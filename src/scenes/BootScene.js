@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
+import { CONFIG } from '../config.js';
 import { createOfficeTextures } from '../art/office.js';
+import { createHeroTextures, createHeroAnimations } from '../art/hero.js';
 
 // 코드로 그린 도트 이미지(src/art)를 여기서 만들어 둔다
 export default class BootScene extends Phaser.Scene {
@@ -9,6 +11,8 @@ export default class BootScene extends Phaser.Scene {
 
   create() {
     createOfficeTextures(this);
+    createHeroTextures(this);
+    createHeroAnimations(this, CONFIG.player);
     this.scene.start('Title');
   }
 }

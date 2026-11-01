@@ -29,4 +29,22 @@ export const PAL = {
   leafLight: '#7cc46a',
   pot: '#e8e4dc',
   potDark: '#b8b2a8',
+
+  // 주인공
+  skin: '#f2c7a0',
+  skinDark: '#d49a76',
+  hair: '#7a4a2a',
+  hairDark: '#553119',
+  shirt: '#f4f4f0',
+  shirtDark: '#c9ccd6',
+  tie: '#d63a3a',
+  tieDark: '#9c2424',
+  pants: '#2e3a6b',
+  pantsDark: '#1f2850',
+  badge: '#3f8fe0',
+  badgeDark: '#2a64a8',
+  badgeCard: '#e8f0ff',
+  shoe: '#2a2230',
+  darkCircle: '#a37a9a',
+  mouth: '#a05a4a',
 };

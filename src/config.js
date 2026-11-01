@@ -34,14 +34,34 @@ export const CONFIG = {
     ],
   },
 
-  // 개발용 임시 기능 (주인공이 들어오면 지운다)
-  dev: {
-    cameraPanSpeed: 240,
+  player: {
+    speed: 90,
+    walkFrameRate: 8,
+    idleFrameRate: 2,
+    // 충돌 판정은 발 부분만 (탑다운 3/4)
+    bodyWidth: 12,
+    bodyHeight: 8,
+  },
+
+  camera: {
+    // 1이면 딱 붙어 따라가고, 작을수록 부드럽게 늦게 따라간다
+    followLerp: 0.15,
   },
 
   input: {
     // 동시에 인식할 터치 수 (조이스틱 + 여유 1)
     activePointers: 2,
+  },
+
+  // 휴대폰: 화면 아무 곳이나 누르면 그 자리에 생기는 가상 조이스틱
+  joystick: {
+    radius: 28,
+    knobRadius: 10,
+    // 이 비율보다 덜 밀면 멈춘 것으로 본다
+    deadZone: 0.15,
+    color: 0xffffff,
+    baseAlpha: 0.25,
+    knobAlpha: 0.6,
   },
 
   colors: {
@@ -62,6 +82,9 @@ export const CONFIG = {
     // 작은 글자는 외곽선이 획을 덮어 오히려 읽기 어렵다
     smallStroke: 0,
     blinkDuration: 600,
+    // 게임 시작 시 조작 안내가 떠 있는 시간과 사라지는 시간(ms)
+    hintDuration: 3000,
+    hintFade: 800,
     blinkMinAlpha: 0.2,
 
     // 화면 높이에 대한 비율로 배치

@@ -39,6 +39,10 @@ const game = new Phaser.Game({
   input: {
     activePointers: CONFIG.input.activePointers,
   },
+  physics: {
+    default: 'arcade',
+    arcade: { gravity: { x: 0, y: 0 } },
+  },
   scene: [BootScene, TitleScene, GameScene],
 });
 
