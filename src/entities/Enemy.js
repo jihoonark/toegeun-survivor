@@ -20,11 +20,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.def = def;
     this.hp = def.hp;
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
+    this.flashLeft = 0;
+    this.knockLeft = 0;
 
     this.enableBody(true, x, y, true, true);
     this.body.setSize(def.bodyWidth, def.bodyHeight);
 
-    this.visual.setTexture(enemyTexture(this.scene, def.art)).setScale(1).setActive(true).setVisible(true);
+    this.visual.setTexture(enemyTexture(this.scene, def.art)).clearTint().setScale(1).setActive(true).setVisible(true);
 
     if (def.credit) {
       this.nameplate = addText(this.scene, x, y, `${def.credit.nickname}님의 ${def.name}`, {
@@ -36,7 +38,22 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   }
 
   chase(target) {
+    if (this.knockLeft > 0) return; // 밀려나는 동안은 쫓지 않는다
     this.scene.physics.moveToObject(this, target, this.def.speed);
+  }
+
+  // 피격 깜빡임: 몸을 하얗게
+  flash(ms) {
+    this.flashLeft = ms;
+    this.visual.setTintFill(0xffffff);
+  }
+
+  // 넉백: (dx, dy) 방향으로 잠깐 밀려난다
+  knockback(dx, dy, strength, ms) {
+    const len = Math.hypot(dx, dy);
+    if (len === 0 || strength <= 0) return;
+    this.knockLeft = ms;
+    this.body.velocity.set((dx / len) * strength, (dy / len) * strength);
   }
 
   // 위에서 한 대 맞음. 0이 되면 처치
@@ -65,8 +82,14 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   }
 
   // 물리 이동이 반영된 뒤 몸·이름표 위치와 점프 모양을 맞춘다
+  // 히트스톱 중에는 delta 가 0으로 들어와 점프·깜빡임·넉백 시간이 함께 멈춘다
   syncAfterPhysics(delta = 0) {
     if (!this.active) return;
+    if (this.flashLeft > 0) {
+      this.flashLeft -= delta;
+      if (this.flashLeft <= 0) this.visual.clearTint();
+    }
+    if (this.knockLeft > 0) this.knockLeft -= delta;
     const hop = this.def.hop;
     let lift = 0;
     let squash = 0;

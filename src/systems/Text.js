@@ -10,14 +10,14 @@ function strokeFor(size) {
 }
 
 // 화면 글자는 모두 이 함수로 만든다
-export function addText(scene, x, y, content, { size = ui.bodyFontSize, color = colors.text, origin = 0.5 } = {}) {
+export function addText(scene, x, y, content, { size = ui.bodyFontSize, color = colors.text, origin = 0.5, stroke } = {}) {
   return scene.add
     .text(x, y, content, {
       fontFamily: ui.fontFamily,
       fontSize: `${size}px`,
       color,
       stroke: colors.outline,
-      strokeThickness: strokeFor(size),
+      strokeThickness: stroke ?? strokeFor(size),
     })
     .setOrigin(origin);
 }

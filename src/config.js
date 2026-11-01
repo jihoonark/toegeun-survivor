@@ -84,6 +84,44 @@ export const CONFIG = {
     followLerp: 0.15,
   },
 
+  // 타격감 (GAME_SPEC.md 6장)
+  juice: {
+    // 히트스톱: 맞는 순간 게임이 잠깐 멈춤(ms). 처치할 때는 배율만큼 더 길게
+    hitStop: { duration: 35, killMultiplier: 1.6 },
+    // 화면 흔들림: strength 는 전체 배율, intensity 는 화면 크기 대비 비율
+    shake: {
+      strength: 1,
+      kill: { duration: 90, intensity: 0.004 },
+      playerHit: { duration: 160, intensity: 0.012 },
+    },
+    // 맞은 대상이 하얗게 번쩍이는 시간(ms)
+    flash: { duration: 70 },
+    // 넉백: 맞은 적이 밀려나는 속도(px/초)와 시간(ms)
+    knockback: { strength: 180, duration: 110 },
+    // 데미지 숫자: 튀어오르는 높이(px)와 사라지는 시간(ms)
+    damageNumber: { color: '#ffd23f', size: 12, stroke: 2, rise: 14, duration: 550 },
+    // 처치 시 종이 조각
+    particles: { count: 9, speedMin: 40, speedMax: 120, lifespan: 500, gravity: 220 },
+  },
+
+  sound: {
+    volume: 0.25,
+    // 같은 소리가 너무 촘촘히 겹치지 않게 하는 최소 간격(ms)
+    minInterval: 40,
+  },
+
+  // 개발용 조절 패널 (GAME_SPEC.md 7장). 배포 빌드에서는 나오지 않는다
+  debugPanel: {
+    sliders: [
+      { label: '이동 속도', path: 'player.speed', min: 30, max: 200, step: 5 },
+      { label: '공격 속도 배율', path: 'combat.attackSpeedMultiplier', min: 0.25, max: 4, step: 0.05 },
+      { label: '적 스폰 간격(ms)', path: 'spawn.interval', min: 100, max: 3000, step: 50 },
+      { label: '히트스톱(ms)', path: 'juice.hitStop.duration', min: 0, max: 200, step: 5 },
+      { label: '흔들림 세기', path: 'juice.shake.strength', min: 0, max: 3, step: 0.1 },
+      { label: '넉백 세기', path: 'juice.knockback.strength', min: 0, max: 600, step: 10 },
+    ],
+  },
+
   input: {
     // 동시에 인식할 터치 수 (조이스틱 + 여유 1)
     activePointers: 2,

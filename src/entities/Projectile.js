@@ -40,7 +40,8 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
 
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
-    if (!this.active) return;
+    // 히트스톱으로 물리가 멈춘 동안에는 회전·수명도 멈춘다
+    if (!this.active || this.scene.physics.world.isPaused) return;
     this.angle += (this.weapon.spin * delta) / 1000;
     this.lifeLeft -= delta;
     if (this.lifeLeft <= 0) this.remove();

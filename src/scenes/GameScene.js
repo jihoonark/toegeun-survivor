@@ -4,6 +4,8 @@ import { addText } from '../systems/Text.js';
 import Controls from '../systems/Controls.js';
 import Combat from '../systems/Combat.js';
 import Spawner from '../systems/Spawner.js';
+import Juice from '../systems/Juice.js';
+import DebugPanel from '../systems/DebugPanel.js';
 import Player from '../entities/Player.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 
@@ -22,6 +24,8 @@ export default class GameScene extends Phaser.Scene {
     this.spawner = new Spawner(this);
     this.enemies = this.spawner.enemies;
     this.combat = new Combat(this, this.player, this.enemies);
+    this.juice = new Juice(this);
+    if (import.meta.env.DEV) this.debugPanel = new DebugPanel(this);
 
     const lerp = CONFIG.camera.followLerp;
     this.cameras.main.startFollow(this.player, true, lerp, lerp);
@@ -29,8 +33,9 @@ export default class GameScene extends Phaser.Scene {
     this.showControlsHint();
     // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
     this.events.on(Phaser.Scenes.Events.POST_UPDATE, (_time, delta) => {
+      const step = this.juice.frozen ? 0 : delta;
       this.player.syncAfterPhysics();
-      this.enemies.getChildren().forEach((e) => e.syncAfterPhysics(delta));
+      this.enemies.getChildren().forEach((e) => e.syncAfterPhysics(step));
     });
   }
 
@@ -59,7 +64,8 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: hint, alpha: 0, delay: ui.hintDuration, duration: ui.hintFade, onComplete: () => hint.destroy() });
   }
 
-  update(_time, delta) {
+  update(time, delta) {
+    if (this.juice.update(time)) return; // 히트스톱 중
     this.player.move(this.controls.read());
     this.spawner.update(delta);
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
