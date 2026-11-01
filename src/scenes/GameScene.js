@@ -14,14 +14,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   buildOffice() {
-    const { worldWidth, worldHeight, desks, plants } = CONFIG.office;
+    const { worldWidth, worldHeight, furniture } = CONFIG.office;
 
     this.add.tileSprite(0, 0, worldWidth, worldHeight, OFFICE_TEXTURES.floor).setOrigin(0).setDepth(-Infinity);
 
     // 탑다운 3/4 시점: 발밑 y가 클수록 앞에 그려지도록 깊이를 y로 둔다
-    const place = (key, [x, y]) => this.add.image(x, y, key).setOrigin(0.5, 1).setDepth(y);
-    desks.forEach((pos) => place(OFFICE_TEXTURES.desk, pos));
-    plants.forEach((pos) => place(OFFICE_TEXTURES.plant, pos));
+    for (const { type, positions } of furniture) {
+      const key = OFFICE_TEXTURES[type];
+      if (!key) throw new Error(`알 수 없는 가구 종류: ${type}`);
+      for (const [x, y] of positions) this.add.image(x, y, key).setOrigin(0.5, 1).setDepth(y);
+    }
 
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);

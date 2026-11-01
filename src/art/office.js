@@ -79,7 +79,7 @@ function drawPlant(ctx) {
   const blobs = [
     [8, 8, 5],
     [4, 11, 3],
-    [12, 11, 3],
+    [11, 11, 3],
     [8, 4, 3],
   ];
 
