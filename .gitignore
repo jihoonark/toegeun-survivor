@@ -1,0 +1,18 @@
+# GAME_SPEC.md 에서 "깃에 올리지 않음"으로 표시된 것
+assets/vendor/
+comments/
+client_secret.json
+client_secret*.json
+token.json
+tokens.json
+*.token.json
+.oauth/
+.env
+.env.*
+
+# 빌드/의존성
+node_modules/
+dist/
+*.log
+.DS_Store
+Thumbs.db
