@@ -32,6 +32,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         this.setFlipX(dir.x < 0);
       } else {
         this.facing = dir.y < 0 ? 'up' : 'down';
+        this.setFlipX(false);
       }
     }
     this.play(`hero-${moving ? 'walk' : 'idle'}-${this.facing}`, true);

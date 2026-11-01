@@ -21,8 +21,8 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, lerp, lerp);
 
     this.showControlsHint();
-    // 물리 이동이 끝난 뒤 그림자·앞뒤 정렬을 맞춘다
-    this.physics.world.on('worldstep', () => this.player.syncAfterPhysics());
+    // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, () => this.player.syncAfterPhysics());
   }
 
   buildOffice() {

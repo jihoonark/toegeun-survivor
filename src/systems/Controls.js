@@ -54,7 +54,9 @@ class VirtualJoystick {
     scene.input.on('pointermove', this.onMove, this);
     scene.input.on('pointerup', this.onUp, this);
     scene.input.on('pointerupoutside', this.onUp, this);
-    scene.input.on('gameout', () => this.release());
+    // 주소창·회전으로 화면이 다시 배치되면 시작점 좌표가 어긋나므로 새 터치부터 받는다
+    scene.scale.on(Phaser.Scale.Events.RESIZE, this.release, this);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => scene.scale.off(Phaser.Scale.Events.RESIZE, this.release, this));
   }
 
   onDown(p) {
