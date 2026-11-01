@@ -10,6 +10,9 @@ import Hud from '../systems/Hud.js';
 import Player from '../entities/Player.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 
+// 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
+const GAME_EVENTS = ['enemy-hit', 'enemy-killed', 'player-hit', 'shift-end'];
+
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('Game');
@@ -34,11 +37,17 @@ export default class GameScene extends Phaser.Scene {
 
     this.showControlsHint();
     // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
-    this.events.on(Phaser.Scenes.Events.POST_UPDATE, (_time, delta) => {
-      const step = this.juice.frozen ? 0 : delta;
-      this.player.syncAfterPhysics(step);
-      this.enemies.getChildren().forEach((e) => e.syncAfterPhysics(step));
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      GAME_EVENTS.forEach((name) => this.events.removeAllListeners(name));
+      this.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
     });
+  }
+
+  syncAfterPhysics(_time, delta) {
+    const step = this.juice.frozen ? 0 : delta;
+    this.player.syncAfterPhysics(step);
+    this.enemies.getChildren().forEach((e) => e.syncAfterPhysics(step));
   }
 
   // 근무 시간: 멘탈, 시계, 처리한 업무 수, 칼퇴·야근 판정
@@ -84,14 +93,19 @@ export default class GameScene extends Phaser.Scene {
     this.ended = true;
     this.physics.world.pause();
     this.player.anims.pause();
-    this.events.emit('shift-end', { result, tasks: this.tasksDone, minutes: this.shiftMinutes() });
+    const summary = { result, tasks: this.tasksDone, minutes: this.shiftMinutes() };
+    this.events.emit('shift-end', summary);
 
-    // 임시: 결과 화면은 8번에서 만든다
+    // 그 자리에서 결과를 크게 한 번 보여 주고 결과 화면으로 넘어간다
     const { width, height } = CONFIG.screen;
-    const label = result === 'clear' ? '칼퇴 성공' : '야근 확정';
-    addText(this, width / 2, height / 2, label, { size: CONFIG.ui.titleFontSize, color: CONFIG.colors.accent })
+    const clear = result === 'clear';
+    addText(this, width / 2, height / 2, clear ? '칼퇴 성공' : '야근 확정', {
+      size: CONFIG.ui.titleFontSize,
+      color: clear ? CONFIG.colors.accent : CONFIG.colors.danger,
+    })
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
+    this.time.delayedCall(CONFIG.result.delay, () => this.scene.start('Result', summary));
   }
 
   buildOffice() {

@@ -1,6 +1,14 @@
 import { CONFIG } from '../config.js';
 import { addText } from './Text.js';
 
+// 시작 시각부터 지난 게임 분 → "17:42"
+export function formatClock(minutes) {
+  const total = CONFIG.clock.startHour * 60 + Math.floor(minutes);
+  const hh = String(Math.floor(total / 60)).padStart(2, '0');
+  const mm = String(total % 60).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 // 화면 위쪽 정보: 왼쪽 멘탈 바, 가운데 시계, 오른쪽 처리한 업무 수
 export default class Hud {
   constructor(scene) {
@@ -35,12 +43,8 @@ export default class Hud {
 
   // minutes: 시작 시각부터 지난 게임 분
   setClock(minutes) {
-    const { startHour, warnMinute } = CONFIG.clock;
-    const total = startHour * 60 + Math.floor(minutes);
-    const hh = String(Math.floor(total / 60)).padStart(2, '0');
-    const mm = String(total % 60).padStart(2, '0');
-    this.clock.setText(`${hh}:${mm}`);
-    this.clock.setColor(minutes >= warnMinute ? CONFIG.colors.accent : CONFIG.colors.text);
+    this.clock.setText(formatClock(minutes));
+    this.clock.setColor(minutes >= CONFIG.clock.warnMinute ? CONFIG.colors.accent : CONFIG.colors.text);
   }
 
   setTasks(count) {

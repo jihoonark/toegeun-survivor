@@ -3,6 +3,7 @@ import { CONFIG } from './config.js';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import GameScene from './scenes/GameScene.js';
+import ResultScene from './scenes/ResultScene.js';
 
 const { width, height, backgroundColor } = CONFIG.screen;
 
@@ -43,7 +44,7 @@ const game = new Phaser.Game({
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 0 } },
   },
-  scene: [BootScene, TitleScene, GameScene],
+  scene: [BootScene, TitleScene, GameScene, ResultScene],
 });
 
 function layout() {

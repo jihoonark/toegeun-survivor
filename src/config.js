@@ -87,6 +87,22 @@ export const CONFIG = {
     mentalLow: 0.3,
   },
 
+  // 결과 화면
+  result: {
+    // 게임이 끝나고 결과 화면으로 넘어가기까지(ms)
+    delay: 1400,
+    // 결과 화면에서 입력을 받기 시작하기까지(ms). 마구 누르다 바로 다시 시작되지 않게
+    inputDelay: 700,
+    // 화면 높이에 대한 비율
+    titleY: 0.2,
+    subtitleY: 0.33,
+    statsY: 0.46,
+    statsGap: 16,
+    heroY: 0.7,
+    buttonsY: 0.86,
+    button: { width: 110, height: 26, gap: 16 },
+  },
+
   // 적 등장. 몬스터별 수치는 src/data/enemies.js
   spawn: {
     // 다음 적이 나오기까지 간격(ms)
@@ -170,6 +186,8 @@ export const CONFIG = {
     text: '#ffffff',
     textDim: '#b8b0c8',
     accent: '#ffd23f',
+    danger: '#e03a3a',
+    buttonHover: '#fff0a8',
   },
 
   ui: {
