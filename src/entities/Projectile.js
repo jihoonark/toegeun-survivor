@@ -19,6 +19,8 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
     this.setTexture(projectileTexture(this.scene, weapon.projectile));
     this.enableBody(true, x, y, true, true);
     this.body.setSize(this.width, this.height);
+    // 명중 판정 반지름 (회전해도 같도록 원으로 본다)
+    this.radius = Math.min(this.width, this.height) / 2;
     this.setDepth(CONFIG.depth.flying);
     this.setAngle(0);
     this.scene.physics.velocityFromRotation(angle, weapon.speed, this.body.velocity);

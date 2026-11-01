@@ -25,8 +25,13 @@ export const PAL = {
   coffee: '#5a3a22',
   sleeve: '#a8743f',
   sleeveDark: '#7a5028',
-  target: '#e04848',
-  targetDark: '#a82e2e',
+  white: '#ffffff',
+
+  // 이메일 몬스터
+  alert: '#e03a3a',
+  alertDark: '#a02424',
+  foot: '#f08a2a',
+  footDark: '#b8601a',
 
   leaf: '#4f9a4a',
   leafDark: '#356b35',

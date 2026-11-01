@@ -60,16 +60,23 @@ export const CONFIG = {
     flying: 100000,
   },
 
-  // 임시: 무기 확인용 과녁 (이메일 몬스터가 들어오면 지운다)
-  practiceTargets: {
-    hp: 3,
-    respawnDelay: 2000,
-    // 몸통 판정 크기
-    bodyWidth: 14,
-    bodyHeight: 14,
-    positions: [
-      [400, 230], [560, 230], [430, 330], [540, 330], [480, 210],
-    ],
+  // 적 등장. 몬스터별 수치는 src/data/enemies.js
+  spawn: {
+    // 다음 적이 나오기까지 간격(ms)
+    interval: 1200,
+    // 화면 밖 얼마나 떨어진 곳에서 나오는지(px)
+    offscreenMargin: 24,
+    // 동시에 살아 있을 수 있는 최대 수
+    maxAlive: 60,
+    // 첫 적이 나오기까지 기다리는 시간(ms)
+    firstDelay: 800,
+  },
+
+  enemy: {
+    // 몬스터끼리 서로 밀어내 한 점에 겹치지 않게 한다
+    separate: true,
+    // credit 이름표가 머리 위로 떠 있는 높이(px)
+    nameplateOffsetY: 38,
   },
 
   camera: {

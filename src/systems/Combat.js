@@ -4,7 +4,10 @@ import { getWeapon } from '../data/weapons.js';
 import Projectile from '../entities/Projectile.js';
 
 // 자동 공격: 무기마다 쿨다운이 차면 사거리 안의 가장 가까운 적에게 던진다
-// 적 그룹에 들어가는 오브젝트는 active, x, y, takeDamage(amount, source)만 있으면 된다
+// 적 그룹에 들어가는 오브젝트는 active, x, y, takeDamage(amount, source)가 있어야 하고
+// getAimPoint()가 있으면 그곳을, 없으면 오브젝트 가운데를 노린다
+// 명중은 물리 판정이 아니라 조준점과의 거리로 본다. 탑다운 3/4에서 몸은 바닥(물리 판정)보다 위에 그려지기 때문
+// 반지름은 적 데이터의 hitRadius, 없으면 오브젝트 크기의 절반
 //
 // 장면 이벤트 (타격감·점수에서 쓴다)
 //   'enemy-hit'  { enemy, damage, x, y, vx, vy }
@@ -21,7 +24,6 @@ export default class Combat {
       runChildUpdate: false,
     });
 
-    scene.physics.add.overlap(this.projectiles, enemies, this.onHit, null, this);
     CONFIG.player.startWeapons.forEach((id) => this.addWeapon(id));
   }
 
@@ -44,6 +46,7 @@ export default class Combat {
   }
 
   update(delta) {
+    this.checkHits();
     const { attackSpeedMultiplier, damageMultiplier } = CONFIG.combat;
     for (const slot of this.weapons) {
       slot.cooldownLeft -= delta * attackSpeedMultiplier;
@@ -66,9 +69,24 @@ export default class Combat {
 
     const x = this.player.x;
     const y = this.player.y - CONFIG.player.handHeight;
-    const center = target.getCenter();
+    const center = target.getAimPoint ? target.getAimPoint() : target.getCenter();
     const angle = Phaser.Math.Angle.Between(x, y, center.x, center.y);
     projectile.fire(weapon, x, y, angle, damage);
+  }
+
+  checkHits() {
+    const enemies = this.enemies.getChildren();
+    for (const projectile of this.projectiles.getChildren()) {
+      if (!projectile.active) continue;
+      for (const enemy of enemies) {
+        if (!enemy.active) continue;
+        const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy.getCenter();
+        const reach = (enemy.def?.hitRadius ?? enemy.width / 2) + projectile.radius;
+        if (Phaser.Math.Distance.Squared(projectile.x, projectile.y, aim.x, aim.y) > reach * reach) continue;
+        this.onHit(projectile, enemy);
+        if (!projectile.active) break;
+      }
+    }
   }
 
   onHit(projectile, enemy) {
