@@ -6,6 +6,8 @@ export const OFFICE_TEXTURES = {
   floor: 'office-floor',
   desk: 'office-desk',
   plant: 'office-plant',
+  // 임시: 무기 확인용 과녁 (이메일 몬스터가 들어오면 지운다)
+  target: 'practice-target',
 };
 
 const TILE = 16;
@@ -102,8 +104,23 @@ function drawPlant(ctx) {
   rect(ctx, PAL.potDark, 4, 15, 8, 1);
 }
 
+// 16x22 연습용 과녁: 받침대 위 빨간 동심원 판
+function drawTarget(ctx) {
+  const o = PAL.outline;
+  rect(ctx, PAL.shadow, 2, 19, 12, 3);
+  box(ctx, o, PAL.woodDark, 6, 12, 4, 9);
+  disc(ctx, 8, 7, 7, () => o);
+  disc(ctx, 8, 7, 6, (dx, dy) => {
+    const d = Math.hypot(dx, dy);
+    if (d > 4.5) return dx + dy > 3 ? PAL.targetDark : PAL.target;
+    if (d > 2.5) return PAL.paper;
+    return PAL.target;
+  });
+}
+
 export function createOfficeTextures(scene) {
   createCanvasTexture(scene, OFFICE_TEXTURES.floor, TILE * 2, TILE * 2, drawFloor);
   createCanvasTexture(scene, OFFICE_TEXTURES.desk, 48, 32, drawDesk);
   createCanvasTexture(scene, OFFICE_TEXTURES.plant, 16, 24, drawPlant);
+  createCanvasTexture(scene, OFFICE_TEXTURES.target, 16, 22, drawTarget);
 }

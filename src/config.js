@@ -41,6 +41,35 @@ export const CONFIG = {
     // 충돌 판정은 발 부분만 (탑다운 3/4)
     bodyWidth: 12,
     bodyHeight: 8,
+    // 투사체가 나가는 높이 (발바닥에서 위로 px)
+    handHeight: 12,
+    // 시작할 때 가진 무기 (src/data/weapons.js 의 id)
+    startWeapons: ['americano'],
+  },
+
+  // 무기별 수치는 src/data/weapons.js, 여기는 전체 배율
+  combat: {
+    attackSpeedMultiplier: 1,
+    damageMultiplier: 1,
+    // 동시에 화면에 있을 수 있는 투사체 수
+    projectilePoolSize: 60,
+  },
+
+  // 그리기 순서. 바닥 위 물건은 발밑 y를 깊이로 쓰고, 날아다니는 것은 그 위에 그린다
+  depth: {
+    flying: 100000,
+  },
+
+  // 임시: 무기 확인용 과녁 (이메일 몬스터가 들어오면 지운다)
+  practiceTargets: {
+    hp: 3,
+    respawnDelay: 2000,
+    // 몸통 판정 크기
+    bodyWidth: 14,
+    bodyHeight: 14,
+    positions: [
+      [400, 230], [560, 230], [430, 330], [540, 330], [480, 210],
+    ],
   },
 
   camera: {

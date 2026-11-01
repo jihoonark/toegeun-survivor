@@ -23,6 +23,10 @@ export const PAL = {
   keyboard: '#d3d6dc',
   keyboardDark: '#a2a7b0',
   coffee: '#5a3a22',
+  sleeve: '#a8743f',
+  sleeveDark: '#7a5028',
+  target: '#e04848',
+  targetDark: '#a82e2e',
 
   leaf: '#4f9a4a',
   leafDark: '#356b35',
