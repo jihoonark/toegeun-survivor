@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#1a1420" />
+    <title>퇴근 서바이버</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #1a1420;
+        overflow: hidden;
+        /* 휴대폰에서 스크롤·확대·길게 누르기 메뉴가 끼어들지 않게 */
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #game {
+        position: fixed;
+        inset: 0;
+      }
+      canvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

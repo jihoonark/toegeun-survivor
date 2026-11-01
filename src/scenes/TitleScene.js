@@ -1,0 +1,27 @@
+import Phaser from 'phaser';
+import { CONFIG } from '../config.js';
+import { addText } from '../systems/Text.js';
+
+export default class TitleScene extends Phaser.Scene {
+  constructor() {
+    super('Title');
+  }
+
+  create() {
+    const { width, height } = CONFIG.screen;
+    const { ui, colors } = CONFIG;
+
+    addText(this, width / 2, height * 0.35, '퇴근 서바이버', { size: ui.titleFontSize, color: colors.accent });
+    addText(this, width / 2, height * 0.5, '17:00 → 18:00, 칼퇴를 노려라', { color: colors.textDim });
+
+    const prompt = addText(this, width / 2, height * 0.72, '화면을 누르거나 아무 키나 눌러 시작');
+    this.tweens.add({ targets: prompt, alpha: 0.2, duration: ui.blinkDuration, yoyo: true, repeat: -1 });
+
+    // 에셋 출처 표기 자리 (GAME_SPEC.md 5장). 구매 에셋을 쓰기 전까지는 임시 문구
+    addText(this, width / 2, height - 10, '임시 그래픽: 코드로 그린 도트', { size: ui.smallFontSize, color: colors.textDim });
+
+    const start = () => this.scene.start('Game');
+    this.input.once('pointerdown', start);
+    this.input.keyboard?.once('keydown', start);
+  }
+}
