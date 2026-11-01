@@ -4,9 +4,12 @@ export const CONFIG = {
   screen: {
     width: 480,
     height: 270,
-    // 화면이 기본 해상도보다 작을 때(세로 휴대폰 등) 허용하는 최소 확대 배율
-    minZoom: 0.5,
     backgroundColor: '#1a1420',
+  },
+
+  input: {
+    // 동시에 인식할 터치 수 (조이스틱 + 여유 1)
+    activePointers: 2,
   },
 
   colors: {
@@ -18,11 +21,28 @@ export const CONFIG = {
 
   ui: {
     fontFamily: '"Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif',
+    // 480x270에서 한글 획이 읽히려면 본문 16px 안팎이 필요하다
     titleFontSize: 32,
-    bodyFontSize: 12,
-    smallFontSize: 10,
-    // 픽셀 해상도에서 한글이 뭉개지지 않도록 글자를 더 촘촘히 그리는 배율
-    textResolution: 4,
+    bodyFontSize: 16,
+    smallFontSize: 12,
+    titleStroke: 4,
+    bodyStroke: 2,
+    // 작은 글자는 외곽선이 획을 덮어 오히려 읽기 어렵다
+    smallStroke: 0,
     blinkDuration: 600,
+    blinkMinAlpha: 0.2,
+
+    // 화면 높이에 대한 비율로 배치
+    title: {
+      nameY: 0.35,
+      subtitleY: 0.5,
+      promptY: 0.72,
+      // 화면 아래에서 떨어뜨리는 거리(px)
+      creditBottom: 12,
+    },
+    gameInfo: {
+      labelOffsetY: -12,
+      infoOffsetY: 12,
+    },
   },
 };

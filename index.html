@@ -27,9 +27,34 @@
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
       }
+      /* 크기와 위치는 main.js가 실제 보이는 영역에 맞춰 정한다 */
       #game {
         position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100dvh;
+      }
+      #rotate-hint {
+        position: fixed;
         inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #1a1420;
+        color: #ffd23f;
+        font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        font-size: 18px;
+        text-align: center;
+        z-index: 10;
+      }
+      #rotate-hint[hidden] {
+        display: none;
+      }
+      #rotate-hint .icon {
+        font-size: 40px;
       }
       canvas {
         image-rendering: pixelated;
@@ -39,6 +64,10 @@
   </head>
   <body>
     <div id="game"></div>
+    <div id="rotate-hint" hidden>
+      <div class="icon">↻</div>
+      <div id="rotate-text">휴대폰을 가로로 돌려주세요</div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
