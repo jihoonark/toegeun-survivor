@@ -173,8 +173,8 @@ export const CONFIG = {
   fullscreen: {
     // 휴대폰에서 타이틀을 눌러 시작할 때 자동으로 전체화면
     autoOnTouchStart: true,
-    // 아이폰용 "홈 화면에 추가" 안내가 떠 있는 시간(ms)
-    hintDuration: 6000,
+    // 아이폰 사파리: 화면 높이가 이만큼(px) 넘게 커지면 주소창이 접힌 것으로 본다
+    swipeGrowThreshold: 10,
   },
 
   input: {
