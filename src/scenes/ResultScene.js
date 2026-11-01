@@ -52,9 +52,11 @@ export default class ResultScene extends Phaser.Scene {
       this.buttons.forEach(({ box, text }) => this.tweens.add({ targets: [box, text], alpha: 1, duration: ui.hintFade / 2 }));
     });
 
-    this.input.keyboard?.on('keydown-ENTER', restart);
-    this.input.keyboard?.on('keydown-SPACE', restart);
-    this.input.keyboard?.on('keydown-ESC', toTitle);
+    // 키를 꾹 누르고 있어 생기는 반복 입력은 무시한다 (결과 화면에서 새로 누른 것만)
+    const onKey = (action) => (event) => !event.repeat && action();
+    this.input.keyboard?.on('keydown-ENTER', onKey(restart));
+    this.input.keyboard?.on('keydown-SPACE', onKey(restart));
+    this.input.keyboard?.on('keydown-ESC', onKey(toTitle));
   }
 
   go(scene) {

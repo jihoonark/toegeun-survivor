@@ -11,7 +11,7 @@ import Player from '../entities/Player.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 
 // 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
-const GAME_EVENTS = ['enemy-hit', 'enemy-killed', 'player-hit', 'shift-end'];
+const GAME_EVENTS = ['enemy-hit', 'enemy-killed', 'player-hit', 'shift-end', 'weapon-added'];
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -30,6 +30,8 @@ export default class GameScene extends Phaser.Scene {
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
     this.setupShift();
+    // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림이 뜨게 한다
+    this.combat.addStarterWeapons();
     if (import.meta.env.DEV) this.debugPanel = new DebugPanel(this);
 
     const lerp = CONFIG.camera.followLerp;

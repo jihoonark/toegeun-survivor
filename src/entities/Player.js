@@ -22,7 +22,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.play('hero-idle-down');
 
     this.mental = maxMental;
-    this.invulnerableUntil = 0;
+    this.invulnerableLeft = 0;
     this.flashLeft = 0;
   }
 
@@ -45,24 +45,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // 적에게 닿았을 때. 무적 시간 중이면 무시하고 false
+  // 무적 시간과 깜빡임은 syncAfterPhysics 의 delta 로 줄어서 히트스톱 동안 함께 멈춘다
   hurt(damage) {
-    const now = this.scene.time.now;
-    if (now < this.invulnerableUntil || this.mental <= 0) return false;
+    if (this.invulnerableLeft > 0 || this.mental <= 0) return false;
 
-    const { hurtCooldown, hurtBlinkInterval } = CONFIG.player;
     this.mental = Math.max(0, this.mental - damage);
-    this.invulnerableUntil = now + hurtCooldown;
-
-    // 무적 시간 동안 깜빡인다
-    this.blink?.remove();
-    this.blink = this.scene.tweens.add({
-      targets: this,
-      alpha: 0.3,
-      duration: hurtBlinkInterval,
-      yoyo: true,
-      repeat: Math.max(0, Math.floor(hurtCooldown / (hurtBlinkInterval * 2)) - 1),
-      onComplete: () => this.setAlpha(1),
-    });
+    this.invulnerableLeft = CONFIG.player.hurtCooldown;
 
     this.scene.events.emit('player-hit', { player: this, damage, mental: this.mental });
     return true;
@@ -79,6 +67,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.flashLeft > 0) {
       this.flashLeft -= delta;
       if (this.flashLeft <= 0) this.clearTint();
+    }
+    if (this.invulnerableLeft > 0) {
+      this.invulnerableLeft = Math.max(0, this.invulnerableLeft - delta);
+      // 무적 시간 동안 hurtBlinkInterval 마다 흐려졌다 돌아온다
+      const { hurtCooldown, hurtBlinkInterval, hurtBlinkAlpha } = CONFIG.player;
+      const dim = this.invulnerableLeft > 0 && Math.floor((hurtCooldown - this.invulnerableLeft) / hurtBlinkInterval) % 2 === 0;
+      this.setAlpha(dim ? hurtBlinkAlpha : 1);
     }
     this.shadow.setPosition(this.x, this.y).setDepth(this.y - 1);
     this.setDepth(this.y);

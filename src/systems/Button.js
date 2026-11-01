@@ -12,9 +12,20 @@ export function addButton(scene, x, y, label, onClick, { width, height } = CONFI
   const box = scene.add.rectangle(x, y, width, height, fill).setStrokeStyle(ui.bodyStroke, toColor(colors.outline));
   const text = addText(scene, x, y, label, { color: CONFIG.colors.outline, stroke: 0 });
 
+  // 버튼 위에서 누르고 버튼 위에서 뗀 경우에만 실행한다
+  // (다른 곳에서 누르던 손가락을 버튼 위에서 떼는 것만으로는 눌리지 않게)
+  let pressed = false;
   box.setInteractive({ useHandCursor: true });
   box.on('pointerover', () => box.setFillStyle(hover));
-  box.on('pointerout', () => box.setFillStyle(fill));
-  box.on('pointerup', onClick);
+  box.on('pointerout', () => {
+    pressed = false;
+    box.setFillStyle(fill);
+  });
+  box.on('pointerdown', () => (pressed = true));
+  box.on('pointerup', () => {
+    if (!pressed) return;
+    pressed = false;
+    onClick();
+  });
   return { box, text };
 }

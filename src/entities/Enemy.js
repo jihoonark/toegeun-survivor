@@ -4,6 +4,9 @@ import { HERO } from '../art/hero.js';
 import { ENEMY_ART, enemyTexture } from '../art/enemies.js';
 import { addText } from '../systems/Text.js';
 
+// 풀에서 다시 꺼낼 때마다 새 번호를 준다. 같은 오브젝트라도 새로 나온 적은 다른 적으로 본다
+let nextSpawnId = 1;
+
 // 적 하나. 물리 판정은 바닥의 그림자가 맡고, 몸(visual)은 그 위에서 통통 뛴다
 // 그래서 점프 높이와 찌그러짐이 충돌 판정에 영향을 주지 않는다
 //
@@ -18,6 +21,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
   spawn(def, x, y) {
     this.def = def;
+    this.spawnId = nextSpawnId++;
     this.hp = def.hp;
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
     this.flashLeft = 0;
@@ -94,10 +98,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     let lift = 0;
     let squash = 0;
     if (hop) {
-      // 한 번 뛰는 시간 중 앞 3/4은 공중, 나머지 1/4은 착지하며 찌그러진다
+      // 한 번 뛰는 시간 중 앞부분(hopAirRatio)은 공중, 나머지는 착지하며 찌그러진다
       this.hopTime = (this.hopTime + delta) % hop.duration;
       const t = this.hopTime / hop.duration;
-      const airTime = 0.75;
+      const airTime = CONFIG.enemy.hopAirRatio;
       if (t < airTime) lift = Math.sin((Math.PI * t) / airTime) * hop.height;
       else squash = Math.sin((Math.PI * (t - airTime)) / (1 - airTime)) * hop.squash;
     }

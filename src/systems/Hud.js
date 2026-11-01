@@ -28,6 +28,36 @@ export default class Hud {
 
     this.tasks = fix(addText(scene, width - margin, margin, '', { size: ui.smallFontSize, stroke: ui.bodyStroke }));
     this.tasks.setOrigin(1, 0);
+
+    this.clockMinute = null;
+    this.clockWarn = null;
+    this.toasts = 0;
+    scene.events.on('weapon-added', ({ weapon }) => this.showCredit(weapon));
+  }
+
+  // 시청자 무기를 얻으면 "○○님의 [무기]"를 시계 아래에 잠깐 띄운다 (GAME_SPEC.md 4장)
+  showCredit(item) {
+    if (!item.credit) return;
+    const t = CONFIG.hud.creditToast;
+    const y = CONFIG.hud.margin + t.offsetY + this.toasts * t.gap;
+    const toast = addText(this.scene, CONFIG.screen.width / 2, y, `${item.credit.nickname}님의 ${item.name}`, {
+      size: CONFIG.ui.smallFontSize,
+      color: CONFIG.colors.accent,
+      stroke: CONFIG.ui.bodyStroke,
+    })
+      .setScrollFactor(0)
+      .setDepth(CONFIG.depth.hud);
+    this.toasts++;
+    this.scene.tweens.add({
+      targets: toast,
+      alpha: 0,
+      delay: t.duration,
+      duration: t.fade,
+      onComplete: () => {
+        toast.destroy();
+        this.toasts--;
+      },
+    });
   }
 
   setMental(value, max) {
@@ -41,10 +71,18 @@ export default class Hud {
     this.bar.fillStyle(fill).fillRect(this.barX, this.barY, Math.round(b.width * ratio), b.height);
   }
 
-  // minutes: 시작 시각부터 지난 게임 분
+  // minutes: 시작 시각부터 지난 게임 분. 글자는 분이 바뀔 때만 다시 그린다
   setClock(minutes) {
-    this.clock.setText(formatClock(minutes));
-    this.clock.setColor(minutes >= CONFIG.clock.warnMinute ? CONFIG.colors.accent : CONFIG.colors.text);
+    const minute = Math.floor(minutes);
+    if (minute !== this.clockMinute) {
+      this.clockMinute = minute;
+      this.clock.setText(formatClock(minute));
+    }
+    const warn = minute >= CONFIG.clock.warnMinute;
+    if (warn !== this.clockWarn) {
+      this.clockWarn = warn;
+      this.clock.setColor(warn ? CONFIG.colors.accent : CONFIG.colors.text);
+    }
   }
 
   setTasks(count) {

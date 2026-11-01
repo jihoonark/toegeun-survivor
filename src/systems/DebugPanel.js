@@ -19,6 +19,7 @@ let open = false;
 
 const STYLE = `
 #debug-panel { position: fixed; top: 8px; left: 8px; z-index: 20; width: 240px; padding: 10px 12px;
+  max-height: calc(100dvh - 16px); overflow-y: auto; box-sizing: border-box; overscroll-behavior: contain;
   background: rgba(26, 20, 32, 0.92); color: #fff; border: 2px solid #ffd23f; border-radius: 6px;
   font: 12px 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; touch-action: auto; user-select: none; }
 #debug-panel[hidden] { display: none; }
@@ -44,9 +45,10 @@ export default class DebugPanel {
     this.panel.id = 'debug-panel';
     this.panel.hidden = !open;
     this.panel.innerHTML = '<h3>조절 패널 ( ` 키로 닫기)</h3>';
-    // 패널을 만지는 동안 게임 조작(조이스틱·키보드)이 같이 움직이지 않게 막는다
+    // 패널을 만지는 동안 게임 조작(조이스틱·키보드)이 같이 움직이지 않게 누르는 입력만 막는다
+    // keyup 은 막지 않는다: 이동 키를 누른 채 패널을 만지고 떼면 게임이 뗀 것을 알아야 한다
     // (` 키는 패널 안에서 눌러도 닫히도록 통과시킨다)
-    for (const type of ['pointerdown', 'keydown', 'keyup']) {
+    for (const type of ['pointerdown', 'keydown']) {
       this.panel.addEventListener(type, (e) => {
         if (e.code !== 'Backquote') e.stopPropagation();
       });

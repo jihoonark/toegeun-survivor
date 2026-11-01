@@ -1,4 +1,5 @@
 // 게임의 모든 수치는 이 파일 한 곳에 모은다 (GAME_SPEC.md 4장)
+// 예외: 몬스터·무기·능력의 항목별 기본 수치는 src/data 의 각 항목 안에 둔다. 여기는 공통 수치와 전체 배율
 
 export const CONFIG = {
   screen: {
@@ -45,11 +46,10 @@ export const CONFIG = {
     handHeight: 12,
     // 멘탈(체력). 0이 되면 야근 확정
     maxMental: 10,
-    // 한 번 맞은 뒤 다시 맞지 않는 시간(ms)과 그동안 깜빡이는 간격(ms)
+    // 한 번 맞은 뒤 다시 맞지 않는 시간(ms)과 그동안 깜빡이는 간격(ms), 흐려질 때 투명도
     hurtCooldown: 900,
     hurtBlinkInterval: 80,
-    // 시작할 때 가진 무기 (src/data/weapons.js 의 id)
-    startWeapons: ['americano'],
+    hurtBlinkAlpha: 0.3,
   },
 
   // 무기별 수치는 src/data/weapons.js, 여기는 전체 배율
@@ -85,6 +85,8 @@ export const CONFIG = {
     // 멘탈 비율이 이 아래로 내려가면 중간·낮음 색
     mentalMid: 0.6,
     mentalLow: 0.3,
+    // 시청자 무기를 얻었을 때 시계 아래에 뜨는 "○○님의 [무기]" 알림
+    creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
   },
 
   // 결과 화면
@@ -120,6 +122,8 @@ export const CONFIG = {
     separate: true,
     // credit 이름표가 머리 위로 떠 있는 높이(px)
     nameplateOffsetY: 38,
+    // 한 번 뛰는 시간 중 공중에 떠 있는 비율. 나머지는 착지하며 찌그러진다
+    hopAirRatio: 0.75,
   },
 
   camera: {

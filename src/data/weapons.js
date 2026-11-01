@@ -11,6 +11,7 @@
 //   lifetime    투사체가 사라지기까지 시간(ms)
 //   pierce      몇 마리를 더 뚫고 지나가는지 (0이면 첫 적에서 사라짐)
 //   spin        투사체 회전 속도(도/초)
+//   starter     true 면 처음부터 들고 시작한다 (아니면 2화부터 레벨업 때 얻는다)
 //   credit      시청자 아이디어면 { nickname, comment }, 아니면 null
 //
 // 전체 공격 속도·데미지 배율은 config.js 의 combat 에서 조절한다
@@ -27,6 +28,7 @@ export const WEAPONS = [
     lifetime: 1200,
     pierce: 0,
     spin: 540,
+    starter: true,
     credit: null,
   },
 ];

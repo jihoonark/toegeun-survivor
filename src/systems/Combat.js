@@ -1,16 +1,18 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
-import { getWeapon } from '../data/weapons.js';
+import { WEAPONS } from '../data/weapons.js';
 import Projectile from '../entities/Projectile.js';
 
 // 자동 공격: 무기마다 쿨다운이 차면 사거리 안의 가장 가까운 적에게 던진다
 // 적 그룹에 들어가는 오브젝트는 active, x, y, takeDamage(amount, source)가 있어야 하고
+// spawnId(등장할 때마다 새 번호)가 있으면 관통 무기가 같은 적을 두 번 맞히지 않는 데 쓴다
 // getAimPoint()가 있으면 그곳을, 없으면 오브젝트 가운데를 노린다
 // 명중은 물리 판정이 아니라 조준점과의 거리로 본다. 탑다운 3/4에서 몸은 바닥(물리 판정)보다 위에 그려지기 때문
 // 반지름은 적 데이터의 hitRadius, 없으면 오브젝트 크기의 절반
 //
 // 장면 이벤트 (타격감·점수에서 쓴다)
-//   'enemy-hit'  { enemy, damage, x, y, vx, vy }
+//   'enemy-hit'     { enemy, damage, x, y, vx, vy }
+//   'weapon-added'  { weapon }   무기를 얻었을 때 (credit 알림에서 쓴다)
 export default class Combat {
   constructor(scene, player, enemies) {
     this.scene = scene;
@@ -23,12 +25,16 @@ export default class Combat {
       maxSize: CONFIG.combat.projectilePoolSize,
       runChildUpdate: false,
     });
-
-    CONFIG.player.startWeapons.forEach((id) => this.addWeapon(id));
   }
 
-  addWeapon(id) {
-    this.weapons.push({ def: getWeapon(id), cooldownLeft: 0 });
+  // weapons.js 에서 starter: true 인 무기를 들고 시작한다
+  addStarterWeapons() {
+    WEAPONS.filter((w) => w.starter).forEach((w) => this.addWeapon(w));
+  }
+
+  addWeapon(def) {
+    this.weapons.push({ def, cooldownLeft: 0 });
+    this.scene.events.emit('weapon-added', { weapon: def });
   }
 
   nearestEnemy(range) {

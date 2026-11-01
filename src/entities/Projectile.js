@@ -27,9 +27,11 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
   }
 
   // 적에게 맞았을 때. 같은 적을 두 번 맞히지 않고, 관통 횟수를 다 쓰면 사라진다
+  // (적은 풀에서 재사용되므로 오브젝트가 아니라 등장 번호 spawnId 로 기억한다)
   hit(target) {
-    if (this.hitTargets.has(target)) return false;
-    this.hitTargets.add(target);
+    const key = target.spawnId ?? target;
+    if (this.hitTargets.has(key)) return false;
+    this.hitTargets.add(key);
     if (this.pierceLeft-- <= 0) this.remove();
     return true;
   }
