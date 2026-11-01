@@ -1,7 +1,7 @@
 import { CONFIG } from '../config.js';
 
 // 개발용 조절 패널 (GAME_SPEC.md 7장)
-// ` 키로 열고 닫는다. 휴대폰처럼 키보드가 없을 때는 오른쪽 위 ⚙ 버튼으로 연다
+// ` 키로 열고 닫는다. 휴대폰처럼 키보드가 없을 때는 오른쪽 아래 ⚙ 버튼으로 연다
 // 슬라이더는 CONFIG 값을 바로 바꾼다. "현재 값 복사"는 바뀐 값만 config.js 형식으로 복사한다
 // GameScene 이 import.meta.env.DEV 일 때만 만들므로 배포 빌드에는 나오지 않는다
 
@@ -30,7 +30,7 @@ const STYLE = `
 #debug-panel .changed { color: #ffd23f; }
 #debug-panel button { margin-top: 10px; width: 100%; padding: 6px; font: inherit; cursor: pointer;
   background: #ffd23f; color: #1a1420; border: 0; border-radius: 4px; }
-#debug-toggle { position: fixed; top: 8px; right: 8px; z-index: 20; width: 32px; height: 32px; border: 0; border-radius: 6px;
+#debug-toggle { position: fixed; bottom: 8px; right: 8px; z-index: 20; width: 32px; height: 32px; border: 0; border-radius: 6px;
   background: rgba(26, 20, 32, 0.6); color: #ffd23f; font-size: 18px; touch-action: auto; }
 `;
 

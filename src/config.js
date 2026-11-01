@@ -43,6 +43,11 @@ export const CONFIG = {
     bodyHeight: 8,
     // 투사체가 나가는 높이 (발바닥에서 위로 px)
     handHeight: 12,
+    // 멘탈(체력). 0이 되면 야근 확정
+    maxMental: 10,
+    // 한 번 맞은 뒤 다시 맞지 않는 시간(ms)과 그동안 깜빡이는 간격(ms)
+    hurtCooldown: 900,
+    hurtBlinkInterval: 80,
     // 시작할 때 가진 무기 (src/data/weapons.js 의 id)
     startWeapons: ['americano'],
   },
@@ -55,9 +60,31 @@ export const CONFIG = {
     projectilePoolSize: 60,
   },
 
-  // 그리기 순서. 바닥 위 물건은 발밑 y를 깊이로 쓰고, 날아다니는 것은 그 위에 그린다
+  // 그리기 순서. 바닥 위 물건은 발밑 y를 깊이로 쓰고, 날아다니는 것은 그 위, 화면 정보는 맨 위
+  // (Infinity 는 쓰지 않는다: 같은 Infinity 끼리 빼면 NaN 이 되어 정렬이 깨진다)
   depth: {
+    floor: -100000,
     flying: 100000,
+    hud: 200000,
+  },
+
+  // 화면 시계: 17:00 에서 18:00 까지. 1화는 실제 1분 = 게임 1시간
+  clock: {
+    startHour: 17,
+    endHour: 18,
+    realDuration: 60000,
+    // 이 분(分)부터 시계가 강조색으로 바뀐다
+    warnMinute: 50,
+  },
+
+  // 화면 위쪽 정보 (멘탈 바, 시계, 처리한 업무 수)
+  hud: {
+    margin: 8,
+    mentalBar: { width: 80, height: 8, labelGap: 4 },
+    mentalColors: { high: 0x5bd16a, mid: 0xffd23f, low: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
+    // 멘탈 비율이 이 아래로 내려가면 중간·낮음 색
+    mentalMid: 0.6,
+    mentalLow: 0.3,
   },
 
   // 적 등장. 몬스터별 수치는 src/data/enemies.js

@@ -48,7 +48,7 @@ class VirtualJoystick {
 
     this.base = scene.add.circle(0, 0, cfg.radius, cfg.color, cfg.baseAlpha);
     this.knob = scene.add.circle(0, 0, cfg.knobRadius, cfg.color, cfg.knobAlpha);
-    for (const g of [this.base, this.knob]) g.setScrollFactor(0).setDepth(Infinity).setVisible(false);
+    for (const g of [this.base, this.knob]) g.setScrollFactor(0).setDepth(CONFIG.depth.hud).setVisible(false);
 
     scene.input.on('pointerdown', this.onDown, this);
     scene.input.on('pointermove', this.onMove, this);
