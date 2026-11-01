@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { addText } from '../systems/Text.js';
+import { requestFullscreen } from '../systems/Fullscreen.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -25,7 +26,11 @@ export default class TitleScene extends Phaser.Scene {
     });
 
     const start = () => this.scene.start('Game');
-    this.input.once('pointerdown', start);
+    // 손을 뗄 때 시작한다. 브라우저는 터치를 뗀 순간에만 전체화면을 허락한다
+    this.input.once('pointerup', (pointer) => {
+      if (pointer.wasTouch && CONFIG.fullscreen.autoOnTouchStart) requestFullscreen();
+      start();
+    });
     this.input.keyboard?.once('keydown', start);
   }
 }

@@ -169,6 +169,14 @@ export const CONFIG = {
     ],
   },
 
+  // 전체화면 (주소창·탭 숨기기)
+  fullscreen: {
+    // 휴대폰에서 타이틀을 눌러 시작할 때 자동으로 전체화면
+    autoOnTouchStart: true,
+    // 아이폰용 "홈 화면에 추가" 안내가 떠 있는 시간(ms)
+    hintDuration: 6000,
+  },
+
   input: {
     // 동시에 인식할 터치 수 (조이스틱 + 여유 1)
     activePointers: 2,

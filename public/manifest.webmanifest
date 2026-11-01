@@ -1,0 +1,14 @@
+{
+  "name": "퇴근 서바이버",
+  "short_name": "퇴근 서바이버",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1a1420",
+  "theme_color": "#1a1420",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-504.png", "sizes": "504x504", "type": "image/png" }
+  ]
+}
