@@ -1,28 +1,57 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { addText } from '../systems/Text.js';
+import { OFFICE_TEXTURES } from '../art/office.js';
 
-// 1단계: 세팅 확인용 화면. 다음 단계에서 사무실 바닥과 주인공이 들어온다
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('Game');
   }
 
   create() {
-    const { width, height } = CONFIG.screen;
-    const layout = CONFIG.ui.gameInfo;
-    addText(this, width / 2, height / 2 + layout.labelOffsetY, '게임 화면 (준비 중)');
-    this.info = addText(this, width / 2, height / 2 + layout.infoOffsetY, '', {
-      size: CONFIG.ui.smallFontSize,
-      color: CONFIG.colors.textDim,
-    });
-    this.input.on('pointerdown', (p) => this.showInput(`터치 ${Math.round(p.x)}, ${Math.round(p.y)}`));
-    this.input.keyboard?.on('keydown', (e) => this.showInput(`키 ${e.key}`));
-    this.scale.on('resize', () => this.showInput());
-    this.showInput();
+    this.buildOffice();
+    this.setupDevCamera();
   }
 
-  showInput(last = '') {
-    this.info.setText(`확대 ${this.scale.zoom}배${last ? ` · 마지막 입력: ${last}` : ''}`);
+  buildOffice() {
+    const { worldWidth, worldHeight, desks, plants } = CONFIG.office;
+
+    this.add.tileSprite(0, 0, worldWidth, worldHeight, OFFICE_TEXTURES.floor).setOrigin(0).setDepth(-Infinity);
+
+    // 탑다운 3/4 시점: 발밑 y가 클수록 앞에 그려지도록 깊이를 y로 둔다
+    const place = (key, [x, y]) => this.add.image(x, y, key).setOrigin(0.5, 1).setDepth(y);
+    desks.forEach((pos) => place(OFFICE_TEXTURES.desk, pos));
+    plants.forEach((pos) => place(OFFICE_TEXTURES.plant, pos));
+
+    this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+    this.cameras.main.centerOn(worldWidth / 2, worldHeight / 2);
+  }
+
+  // 임시: 주인공이 들어오기 전까지 방향키·드래그로 사무실을 둘러본다
+  setupDevCamera() {
+    const cam = this.cameras.main;
+    this.cursors = this.input.keyboard?.createCursorKeys();
+    this.input.on('pointermove', (p) => {
+      if (!p.isDown) return;
+      cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
+      cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
+    });
+
+    const { width, height } = CONFIG.screen;
+    addText(this, width / 2, height - CONFIG.ui.title.creditBottom, '방향키·드래그로 둘러보기 (임시)', {
+      size: CONFIG.ui.smallFontSize,
+    })
+      .setScrollFactor(0)
+      .setDepth(Infinity);
+  }
+
+  update(_time, delta) {
+    if (!this.cursors) return;
+    const step = (CONFIG.dev.cameraPanSpeed * delta) / 1000;
+    const cam = this.cameras.main;
+    if (this.cursors.left.isDown) cam.scrollX -= step;
+    if (this.cursors.right.isDown) cam.scrollX += step;
+    if (this.cursors.up.isDown) cam.scrollY -= step;
+    if (this.cursors.down.isDown) cam.scrollY += step;
   }
 }
