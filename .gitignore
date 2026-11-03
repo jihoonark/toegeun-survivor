@@ -10,6 +10,11 @@ tokens.json
 .env
 .env.*
 
+# 퇴근봇: 저장소가 공개라서 시청자 댓글·닉네임이 담긴 파일과 실행 기록은 올리지 않는다
+bot/drafts.json
+bot/posted.json
+bot/logs/
+
 # 빌드/의존성
 node_modules/
 dist/

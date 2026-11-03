@@ -177,6 +177,23 @@ export const CONFIG = {
     swipeGrowThreshold: 10,
   },
 
+  // 퇴근봇: 유튜브 댓글 가져오기·답글 (GAME_SPEC.md 11장). scripts/ 의 Node 스크립트가 읽는다
+  bot: {
+    // 하루에 올릴 수 있는 최대 답글 수
+    maxRepliesPerDay: 20,
+    // 댓글을 확인할 영상: 최근에 올린 영상 중 제목(띄어쓰기 무시)에 이 말이 들어간 것
+    videoKeyword: '퇴근서바이버',
+    recentVideos: 20,
+    // 한 번에 가져오는 댓글 쪽수 (한 쪽 100개)
+    fetchMaxPages: 5,
+    // 퇴근봇이 한 번에 초안을 쓰는 댓글 수
+    maxCommentsPerRun: 50,
+    // 답글 최대 글자 수
+    replyMaxLength: 200,
+    // Codex 초안 작성 제한 시간(ms)
+    codexTimeoutMs: 600000,
+  },
+
   input: {
     // 동시에 인식할 터치 수 (조이스틱 + 여유 1)
     activePointers: 2,

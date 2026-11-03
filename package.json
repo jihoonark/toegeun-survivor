@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bot:login": "node scripts/login.js",
+    "bot:fetch": "node scripts/fetch-comments.js",
+    "bot:draft": "node scripts/draft-replies.js",
+    "bot:post": "node scripts/post-replies.js",
+    "bot:daily": "node scripts/daily-check.js"
   },
   "dependencies": {
     "phaser": "^3.90.0"
