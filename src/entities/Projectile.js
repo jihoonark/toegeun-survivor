@@ -25,7 +25,7 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
     // 명중 판정 반지름 (회전해도 같도록 원으로 본다)
     this.radius = Math.min(this.width, this.height) / 2;
     this.setDepth(CONFIG.depth.flying);
-    this.setAngle(0);
+    this.setRotation(weapon.orient ? angle : 0);
     this.scene.physics.velocityFromRotation(angle, weapon.speed, this.body.velocity);
   }
 
@@ -82,6 +82,6 @@ export default class Projectile extends Phaser.Physics.Arcade.Sprite {
     }
     this.updateReturn(delta);
     if (!this.active) return;
-    this.angle += (this.weapon.spin * delta) / 1000 * (this.returning ? -1 : 1);
+    if (!this.weapon.orient) this.angle += (this.weapon.spin * delta) / 1000 * (this.returning ? -1 : 1);
   }
 }

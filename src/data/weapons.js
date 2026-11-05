@@ -20,6 +20,8 @@ import { CONFIG } from '../config.js';
 //   returnAfter  지정하면 이 시간(ms) 뒤 발사한 주인공을 향해 돌아온다. 왕복 각각 한 번씩 명중
 //   returnSpeed  돌아올 때 속도(px/초). 돌아서는 순간 관통 횟수도 새로 센다
 //   catchRadius  돌아온 투사체를 회수하는 손 주변 거리(px). lifetime은 왕복 전체의 제한 시간
+//   orient       true 면 날아가는 방향을 바라본다 (spin 대신)
+//   stun         맞은 몬스터를 이 시간(ms) 동안 그 자리에 고정한다 (없으면 0)
 //   levels       Lv2 부터 바뀌는 값. levels[0] 이 Lv2. { desc: 카드 설명, 바뀌는 필드: 값 }
 //                Lv1 은 위의 기본값이고, 레벨이 오르면 앞 레벨의 변경 위에 차례로 쌓인다
 //   starter      true 면 처음부터 들고 시작한다
@@ -75,6 +77,30 @@ export const WEAPONS = [
       { desc: '카드 3장으로 부채꼴 관통', count: 3 },
     ],
     starter: false,
+    credit: null,
+  },
+  {
+    id: 'stapler',
+    name: '스테이플러',
+    description: '찍힌 업무는 잠깐 그 자리에 고정된다',
+    projectile: 'staple',
+    damage: 1,
+    cooldown: 950,
+    count: 1,
+    spread: 10,
+    speed: 280,
+    range: 170,
+    lifetime: 700,
+    pierce: 0,
+    spin: 0,
+    orient: true,
+    stun: 700,
+    levels: [
+      { desc: '더 오래 고정한다', stun: 1100 },
+      { desc: '두 발씩 찍는다', count: 2 },
+      { desc: '세 마리까지 뚫고 찍는다', pierce: 2 },
+      { desc: '빠르고 세게 찍는다', cooldown: 650, damage: 2 },
+    ],
     credit: null,
   },
 ];

@@ -16,6 +16,16 @@ function drawAmericano(ctx) {
   rect(ctx, PAL.paperDark, 1, 1, 6, 1);
 }
 
+// 9x5 스테이플러 심: 오른쪽을 향한 ㄷ자 철심 (날아가는 방향을 바라본다)
+function drawStaple(ctx) {
+  const o = PAL.outline;
+  rect(ctx, o, 0, 0, 9, 5);
+  rect(ctx, PAL.keyboard, 1, 1, 7, 1);
+  rect(ctx, PAL.keyboardDark, 1, 3, 7, 1);
+  rect(ctx, PAL.keyboard, 7, 1, 1, 3);
+  rect(ctx, o, 1, 2, 6, 1);
+}
+
 function drawDefault(ctx) {
   box(ctx, PAL.outline, PAL.paper, 0, 0, 6, 6);
   rect(ctx, PAL.paperDark, 3, 3, 2, 2);
@@ -34,6 +44,7 @@ function drawCorporateCard(ctx) {
 const PROJECTILES = {
   americano: { width: 8, height: 11, draw: drawAmericano },
   'corporate-card': { width: 12, height: 8, draw: drawCorporateCard },
+  staple: { width: 9, height: 5, draw: drawStaple },
 };
 
 export function projectileTexture(scene, id) {

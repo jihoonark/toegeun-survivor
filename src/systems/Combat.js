@@ -122,6 +122,7 @@ export default class Combat {
     if (!projectile.hit(enemy)) return;
 
     enemy.takeDamage(projectile.damage, projectile);
+    if (projectile.weapon.stun && enemy.active) enemy.stun?.(projectile.weapon.stun);
     this.scene.events.emit('enemy-hit', { enemy, damage: projectile.damage, x, y, vx, vy });
   }
 }

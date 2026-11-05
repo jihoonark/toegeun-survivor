@@ -173,6 +173,8 @@ export const CONFIG = {
     nameplateOffsetY: 38,
     // 한 번 뛰는 시간 중 공중에 떠 있는 비율. 나머지는 착지하며 찌그러진다
     hopAirRatio: 0.75,
+    // 스테이플러에 고정된 동안 몸 색 (곱해지는 색)
+    stunTint: 0x8f9ab8,
   },
 
   camera: {

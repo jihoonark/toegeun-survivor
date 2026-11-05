@@ -26,6 +26,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
     this.flashLeft = 0;
     this.knockLeft = 0;
+    this.stunLeft = 0;
 
     this.enableBody(true, x, y, true, true);
     this.body.setSize(def.bodyWidth, def.bodyHeight);
@@ -43,6 +44,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
   chase(target) {
     if (this.knockLeft > 0) return; // 밀려나는 동안은 쫓지 않는다
+    if (this.stunLeft > 0) {
+      this.body.velocity.set(0, 0); // 스테이플러에 고정된 동안은 제자리
+      return;
+    }
     this.scene.physics.moveToObject(this, target, this.def.speed);
   }
 
@@ -50,6 +55,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   flash(ms) {
     this.flashLeft = ms;
     this.visual.setTintFill(0xffffff);
+  }
+
+  // 고정: ms 동안 움직이지 않고, 점프도 멈추고, 색이 바랜다 (이어서 맞으면 더 긴 쪽으로)
+  stun(ms) {
+    this.stunLeft = Math.max(this.stunLeft, ms);
+    if (this.flashLeft <= 0) this.visual.setTint(CONFIG.enemy.stunTint);
   }
 
   // 넉백: (dx, dy) 방향으로 잠깐 밀려난다
@@ -80,6 +91,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.nameplate = null;
   }
 
+  // 하얀 깜빡임이 끝나면: 고정 중이면 바랜 색, 아니면 원래 색
+  restoreTint() {
+    if (this.stunLeft > 0) this.visual.setTint(CONFIG.enemy.stunTint);
+    else this.visual.clearTint();
+  }
+
   // 투사체가 노리는 곳: 바닥이 아니라 몸 한가운데
   getAimPoint() {
     return this.visual.getCenter();
@@ -91,13 +108,17 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     if (!this.active) return;
     if (this.flashLeft > 0) {
       this.flashLeft -= delta;
-      if (this.flashLeft <= 0) this.visual.clearTint();
+      if (this.flashLeft <= 0) this.restoreTint();
     }
     if (this.knockLeft > 0) this.knockLeft -= delta;
+    if (this.stunLeft > 0) {
+      this.stunLeft -= delta;
+      if (this.stunLeft <= 0 && this.flashLeft <= 0) this.restoreTint();
+    }
     const hop = this.def.hop;
     let lift = 0;
     let squash = 0;
-    if (hop) {
+    if (hop && this.stunLeft <= 0) {
       // 한 번 뛰는 시간 중 앞부분(hopAirRatio)은 공중, 나머지는 착지하며 찌그러진다
       this.hopTime = (this.hopTime + delta) % hop.duration;
       const t = this.hopTime / hop.duration;
