@@ -17,6 +17,8 @@ import { CONFIG } from '../config.js';
 //   lifetime     투사체가 사라지기까지 시간(ms)
 //   pierce       몇 마리를 더 뚫고 지나가는지 (0이면 첫 적에서 사라짐)
 //   spin         투사체 회전 속도(도/초)
+//   orient       true 면 날아가는 방향을 바라본다 (spin 대신)
+//   stun         맞은 몬스터를 이 시간(ms) 동안 그 자리에 고정한다 (없으면 0)
 //   levels       Lv2 부터 바뀌는 값. levels[0] 이 Lv2. { desc: 카드 설명, 바뀌는 필드: 값 }
 //                Lv1 은 위의 기본값이고, 레벨이 오르면 앞 레벨의 변경 위에 차례로 쌓인다
 //   starter      true 면 처음부터 들고 시작한다
@@ -46,6 +48,30 @@ export const WEAPONS = [
       { desc: '컵 3개, 한 마리를 뚫고 지나간다', count: 3, pierce: 1 },
     ],
     starter: true,
+    credit: null,
+  },
+  {
+    id: 'stapler',
+    name: '스테이플러',
+    description: '찍힌 업무는 잠깐 그 자리에 고정된다',
+    projectile: 'staple',
+    damage: 1,
+    cooldown: 950,
+    count: 1,
+    spread: 10,
+    speed: 280,
+    range: 170,
+    lifetime: 700,
+    pierce: 0,
+    spin: 0,
+    orient: true,
+    stun: 700,
+    levels: [
+      { desc: '더 오래 고정한다', stun: 1100 },
+      { desc: '두 발씩 찍는다', count: 2 },
+      { desc: '세 마리까지 뚫고 찍는다', pierce: 2 },
+      { desc: '빠르고 세게 찍는다', cooldown: 650, damage: 2 },
+    ],
     credit: null,
   },
 ];
