@@ -63,7 +63,7 @@ export const WEAPONS = [
     count: 1,
     spread: 32,
     speed: 240,
-    range: 140,
+    range: 170,
     lifetime: 2500,
     pierce: Infinity,
     spin: 720,
