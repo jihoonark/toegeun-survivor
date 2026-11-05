@@ -7,11 +7,16 @@ import Spawner from '../systems/Spawner.js';
 import Juice from '../systems/Juice.js';
 import DebugPanel from '../systems/DebugPanel.js';
 import Hud from '../systems/Hud.js';
+import Pickups from '../systems/Pickups.js';
+import Promotion from '../systems/Promotion.js';
 import Player from '../entities/Player.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 
 // 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
-const GAME_EVENTS = ['enemy-hit', 'enemy-killed', 'player-hit', 'shift-end', 'weapon-added'];
+const GAME_EVENTS = [
+  'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
+  'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted',
+];
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -29,9 +34,12 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.spawner.enemies;
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
+    this.pickups = new Pickups(this, this.player);
+    this.promotion = new Promotion(this, this.combat, this.player);
     this.setupShift();
-    // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림이 뜨게 한다
+    // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림과 무기 칸이 맞게 한다
     this.combat.addStarterWeapons();
+    this.promotion.emitChanged();
     if (import.meta.env.DEV) this.debugPanel = new DebugPanel(this);
 
     const lerp = CONFIG.camera.followLerp;
@@ -40,8 +48,15 @@ export default class GameScene extends Phaser.Scene {
     this.showControlsHint();
     // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
     this.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
+    // 승진 카드를 고르는 동안 누르던 키·조이스틱이 돌아와서도 눌린 채로 남지 않게
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      this.input.keyboard?.resetKeys();
+      this.controls.joystick.release();
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scene.stop('LevelUp');
       GAME_EVENTS.forEach((name) => this.events.removeAllListeners(name));
+      this.events.off(Phaser.Scenes.Events.RESUME);
       this.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
     });
   }
@@ -53,7 +68,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // 근무 시간: 멘탈, 시계, 처리한 업무 수, 칼퇴·야근 판정
-  //   장면 이벤트 'shift-end' { result: 'clear' | 'overtime', tasks, minutes }
+  //   장면 이벤트 'shift-end' { result: 'clear' | 'overtime', tasks, minutes, rank }
   setupShift() {
     this.hud = new Hud(this);
     this.elapsed = 0;
@@ -73,6 +88,14 @@ export default class GameScene extends Phaser.Scene {
       if (mental <= 0) this.endShift('overtime');
     });
     this.events.on('enemy-killed', () => this.hud.setTasks(++this.tasksDone));
+    this.events.on('player-healed', ({ mental }) => this.hud.setMental(mental, CONFIG.player.maxMental));
+
+    // 무기 칸과 승진 막대
+    const refreshWeapons = () => this.hud.setWeapons(this.combat.weapons);
+    this.events.on('weapon-added', refreshWeapons);
+    this.events.on('weapon-upgraded', refreshWeapons);
+    this.events.on('xp-changed', (state) => this.hud.setXp(state));
+    this.events.on('xp-gained', () => this.juice.sfx.play('pickup'));
   }
 
   // 1화는 실제 1분 = 게임 1시간
@@ -95,7 +118,7 @@ export default class GameScene extends Phaser.Scene {
     this.ended = true;
     this.physics.world.pause();
     this.player.anims.pause();
-    const summary = { result, tasks: this.tasksDone, minutes: this.shiftMinutes() };
+    const summary = { result, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
     this.events.emit('shift-end', summary);
 
     // 그 자리에서 결과를 크게 한 번 보여 주고 결과 화면으로 넘어간다
@@ -129,7 +152,7 @@ export default class GameScene extends Phaser.Scene {
   showControlsHint() {
     const { width, height } = CONFIG.screen;
     const { ui } = CONFIG;
-    const hint = addText(this, width / 2, height - ui.title.creditBottom, '방향키·WASD 또는 화면을 눌러 끌면 이동')
+    const hint = addText(this, width / 2, height - CONFIG.hud.controlsHintBottom, '방향키·WASD 또는 화면을 눌러 끌면 이동')
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
     this.tweens.add({ targets: hint, alpha: 0, delay: ui.hintDuration, duration: ui.hintFade, onComplete: () => hint.destroy() });
@@ -144,5 +167,6 @@ export default class GameScene extends Phaser.Scene {
     this.spawner.update(delta);
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
+    this.pickups.update(delta);
   }
 }

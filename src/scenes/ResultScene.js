@@ -6,13 +6,13 @@ import { formatClock } from '../systems/Hud.js';
 import { HERO } from '../art/hero.js';
 
 // 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간, 다시하기
-// 받는 값: { result: 'clear' | 'overtime', tasks, minutes }
+// 받는 값: { result: 'clear' | 'overtime', tasks, minutes, rank }
 export default class ResultScene extends Phaser.Scene {
   constructor() {
     super('Result');
   }
 
-  create({ result, tasks, minutes }) {
+  create({ result, tasks, minutes, rank }) {
     const { width, height } = CONFIG.screen;
     const { ui, colors } = CONFIG;
     const r = CONFIG.result;
@@ -27,7 +27,7 @@ export default class ResultScene extends Phaser.Scene {
     });
 
     const statsY = height * r.statsY;
-    addText(this, width / 2, statsY, `처리한 업무 ${tasks}건`);
+    addText(this, width / 2, statsY, `처리한 업무 ${tasks}건 · 최종 직급 ${rank}`);
     const timeLine = clear ? `퇴근 시각 ${formatClock(minutes)}` : `${formatClock(minutes)}까지 버팀`;
     addText(this, width / 2, statsY + r.statsGap, timeLine);
 

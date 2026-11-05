@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
-import { WEAPONS } from '../data/weapons.js';
+import { WEAPONS, statsAt, maxLevelOf } from '../data/weapons.js';
 import Projectile from '../entities/Projectile.js';
 
 // 자동 공격: 무기마다 쿨다운이 차면 사거리 안의 가장 가까운 적에게 던진다
@@ -12,7 +12,10 @@ import Projectile from '../entities/Projectile.js';
 //
 // 장면 이벤트 (타격감·점수에서 쓴다)
 //   'enemy-hit'     { enemy, damage, x, y, vx, vy }
-//   'weapon-added'  { weapon }   무기를 얻었을 때 (credit 알림에서 쓴다)
+//   'weapon-added'     { weapon }          무기를 얻었을 때 (credit 알림, 무기 칸에서 쓴다)
+//   'weapon-upgraded'  { weapon, level }   무기 레벨이 올랐을 때
+//
+// 무기 칸 하나 = { def(무기 데이터), level, stats(그 레벨의 수치), cooldownLeft }
 export default class Combat {
   constructor(scene, player, enemies) {
     this.scene = scene;
@@ -33,8 +36,17 @@ export default class Combat {
   }
 
   addWeapon(def) {
-    this.weapons.push({ def, cooldownLeft: 0 });
+    if (this.weapons.length >= CONFIG.weapons.slots || this.weapons.some((s) => s.def.id === def.id)) return;
+    this.weapons.push({ def, level: 1, stats: statsAt(def, 1), cooldownLeft: 0 });
     this.scene.events.emit('weapon-added', { weapon: def });
+  }
+
+  upgradeWeapon(id) {
+    const slot = this.weapons.find((s) => s.def.id === id);
+    if (!slot || slot.level >= maxLevelOf(slot.def)) return;
+    slot.level++;
+    slot.stats = statsAt(slot.def, slot.level);
+    this.scene.events.emit('weapon-upgraded', { weapon: slot.def, level: slot.level });
   }
 
   nearestEnemy(range) {
@@ -58,26 +70,33 @@ export default class Combat {
       slot.cooldownLeft -= delta * attackSpeedMultiplier;
       if (slot.cooldownLeft > 0) continue;
 
-      const target = this.nearestEnemy(slot.def.range);
+      const w = slot.stats;
+      const target = this.nearestEnemy(w.range);
       if (!target) {
         // 적이 없으면 쿨다운이 찬 상태로 기다렸다가 나타나는 즉시 던진다
         slot.cooldownLeft = 0;
         continue;
       }
-      this.fire(slot.def, target, slot.def.damage * damageMultiplier);
-      slot.cooldownLeft += slot.def.cooldown;
+      this.fire(w, target, w.damage * damageMultiplier);
+      slot.cooldownLeft += w.cooldown;
     }
   }
 
   fire(weapon, target, damage) {
-    const projectile = this.projectiles.get();
-    if (!projectile) return; // 풀이 가득 찼으면 이번 발사는 건너뛴다
+    const first = this.projectiles.get();
+    if (!first) return; // 풀이 가득 찼으면 이번 발사는 건너뛴다
 
     const x = this.player.x;
     const y = this.player.y - CONFIG.player.handHeight;
     const center = target.getAimPoint ? target.getAimPoint() : target.getCenter();
     const angle = Phaser.Math.Angle.Between(x, y, center.x, center.y);
-    projectile.fire(weapon, x, y, angle, damage);
+    // 여러 개면 가운데가 적을 향하도록 spread 각도만큼 벌려 던진다
+    for (let i = 0; i < weapon.count; i++) {
+      const projectile = i === 0 ? first : this.projectiles.get();
+      if (!projectile) return;
+      const offset = Phaser.Math.DegToRad((i - (weapon.count - 1) / 2) * weapon.spread);
+      projectile.fire(weapon, x, y, angle + offset, damage);
+    }
   }
 
   checkHits() {

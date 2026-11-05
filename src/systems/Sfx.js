@@ -13,6 +13,7 @@ const SOUNDS = {
     { wave: 'square', from: 659, to: 659, duration: 0.08, gain: 0.3, delay: 0.08 },
     { wave: 'square', from: 784, to: 784, duration: 0.16, gain: 0.3, delay: 0.16 },
   ],
+  pickup: [{ wave: 'triangle', from: 880, to: 1320, duration: 0.05, gain: 0.18 }],
   hurt: [{ wave: 'sawtooth', from: 240, to: 80, duration: 0.2, gain: 0.45 }],
 };
 

@@ -56,6 +56,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     return true;
   }
 
+  // 멘탈 회복 (승진 카드 등)
+  heal(amount) {
+    this.mental = Math.min(CONFIG.player.maxMental, this.mental + amount);
+    this.scene.events.emit('player-healed', { player: this, amount, mental: this.mental });
+  }
+
   // 피격 깜빡임: 하얗게
   flash(ms) {
     this.flashLeft = ms;

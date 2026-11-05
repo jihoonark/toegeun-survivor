@@ -52,6 +52,49 @@ export const CONFIG = {
     hurtBlinkAlpha: 0.3,
   },
 
+  // 승진(레벨업): 몬스터가 떨어뜨린 결재 서류(경험치)를 모으면 직급이 오른다 (GAME_SPEC.md 12장)
+  progression: {
+    ranks: ['인턴', '사원', '주임', '대리', '과장', '차장', '부장', '이사', '상무', '전무', '부사장', '사장', '회장'],
+    // n번째 승진에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
+    firstNeed: 5,
+    growth: 1.3,
+  },
+
+  // 결재 서류 줍기
+  pickup: {
+    // 이 거리(px) 안에 들어오면 주인공 쪽으로 빨려 온다
+    magnetRadius: 56,
+    // 빨려 오는 가속도(px/초²)와 최고 속도(px/초)
+    pullAccel: 900,
+    pullMaxSpeed: 300,
+    // 이 거리 안이면 주운 것
+    collectRadius: 8,
+    // 처치한 자리에서 살짝 흩어지는 거리(px)
+    scatter: 6,
+    // 동시에 바닥에 있을 수 있는 서류 수
+    poolSize: 200,
+  },
+
+  // 무기 칸과 레벨
+  weapons: {
+    slots: 4,
+    maxLevel: 5,
+  },
+
+  // 승진 카드 화면
+  levelUp: {
+    cardCount: 3,
+    // 화면이 뜨고 이 시간(ms) 동안은 누르지 않는다. 이동하던 손가락에 카드가 눌리지 않게
+    inputDelay: 350,
+    dimAlpha: 0.7,
+    titleY: 0.14,
+    cardsY: 0.62,
+    card: { width: 128, height: 136, gap: 14 },
+    // 카드 안 줄 위치: 카드 위쪽에서 떨어진 거리(px). credit 은 카드 아래쪽에서 떨어진 거리
+    cardRows: { badge: 12, icon: 38, name: 66, desc: 92, credit: 12 },
+    iconScale: 3,
+  },
+
   // 무기별 수치는 src/data/weapons.js, 여기는 전체 배율
   combat: {
     attackSpeedMultiplier: 1,
@@ -85,6 +128,12 @@ export const CONFIG = {
     // 멘탈 비율이 이 아래로 내려가면 중간·낮음 색
     mentalMid: 0.6,
     mentalLow: 0.3,
+    // 멘탈 바 아래 무기 칸 (아이콘 + 레벨)
+    weaponSlots: { size: 20, gap: 3, offsetY: 6, iconScale: 1.4 },
+    // 화면 아래 승진 막대
+    // 게임 시작 때 조작 안내가 화면 아래에서 떨어진 거리(px). 승진 막대 위에 뜨게
+    controlsHintBottom: 30,
+    xpBar: { width: 240, height: 5, bottom: 10, labelGap: 6, fill: 0x7ec8e3, back: 0x3a3048, outline: 0x1a1420 },
     // 시청자 무기를 얻었을 때 시계 아래에 뜨는 "○○님의 [무기]" 알림
     creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
   },
