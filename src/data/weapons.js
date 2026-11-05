@@ -22,6 +22,10 @@ import { CONFIG } from '../config.js';
 //   catchRadius  돌아온 투사체를 회수하는 손 주변 거리(px). lifetime은 왕복 전체의 제한 시간
 //   orient       true 면 날아가는 방향을 바라본다 (spin 대신)
 //   stun         맞은 몬스터를 이 시간(ms) 동안 그 자리에 고정한다 (없으면 0)
+//   stunMark     true 면 고정된 동안 몬스터 몸에 투사체 그림이 박혀 보인다
+//   hitFx        맞힐 때 효과 { sound: Sfx 소리 이름, particle: 파편 키(art/effects.js hitFrames), particleCount,
+//                text: 맞은 자리에 뜨는 짧은 글자, flashColor: 맞은 몬스터가 번쩍이는 색 }
+//   trail        있으면 투사체 뒤에 이 간격(ms)마다 잔상을 남긴다
 //   levels       Lv2 부터 바뀌는 값. levels[0] 이 Lv2. { desc: 카드 설명, 바뀌는 필드: 값 }
 //                Lv1 은 위의 기본값이고, 레벨이 오르면 앞 레벨의 변경 위에 차례로 쌓인다
 //   starter      true 면 처음부터 들고 시작한다
@@ -44,6 +48,7 @@ export const WEAPONS = [
     lifetime: 1200,
     pierce: 0,
     spin: 540,
+    hitFx: { sound: 'splash', particle: 'coffee', flashColor: 0x8a5a33 },
     levels: [
       { desc: '컵을 2개씩 던진다', count: 2 },
       { desc: '더 빨리 던진다', cooldown: 540 },
@@ -70,6 +75,8 @@ export const WEAPONS = [
     returnAfter: 500,
     returnSpeed: 300,
     catchRadius: 8,
+    hitFx: { sound: 'beep', particle: 'receipt', text: '승인' },
+    trail: 45,
     levels: [
       { desc: '카드 2장으로 넓게 긁는다', count: 2 },
       { desc: '더 자주 긁는다', cooldown: 900 },
@@ -95,6 +102,8 @@ export const WEAPONS = [
     spin: 0,
     orient: true,
     stun: 700,
+    stunMark: true,
+    hitFx: { sound: 'staple', particle: 'spark' },
     levels: [
       { desc: '더 오래 고정한다', stun: 1100 },
       { desc: '두 발씩 찍는다', count: 2 },

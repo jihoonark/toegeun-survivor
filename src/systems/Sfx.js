@@ -18,6 +18,16 @@ const SOUNDS = {
     { wave: 'square', from: 660, to: 660, duration: 0.12, gain: 0.3, delay: 0.14 },
     { wave: 'square', from: 880, to: 880, duration: 0.12, gain: 0.3, delay: 0.28 },
   ],
+  // 무기별 맞힐 때 소리 (무기 데이터 hitFx.sound)
+  splash: [
+    { wave: 'noise', duration: 0.07, gain: 0.3 },
+    { wave: 'sine', from: 520, to: 180, duration: 0.08, gain: 0.25 },
+  ],
+  staple: [
+    { wave: 'square', from: 1800, to: 900, duration: 0.025, gain: 0.25 },
+    { wave: 'noise', duration: 0.03, gain: 0.25, delay: 0.02 },
+  ],
+  beep: [{ wave: 'sine', from: 1480, to: 1480, duration: 0.07, gain: 0.22 }],
   pickup: [{ wave: 'triangle', from: 880, to: 1320, duration: 0.05, gain: 0.18 }],
   hurt: [{ wave: 'sawtooth', from: 240, to: 80, duration: 0.2, gain: 0.45 }],
 };

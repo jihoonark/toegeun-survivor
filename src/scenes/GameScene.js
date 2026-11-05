@@ -28,6 +28,7 @@ export default class GameScene extends Phaser.Scene {
 
     const { worldWidth, worldHeight } = CONFIG.office;
     this.player = new Player(this, worldWidth / 2, worldHeight / 2);
+    this.physics.add.collider(this.player, this.furniture);
     this.controls = new Controls(this);
 
     this.spawner = new Spawner(this);
@@ -148,6 +149,16 @@ export default class GameScene extends Phaser.Scene {
       if (!key) throw new Error(`알 수 없는 가구 종류: ${type}`);
       for (const [x, y] of positions) this.add.image(x, y, key).setOrigin(0.5, 1).setDepth(y);
     }
+    // 주인공은 가구 발밑을 지나갈 수 없다 (구석에 몰리면 위험해진다)
+    this.furniture = this.physics.add.staticGroup();
+    for (const { type, positions } of furniture) {
+      const block = CONFIG.furnitureBlock[type];
+      if (!block) continue;
+      for (const [x, y] of positions) {
+        const zone = this.add.zone(x, y - block.height / 2, block.width, block.height);
+        this.furniture.add(zone);
+      }
+    }
 
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
@@ -172,5 +183,6 @@ export default class GameScene extends Phaser.Scene {
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
     this.pickups.update(delta);
+    this.juice.trails(this.combat.projectiles, delta);
   }
 }

@@ -103,7 +103,8 @@ export const ENEMIES = [
     labelTime: 1200,
     art: 'deadline',
     hp: 4,
-    speed: 88,
+    // 주인공(90)보다 빨라서 도망으로는 못 피한다
+    speed: 108,
     contactDamage: 2,
     xp: 3,
     spawnWeight: 1.2,

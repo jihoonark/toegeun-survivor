@@ -3,7 +3,8 @@ import { CONFIG } from '../config.js';
 import { WEAPONS, maxLevelOf, levelDesc } from '../data/weapons.js';
 import { UPGRADES } from '../data/upgrades.js';
 
-// 승진(레벨업): 결재 서류가 승진 막대를 채우면 게임을 멈추고 카드 3장(LevelUp 장면)을 보여 준다
+// 레벨업: 결재 서류가 막대를 채우면 호봉이 오르고(호봉 UP!), 호봉이 다 차면 직급이 오른다(승진!)
+// 그때마다 게임을 멈추고 카드 3장(LevelUp 장면)을 보여 준다
 // 카드는 새 무기와 가진 무기 강화가 섞여 나온다. 무기 칸이 다 차면 강화만 나오고,
 // 고를 것이 하나도 없거나 멘탈이 많이 깎였으면 upgrades.js 의 fallback 카드(멘탈 회복 등)가 나온다
 //
@@ -29,9 +30,23 @@ export default class Promotion {
     return Math.round(firstNeed * growth ** (level - 1));
   }
 
+  // level → { rank: '사원', step: 3 } (사원 3호봉)
+  static rankOf(level) {
+    const { ranks, stepsPerRank, maxRankInRun } = CONFIG.progression;
+    const index = Math.min(Math.floor((level - 1) / stepsPerRank), ranks.indexOf(maxRankInRun));
+    return { rank: ranks[index], step: level - index * stepsPerRank };
+  }
+
   static rankName(level) {
-    const { ranks } = CONFIG.progression;
-    return level <= ranks.length ? ranks[level - 1] : `${ranks[ranks.length - 1]} ${level - ranks.length + 1}년차`;
+    const { rank, step } = Promotion.rankOf(level);
+    return `${rank} ${step}호봉`;
+  }
+
+  // 다음 레벨에서 직급이 바뀌면 새 직급 이름, 아니면 "N호봉"
+  static nextLabel(level) {
+    const now = Promotion.rankOf(level);
+    const next = Promotion.rankOf(level + 1);
+    return next.rank !== now.rank ? next.rank : `${next.step}호봉`;
   }
 
   get rank() {
@@ -56,7 +71,7 @@ export default class Promotion {
       need: this.need,
       level: this.level,
       rank: this.rank,
-      nextRank: Promotion.rankName(this.level + 1),
+      nextRank: Promotion.nextLabel(this.level),
     });
   }
 
@@ -65,9 +80,11 @@ export default class Promotion {
     const level = this.level - this.pending + 1;
     this.choosing = true;
     this.scene.scene.pause();
+    const promoted = Promotion.rankOf(level).rank !== Promotion.rankOf(level - 1).rank;
     this.scene.scene.launch('LevelUp', {
-      fromRank: Promotion.rankName(level - 1),
-      toRank: Promotion.rankName(level),
+      promoted,
+      fromRank: promoted ? Promotion.rankOf(level - 1).rank : Promotion.rankName(level - 1),
+      toRank: promoted ? Promotion.rankOf(level).rank : Promotion.rankName(level),
       choices: this.choices(),
       onPick: (choice) => this.pick(choice),
     });

@@ -35,6 +35,12 @@ export const CONFIG = {
     ],
   },
 
+  // 가구 중 주인공이 지나갈 수 없는 발밑 부분(px). 몬스터와 투사체는 그냥 지나간다
+  furnitureBlock: {
+    desk: { width: 44, height: 12 },
+    plant: { width: 12, height: 6 },
+  },
+
   player: {
     speed: 90,
     walkFrameRate: 8,
@@ -57,7 +63,11 @@ export const CONFIG = {
     // 멘탈이 이 비율 이하면 승진 카드에 복지 카드(멘탈 회복)도 섞여 나온다
     welfareBelow: 0.5,
     ranks: ['인턴', '사원', '주임', '대리', '과장', '차장', '부장', '이사', '상무', '전무', '부사장', '사장', '회장'],
-    // n번째 승진에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
+    // 레벨업 한 번 = 호봉 하나. 이만큼 호봉이 차면 다음 직급으로 승진한다
+    stepsPerRank: 4,
+    // 한 판 안에서 오를 수 있는 가장 높은 직급 (그 뒤로는 호봉만 오른다). 높은 직급은 층 보스(부장 등)와 겹치지 않게 남겨 둔다
+    maxRankInRun: '대리',
+    // n번째 레벨업에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
     firstNeed: 4,
     growth: 1.25,
   },
@@ -172,17 +182,23 @@ export const CONFIG = {
     ],
     // 전체 간격 배율 (조절 패널용. 작을수록 많이 나온다)
     intervalMultiplier: 1,
-    // "전체 회신" 폭탄: 그 시각에 주인공을 빙 둘러 한꺼번에 나온다
-    bombs: [
-      { at: 30, count: 8 },
-      { at: 50, count: 16 },
+    // 몰려오는 패턴: 그 시각(17:00 부터 분)에 한꺼번에 나온다
+    //   ring: "전체 회신 폭탄!" 주인공을 빙 둘러 사방에서 / line: 한쪽에서 줄지어 (gap: 줄 간격 px)
+    //   enemy: 나올 몬스터 id (없으면 그 시각에 나올 수 있는 몬스터 중에서 고른다)
+    waves: [
+      { at: 12, type: 'line', count: 8, gap: 16, enemy: 'email' },
+      { at: 22, type: 'line', count: 10, gap: 16, enemy: 'email' },
+      { at: 30, type: 'ring', count: 8 },
+      { at: 38, type: 'line', count: 12, gap: 14, enemy: 'email' },
+      { at: 46, type: 'line', count: 14, gap: 14, enemy: 'email' },
+      { at: 50, type: 'ring', count: 16 },
     ],
     // 쪼개져 나온 몬스터가 튕겨 나가는 세기(px/초)와 시간(ms)
     splitPop: { strength: 140, duration: 160 },
     // 화면 밖 얼마나 떨어진 곳에서 나오는지(px)
     offscreenMargin: 24,
     // 동시에 살아 있을 수 있는 최대 수
-    maxAlive: 90,
+    maxAlive: 60,
     // 첫 적이 나오기까지 기다리는 시간(ms)
     firstDelay: 800,
   },
@@ -196,8 +212,9 @@ export const CONFIG = {
     labelFade: 300,
     // 한 번 뛰는 시간 중 공중에 떠 있는 비율. 나머지는 착지하며 찌그러진다
     hopAirRatio: 0.75,
-    // 스테이플러에 고정된 동안 몸 색 (곱해지는 색)
+    // 스테이플러에 고정된 동안 몸 색 (곱해지는 색)과 몸에 박힌 철심 위치(가운데에서 x px)·기울기(도)
     stunTint: 0x8f9ab8,
+    stunMark: { offsetX: 5, angle: -25 },
   },
 
   camera: {
@@ -207,8 +224,8 @@ export const CONFIG = {
 
   // 타격감 (GAME_SPEC.md 6장)
   juice: {
-    // 히트스톱: 맞는 순간 게임이 잠깐 멈춤(ms). 처치할 때는 배율만큼 더 길게
-    hitStop: { duration: 35, killMultiplier: 1.6 },
+    // 히트스톱: 처치하는 순간 게임이 잠깐 멈춤(ms). 한 번 걸면 cooldown(ms) 동안은 다시 걸지 않는다
+    hitStop: { duration: 45, cooldown: 350 },
     // 화면 흔들림: strength 는 전체 배율, intensity 는 화면 크기 대비 비율
     shake: {
       strength: 1,
@@ -220,7 +237,12 @@ export const CONFIG = {
     // 넉백: 맞은 적이 밀려나는 속도(px/초)와 시간(ms)
     knockback: { strength: 180, duration: 110 },
     // 데미지 숫자: 튀어오르는 높이(px)와 사라지는 시간(ms)
-    damageNumber: { color: '#ffd23f', size: 12, stroke: 2, rise: 14, duration: 550 },
+    // poolSize: 미리 만들어 돌려 쓰는 글자 수. popColor/popOffsetY: 무기별 짧은 글자("승인" 등) 색과 높이
+    damageNumber: { color: '#ffd23f', size: 12, stroke: 2, rise: 14, duration: 550, poolSize: 40, popColor: '#7ec8e3', popOffsetY: 8 },
+    // 무기별 맞힐 때 파편 (무기 데이터 hitFx.particle)
+    hitParticles: { count: 5, speedMin: 30, speedMax: 90, lifespan: 320, gravity: 260 },
+    // 투사체 잔상 (무기 데이터 trail)
+    trail: { speedMin: 0, speedMax: 0, lifespan: 220, gravity: 0, alpha: 0.45, rotate: false },
     // 처치 시 종이 조각
     particles: { count: 9, speedMin: 40, speedMax: 120, lifespan: 500, gravity: 220 },
   },

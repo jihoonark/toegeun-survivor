@@ -7,17 +7,17 @@ import { ENEMY_ART } from '../art/enemies.js';
 // 적 등장: 카메라 화면 바로 바깥에서 몬스터를 꺼낸다
 // - 시간대별 난이도(config spawn.stages): 시간이 갈수록 자주, 여러 마리씩, 튼튼하고 빠르게
 // - 몬스터의 appearAt 이 지나야 그 몬스터가 나온다
-// - "전체 회신" 폭탄(config spawn.bombs): 정해진 시각에 주인공을 빙 둘러 한꺼번에
+// - 몰려오는 패턴(config spawn.waves): 정해진 시각에 "전체 회신 폭탄"(빙 둘러) 또는 한쪽에서 줄지어
 // - splitInto 가 있는 몬스터는 처치하면 다음 프레임에 그 자리에서 쪼개져 나온다
 //
 // 장면 이벤트
-//   'mail-bomb'  { count }   전체 회신 폭탄이 터질 때 (경고 글자에서 쓴다)
+//   'mail-bomb'  { count }   전체 회신 폭탄(ring)이 터질 때 (경고 글자에서 쓴다)
 export default class Spawner {
   constructor(scene) {
     this.scene = scene;
     this.timeLeft = CONFIG.spawn.firstDelay;
     this.enemies = scene.physics.add.group({ classType: Enemy, maxSize: CONFIG.spawn.maxAlive });
-    this.bombsDone = new Set();
+    this.wavesDone = new Set();
     this.splits = [];
 
     if (CONFIG.enemy.separate) scene.physics.add.collider(this.enemies, this.enemies);
@@ -44,11 +44,11 @@ export default class Spawner {
     this.boost = level.boost;
     this.releaseSplits();
 
-    for (const bomb of CONFIG.spawn.bombs) {
-      if (minutes >= bomb.at && !this.bombsDone.has(bomb)) {
-        this.bombsDone.add(bomb);
-        this.mailBomb(bomb.count, minutes);
-      }
+    for (const wave of CONFIG.spawn.waves) {
+      if (minutes < wave.at || this.wavesDone.has(wave)) continue;
+      this.wavesDone.add(wave);
+      if (wave.type === 'ring') this.mailBomb(wave.count, minutes);
+      else this.line(wave, minutes);
     }
 
     this.timeLeft -= delta;
@@ -106,6 +106,26 @@ export default class Spawner {
       this.spawnAt(this.pickEnemy(minutes), x, y);
     }
     this.scene.events.emit('mail-bomb', { count });
+  }
+
+  // 한쪽 변 바깥에서 줄지어 나온다. 변은 사무실 안쪽으로 열린 곳 중에서 고른다
+  line({ count, gap, enemy }, minutes) {
+    const view = this.scene.cameras.main.worldView;
+    const m = CONFIG.spawn.offscreenMargin;
+    const { worldWidth: W, worldHeight: H } = CONFIG.office;
+    const length = (count - 1) * gap;
+    const sides = [];
+    if (view.left - m >= 0) sides.push({ x: view.left - m, y: view.centerY, dx: 0, dy: 1 });
+    if (view.right + m <= W) sides.push({ x: view.right + m, y: view.centerY, dx: 0, dy: 1 });
+    if (view.top - m >= 0) sides.push({ x: view.centerX, y: view.top - m, dx: 1, dy: 0 });
+    if (view.bottom + m + ENEMY_ART.size <= H) sides.push({ x: view.centerX, y: view.bottom + m + ENEMY_ART.size, dx: 1, dy: 0 });
+    const side = Phaser.Utils.Array.GetRandom(sides);
+    if (!side) return;
+    const def = enemy ? getEnemy(enemy) : this.pickEnemy(minutes);
+    for (let i = 0; i < count; i++) {
+      const t = i * gap - length / 2;
+      this.spawnAt(def, Phaser.Math.Clamp(side.x + side.dx * t, 0, W), Phaser.Math.Clamp(side.y + side.dy * t, 0, H));
+    }
   }
 
   // 화면 밖이면서 사무실 안인 곳. 화면이 사무실 끝에 붙어 있으면 그쪽 변은 빼고 고른다

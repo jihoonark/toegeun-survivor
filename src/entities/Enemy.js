@@ -60,15 +60,21 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   }
 
   // 피격 깜빡임: 몸을 하얗게
-  flash(ms) {
+  // color 가 있으면 그 색으로 (아메리카노는 커피색)
+  flash(ms, color = 0xffffff) {
     this.flashLeft = ms;
-    this.visual.setTintFill(0xffffff);
+    this.visual.setTintFill(color);
   }
 
   // 고정: ms 동안 움직이지 않고, 점프도 멈추고, 색이 바랜다 (이어서 맞으면 더 긴 쪽으로)
-  stun(ms) {
+  // markTexture 가 있으면 고정된 동안 몸에 그 그림(스테이플러 철심)이 박혀 보인다
+  stun(ms, markTexture) {
     this.stunLeft = Math.max(this.stunLeft, ms);
     if (this.flashLeft <= 0) this.visual.setTint(CONFIG.enemy.stunTint);
+    if (markTexture) {
+      this.mark ??= this.scene.add.image(0, 0, markTexture);
+      this.mark.setTexture(markTexture).setAngle(CONFIG.enemy.stunMark.angle).setVisible(true);
+    }
   }
 
   // 넉백: (dx, dy) 방향으로 잠깐 밀려난다
@@ -94,6 +100,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
   remove() {
     this.disableBody(true, true);
+    this.mark?.setVisible(false);
     this.visual.setActive(false).setVisible(false);
     if (this.nameplate) this.scene.tweens.killTweensOf(this.nameplate);
     this.nameplate?.destroy();
@@ -122,7 +129,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     if (this.knockLeft > 0) this.knockLeft -= delta;
     if (this.stunLeft > 0) {
       this.stunLeft -= delta;
-      if (this.stunLeft <= 0 && this.flashLeft <= 0) this.restoreTint();
+      if (this.stunLeft <= 0) {
+        this.mark?.setVisible(false);
+        if (this.flashLeft <= 0) this.restoreTint();
+      }
     }
     const hop = this.def.hop;
     let lift = 0;
@@ -139,6 +149,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     const s = this.baseScale;
     this.visual.setPosition(this.x, this.y - lift).setScale(s * (1 + squash), s * (1 - squash)).setDepth(this.y);
     this.setDepth(this.y - 1);
+    if (this.mark?.visible) {
+      const c = this.visual.getCenter();
+      this.mark.setPosition(c.x + CONFIG.enemy.stunMark.offsetX * s, c.y).setDepth(this.y + 1);
+    }
     this.nameplate?.setPosition(this.x, this.y - lift - CONFIG.enemy.nameplateOffsetY * s).setDepth(CONFIG.depth.flying);
   }
 }

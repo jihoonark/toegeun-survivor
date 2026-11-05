@@ -11,7 +11,7 @@ import Projectile from '../entities/Projectile.js';
 // 반지름은 적 데이터의 hitRadius, 없으면 오브젝트 크기의 절반
 //
 // 장면 이벤트 (타격감·점수에서 쓴다)
-//   'enemy-hit'     { enemy, damage, x, y, vx, vy }
+//   'enemy-hit'     { enemy, damage, x, y, vx, vy, weapon }
 //   'weapon-added'     { weapon }          무기를 얻었을 때 (credit 알림, 무기 칸에서 쓴다)
 //   'weapon-upgraded'  { weapon, level }   무기 레벨이 올랐을 때
 //
@@ -122,7 +122,8 @@ export default class Combat {
     if (!projectile.hit(enemy)) return;
 
     enemy.takeDamage(projectile.damage, projectile);
-    if (projectile.weapon.stun && enemy.active) enemy.stun?.(projectile.weapon.stun);
-    this.scene.events.emit('enemy-hit', { enemy, damage: projectile.damage, x, y, vx, vy });
+    const w = projectile.weapon;
+    if (w.stun && enemy.active) enemy.stun?.(w.stun, w.stunMark ? projectile.texture.key : null);
+    this.scene.events.emit('enemy-hit', { enemy, damage: projectile.damage, x, y, vx, vy, weapon: w });
   }
 }

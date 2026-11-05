@@ -7,7 +7,7 @@ import { projectileTexture } from '../art/projectiles.js';
 const toColor = (hex) => Phaser.Display.Color.HexStringToColor(hex).color;
 
 // 승진 화면: 게임 위에 겹쳐 뜨고, 카드 3장 중 하나를 고르면 닫힌다 (Promotion 이 띄운다)
-// 받는 값: { fromRank, toRank, choices, onPick }
+// 받는 값: { promoted(직급이 바뀌었나), fromRank, toRank, choices, onPick }
 //   choice = { type: 'new' | 'upgrade', weapon, level, desc } 또는 { type: 'upgrade-item', item, desc }
 // 카드는 마우스·터치로 누르거나 1·2·3 키로 고른다
 export default class LevelUpScene extends Phaser.Scene {
@@ -15,7 +15,7 @@ export default class LevelUpScene extends Phaser.Scene {
     super('LevelUp');
   }
 
-  create({ fromRank, toRank, choices, onPick }) {
+  create({ promoted, fromRank, toRank, choices, onPick }) {
     const { width, height } = CONFIG.screen;
     const L = CONFIG.levelUp;
     const { colors, ui } = CONFIG;
@@ -25,7 +25,7 @@ export default class LevelUpScene extends Phaser.Scene {
     this.ready = false;
 
     this.add.rectangle(0, 0, width, height, toColor(colors.outline), L.dimAlpha).setOrigin(0);
-    addText(this, width / 2, height * L.titleY, '승진!', { size: ui.titleFontSize, color: colors.accent });
+    addText(this, width / 2, height * L.titleY, promoted ? '승진!' : '호봉 UP!', { size: ui.titleFontSize, color: colors.accent });
     addText(this, width / 2, height * L.titleY + ui.titleFontSize * 0.9, `${fromRank} → ${toRank}`, { color: colors.text });
 
     const { width: cw, height: ch, gap } = L.card;
