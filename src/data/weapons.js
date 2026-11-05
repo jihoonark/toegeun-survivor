@@ -15,8 +15,11 @@ import { CONFIG } from '../config.js';
 //   speed        투사체 속도(px/초)
 //   range        이 거리 안의 가장 가까운 적을 노린다(px)
 //   lifetime     투사체가 사라지기까지 시간(ms)
-//   pierce       몇 마리를 더 뚫고 지나가는지 (0이면 첫 적에서 사라짐)
+//   pierce       몇 마리를 더 뚫고 지나가는지 (0이면 첫 적에서 사라짐, Infinity면 제한 없음)
 //   spin         투사체 회전 속도(도/초)
+//   returnAfter  지정하면 이 시간(ms) 뒤 발사한 주인공을 향해 돌아온다. 왕복 각각 한 번씩 명중
+//   returnSpeed  돌아올 때 속도(px/초). 돌아서는 순간 관통 횟수도 새로 센다
+//   catchRadius  돌아온 투사체를 회수하는 손 주변 거리(px). lifetime은 왕복 전체의 제한 시간
 //   levels       Lv2 부터 바뀌는 값. levels[0] 이 Lv2. { desc: 카드 설명, 바뀌는 필드: 값 }
 //                Lv1 은 위의 기본값이고, 레벨이 오르면 앞 레벨의 변경 위에 차례로 쌓인다
 //   starter      true 면 처음부터 들고 시작한다
@@ -46,6 +49,32 @@ export const WEAPONS = [
       { desc: '컵 3개, 한 마리를 뚫고 지나간다', count: 3, pierce: 1 },
     ],
     starter: true,
+    credit: null,
+  },
+  {
+    id: 'corporate-card',
+    name: '법인카드',
+    description: '업무를 관통하고 돌아오는 카드',
+    projectile: 'corporate-card',
+    damage: 1,
+    cooldown: 1250,
+    count: 1,
+    spread: 32,
+    speed: 240,
+    range: 140,
+    lifetime: 2500,
+    pierce: Infinity,
+    spin: 720,
+    returnAfter: 500,
+    returnSpeed: 300,
+    catchRadius: 8,
+    levels: [
+      { desc: '카드 2장으로 넓게 긁는다', count: 2 },
+      { desc: '더 자주 긁는다', cooldown: 900 },
+      { desc: '왕복 각각 피해 2', damage: 2 },
+      { desc: '카드 3장으로 부채꼴 관통', count: 3 },
+    ],
+    starter: false,
     credit: null,
   },
 ];

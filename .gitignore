@@ -18,6 +18,8 @@ bot/logs/
 # 빌드/의존성
 node_modules/
 dist/
+# 로컬 브라우저 검사 캐시·프로필·화면 캡처
+.qa/
 *.log
 .DS_Store
 Thumbs.db

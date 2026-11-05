@@ -21,8 +21,19 @@ function drawDefault(ctx) {
   rect(ctx, PAL.paperDark, 3, 3, 2, 2);
 }
 
+// 12x8 법인카드: 파란 바탕과 짙은 아래쪽, 금색 칩. 로고·상표 없이 카드 형태만 쓴다
+function drawCorporateCard(ctx) {
+  box(ctx, PAL.outline, PAL.badge, 0, 0, 12, 8);
+  rect(ctx, PAL.badgeDark, 1, 5, 10, 2);
+  rect(ctx, PAL.sleeve, 2, 2, 3, 3);
+  rect(ctx, PAL.sleeveDark, 2, 4, 3, 1);
+  rect(ctx, PAL.paper, 7, 2, 3, 1);
+  rect(ctx, PAL.paperDark, 7, 3, 2, 1);
+}
+
 const PROJECTILES = {
   americano: { width: 8, height: 11, draw: drawAmericano },
+  'corporate-card': { width: 12, height: 8, draw: drawCorporateCard },
 };
 
 export function projectileTexture(scene, id) {

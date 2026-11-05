@@ -95,7 +95,7 @@ export default class Combat {
       const projectile = i === 0 ? first : this.projectiles.get();
       if (!projectile) return;
       const offset = Phaser.Math.DegToRad((i - (weapon.count - 1) / 2) * weapon.spread);
-      projectile.fire(weapon, x, y, angle + offset, damage);
+      projectile.fire(weapon, x, y, angle + offset, damage, this.player);
     }
   }
 
