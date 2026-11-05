@@ -5,7 +5,7 @@ import { UPGRADES } from '../data/upgrades.js';
 
 // 승진(레벨업): 결재 서류가 승진 막대를 채우면 게임을 멈추고 카드 3장(LevelUp 장면)을 보여 준다
 // 카드는 새 무기와 가진 무기 강화가 섞여 나온다. 무기 칸이 다 차면 강화만 나오고,
-// 고를 것이 하나도 없으면 upgrades.js 의 fallback 카드(멘탈 회복 등)가 나온다
+// 고를 것이 하나도 없거나 멘탈이 많이 깎였으면 upgrades.js 의 fallback 카드(멘탈 회복 등)가 나온다
 //
 // 장면 이벤트
 //   'xp-changed'  { xp, need, level, rank, nextRank }
@@ -83,9 +83,13 @@ export default class Promotion {
     const fresh = slots.length < CONFIG.weapons.slots
       ? WEAPONS.filter((w) => !owned.has(w.id)).map((w) => ({ type: 'new', weapon: w, level: 1, desc: w.description }))
       : [];
+    const welfare = UPGRADES.filter((u) => u.fallback).map((u) => ({ type: 'upgrade-item', item: u, desc: u.description }));
     const picks = Phaser.Utils.Array.Shuffle([...upgrades, ...fresh]).slice(0, CONFIG.levelUp.cardCount);
-    if (picks.length) return picks;
-    return UPGRADES.filter((u) => u.fallback).map((u) => ({ type: 'upgrade-item', item: u, desc: u.description }));
+    if (!picks.length) return welfare;
+    // 멘탈이 많이 깎였으면 마지막 카드 자리에 복지 카드를 넣는다
+    const low = this.player.mental <= CONFIG.player.maxMental * CONFIG.progression.welfareBelow;
+    if (low && welfare.length) picks.splice(Math.min(picks.length, CONFIG.levelUp.cardCount - 1), 1, welfare[0]);
+    return picks;
   }
 
   pick(choice) {

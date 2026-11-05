@@ -19,10 +19,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.visual.setActive(false).setVisible(false);
   }
 
-  spawn(def, x, y) {
+  // boost: 시간대별 난이도 배율 { hp, speed } (Spawner 가 준다)
+  spawn(def, x, y, boost = { hp: 1, speed: 1 }) {
     this.def = def;
     this.spawnId = nextSpawnId++;
-    this.hp = def.hp;
+    this.hp = Math.max(1, Math.round(def.hp * boost.hp));
+    this.speed = def.speed * boost.speed;
+    this.baseScale = def.scale ?? 1;
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
     this.flashLeft = 0;
     this.knockLeft = 0;
@@ -33,11 +36,16 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
     this.visual.setTexture(enemyTexture(this.scene, def.art)).clearTint().setScale(1).setActive(true).setVisible(true);
 
-    if (def.credit) {
-      this.nameplate = addText(this.scene, x, y, `${def.credit.nickname}님의 ${def.name}`, {
+    // 시청자 몬스터는 "○○님의 [이름]", 아니면 label 이 있을 때만 머리 위 글자
+    const plate = def.credit ? `${def.credit.nickname}님의 ${def.name}` : def.label;
+    if (plate) {
+      this.nameplate = addText(this.scene, x, y, plate, {
         size: CONFIG.ui.smallFontSize,
-        color: CONFIG.colors.accent,
+        color: def.credit ? CONFIG.colors.accent : CONFIG.colors.text,
       });
+      if (!def.credit && def.labelTime) {
+        this.scene.tweens.add({ targets: this.nameplate, alpha: 0, delay: def.labelTime, duration: CONFIG.enemy.labelFade });
+      }
     }
     this.syncAfterPhysics();
   }
@@ -48,7 +56,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
       this.body.velocity.set(0, 0); // 스테이플러에 고정된 동안은 제자리
       return;
     }
-    this.scene.physics.moveToObject(this, target, this.def.speed);
+    this.scene.physics.moveToObject(this, target, this.speed);
   }
 
   // 피격 깜빡임: 몸을 하얗게
@@ -87,6 +95,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   remove() {
     this.disableBody(true, true);
     this.visual.setActive(false).setVisible(false);
+    if (this.nameplate) this.scene.tweens.killTweensOf(this.nameplate);
     this.nameplate?.destroy();
     this.nameplate = null;
   }
@@ -127,8 +136,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
       else squash = Math.sin((Math.PI * (t - airTime)) / (1 - airTime)) * hop.squash;
     }
 
-    this.visual.setPosition(this.x, this.y - lift).setScale(1 + squash, 1 - squash).setDepth(this.y);
+    const s = this.baseScale;
+    this.visual.setPosition(this.x, this.y - lift).setScale(s * (1 + squash), s * (1 - squash)).setDepth(this.y);
     this.setDepth(this.y - 1);
-    this.nameplate?.setPosition(this.x, this.y - lift - CONFIG.enemy.nameplateOffsetY).setDepth(CONFIG.depth.flying);
+    this.nameplate?.setPosition(this.x, this.y - lift - CONFIG.enemy.nameplateOffsetY * s).setDepth(CONFIG.depth.flying);
   }
 }

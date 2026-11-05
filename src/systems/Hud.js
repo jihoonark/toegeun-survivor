@@ -97,6 +97,17 @@ export default class Hud {
     if (this.nextRankText.text !== nextRank) this.nextRankText.setText(nextRank);
   }
 
+  // 화면 가운데 위쪽에 크게 잠깐 뜨는 경고
+  showWarning(message) {
+    const w = CONFIG.hud.warning;
+    const { width, height } = CONFIG.screen;
+    const text = addText(this.scene, width / 2, height * w.y, message, { size: CONFIG.ui.titleFontSize, color: CONFIG.colors.danger })
+      .setScrollFactor(0)
+      .setDepth(CONFIG.depth.hud);
+    this.scene.tweens.add({ targets: text, scale: { from: 1.3, to: 1 }, duration: 180, ease: 'Back.Out' });
+    this.scene.tweens.add({ targets: text, alpha: 0, delay: w.duration, duration: w.fade, onComplete: () => text.destroy() });
+  }
+
   // 시청자 무기를 얻으면 "○○님의 [무기]"를 시계 아래에 잠깐 띄운다 (GAME_SPEC.md 4장)
   showCredit(item) {
     if (!item.credit) return;

@@ -20,6 +20,7 @@ export default class LevelUpScene extends Phaser.Scene {
     const L = CONFIG.levelUp;
     const { colors, ui } = CONFIG;
     this.onPick = onPick;
+    this.choices = choices;
     this.picked = false;
     this.ready = false;
 

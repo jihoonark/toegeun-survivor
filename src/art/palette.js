@@ -30,6 +30,9 @@ export const PAL = {
   // 이메일 몬스터
   alert: '#e03a3a',
   alertDark: '#a02424',
+  // 최종_진짜최종.pptx
+  slide: '#e8743b',
+  slideDark: '#b5522a',
   foot: '#f08a2a',
   footDark: '#b8601a',
 

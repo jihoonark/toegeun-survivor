@@ -54,16 +54,18 @@ export const CONFIG = {
 
   // 승진(레벨업): 몬스터가 떨어뜨린 결재 서류(경험치)를 모으면 직급이 오른다 (GAME_SPEC.md 12장)
   progression: {
+    // 멘탈이 이 비율 이하면 승진 카드에 복지 카드(멘탈 회복)도 섞여 나온다
+    welfareBelow: 0.5,
     ranks: ['인턴', '사원', '주임', '대리', '과장', '차장', '부장', '이사', '상무', '전무', '부사장', '사장', '회장'],
     // n번째 승진에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
-    firstNeed: 5,
-    growth: 1.3,
+    firstNeed: 4,
+    growth: 1.25,
   },
 
   // 결재 서류 줍기
   pickup: {
     // 이 거리(px) 안에 들어오면 주인공 쪽으로 빨려 온다
-    magnetRadius: 56,
+    magnetRadius: 80,
     // 빨려 오는 가속도(px/초²)와 최고 속도(px/초)
     pullAccel: 900,
     pullMaxSpeed: 300,
@@ -136,6 +138,8 @@ export const CONFIG = {
     xpBar: { width: 240, height: 5, bottom: 10, labelGap: 6, fill: 0x7ec8e3, back: 0x3a3048, outline: 0x1a1420 },
     // 시청자 무기를 얻었을 때 시계 아래에 뜨는 "○○님의 [무기]" 알림
     creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
+    // "전체 회신 폭탄!" 같은 경고 글자: 화면 높이 비율 위치, 떠 있는 시간(ms), 사라지는 시간(ms)
+    warning: { y: 0.3, duration: 1300, fade: 500 },
   },
 
   // 결과 화면
@@ -156,12 +160,29 @@ export const CONFIG = {
 
   // 적 등장. 몬스터별 수치는 src/data/enemies.js
   spawn: {
-    // 다음 적이 나오기까지 간격(ms)
-    interval: 1200,
+    // 시간대별 난이도. 17:00 부터 at 분이 지나면 그 단계 값으로 서서히 바뀐다 (단계 사이는 부드럽게 이어진다)
+    //   interval: 다음 적이 나오기까지 간격(ms), batch: 한 번에 나오는 수 [최소, 최대]
+    //   hp / speed: 몬스터 기본 체력·속도에 곱하는 배율
+    stages: [
+      { at: 0, interval: 1400, batch: [1, 1], hp: 1, speed: 1 },
+      { at: 15, interval: 1000, batch: [1, 2], hp: 1.15, speed: 1 },
+      { at: 30, interval: 750, batch: [1, 2], hp: 1.3, speed: 1.05 },
+      { at: 45, interval: 500, batch: [2, 3], hp: 1.6, speed: 1.12 },
+      { at: 52, interval: 400, batch: [2, 3], hp: 1.8, speed: 1.18 },
+    ],
+    // 전체 간격 배율 (조절 패널용. 작을수록 많이 나온다)
+    intervalMultiplier: 1,
+    // "전체 회신" 폭탄: 그 시각에 주인공을 빙 둘러 한꺼번에 나온다
+    bombs: [
+      { at: 30, count: 8 },
+      { at: 50, count: 16 },
+    ],
+    // 쪼개져 나온 몬스터가 튕겨 나가는 세기(px/초)와 시간(ms)
+    splitPop: { strength: 140, duration: 160 },
     // 화면 밖 얼마나 떨어진 곳에서 나오는지(px)
     offscreenMargin: 24,
     // 동시에 살아 있을 수 있는 최대 수
-    maxAlive: 60,
+    maxAlive: 90,
     // 첫 적이 나오기까지 기다리는 시간(ms)
     firstDelay: 800,
   },
@@ -171,6 +192,8 @@ export const CONFIG = {
     separate: true,
     // credit 이름표가 머리 위로 떠 있는 높이(px)
     nameplateOffsetY: 38,
+    // labelTime 이 지난 글자가 사라지는 시간(ms)
+    labelFade: 300,
     // 한 번 뛰는 시간 중 공중에 떠 있는 비율. 나머지는 착지하며 찌그러진다
     hopAirRatio: 0.75,
     // 스테이플러에 고정된 동안 몸 색 (곱해지는 색)
@@ -213,7 +236,7 @@ export const CONFIG = {
     sliders: [
       { label: '이동 속도', path: 'player.speed', min: 30, max: 200, step: 5 },
       { label: '공격 속도 배율', path: 'combat.attackSpeedMultiplier', min: 0.25, max: 4, step: 0.05 },
-      { label: '적 스폰 간격(ms)', path: 'spawn.interval', min: 100, max: 3000, step: 50 },
+      { label: '적 스폰 간격 배율', path: 'spawn.intervalMultiplier', min: 0.2, max: 3, step: 0.05 },
       { label: '히트스톱(ms)', path: 'juice.hitStop.duration', min: 0, max: 200, step: 5 },
       { label: '흔들림 세기', path: 'juice.shake.strength', min: 0, max: 3, step: 0.1 },
       { label: '넉백 세기', path: 'juice.knockback.strength', min: 0, max: 600, step: 10 },

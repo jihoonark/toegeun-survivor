@@ -15,7 +15,7 @@ import { OFFICE_TEXTURES } from '../art/office.js';
 // 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
-  'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted',
+  'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -96,6 +96,10 @@ export default class GameScene extends Phaser.Scene {
     this.events.on('weapon-upgraded', refreshWeapons);
     this.events.on('xp-changed', (state) => this.hud.setXp(state));
     this.events.on('xp-gained', () => this.juice.sfx.play('pickup'));
+    this.events.on('mail-bomb', () => {
+      this.hud.showWarning('전체 회신 폭탄!');
+      this.juice.sfx.play('alarm');
+    });
   }
 
   // 1화는 실제 1분 = 게임 1시간
@@ -164,7 +168,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateClock(delta);
     if (this.ended) return;
     this.player.move(this.controls.read());
-    this.spawner.update(delta);
+    this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
     this.pickups.update(delta);
