@@ -6,6 +6,7 @@ import GameScene from './scenes/GameScene.js';
 import ResultScene from './scenes/ResultScene.js';
 import LevelUpScene from './scenes/LevelUpScene.js';
 import Fullscreen from './systems/Fullscreen.js';
+import SoundToggle from './systems/SoundToggle.js';
 
 const { width, height, backgroundColor } = CONFIG.screen;
 
@@ -82,6 +83,7 @@ function layout() {
 }
 
 const fullscreen = new Fullscreen(layout);
+new SoundToggle();
 
 // 게임 루프가 준비된 뒤에 배치를 시작해야 sleep/wake가 꼬이지 않는다
 game.events.once(Phaser.Core.Events.READY, layout);

@@ -4,6 +4,7 @@ import { addText } from '../systems/Text.js';
 import { addButton } from '../systems/Button.js';
 import { formatClock } from '../systems/Hud.js';
 import { HERO } from '../art/hero.js';
+import { music } from '../systems/Music.js';
 
 // 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간, 다시하기
 // 받는 값: { result: 'clear' | 'overtime', tasks, minutes, rank }
@@ -17,6 +18,7 @@ export default class ResultScene extends Phaser.Scene {
     const { ui, colors } = CONFIG;
     const r = CONFIG.result;
     const clear = result === 'clear';
+    music.use(this).play(clear ? 'clear' : 'overtime', { restart: true });
 
     addText(this, width / 2, height * r.titleY, clear ? '칼퇴 성공' : '야근 확정', {
       size: ui.titleFontSize,

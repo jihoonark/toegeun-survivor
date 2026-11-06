@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { addText } from '../systems/Text.js';
 import { requestFullscreen } from '../systems/Fullscreen.js';
+import { music } from '../systems/Music.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -9,6 +10,8 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   create() {
+    // 브라우저는 첫 클릭·터치 전까지 소리를 막아 두므로, 누르는 순간부터 들린다
+    music.use(this).play('title');
     const { width, height } = CONFIG.screen;
     const { ui, colors } = CONFIG;
     const layout = ui.title;

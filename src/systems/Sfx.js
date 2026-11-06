@@ -1,4 +1,5 @@
 import { CONFIG } from '../config.js';
+import { soundOut } from './SoundOut.js';
 
 // 코드로 만든 간단한 효과음 (GAME_SPEC.md 6장). 나중에 녹음한 소리로 바꿀 수 있다
 // 음 하나 = { wave, from, to, duration(초), gain, delay(초) }. wave 가 'noise' 면 잡음
@@ -58,7 +59,7 @@ export default class Sfx {
     const peak = note.gain * CONFIG.sound.volume;
     gain.gain.setValueAtTime(peak, start);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-    gain.connect(ctx.destination);
+    gain.connect(soundOut(ctx));
 
     let source;
     if (note.wave === 'noise') {

@@ -248,9 +248,35 @@ export const CONFIG = {
   },
 
   sound: {
-    volume: 0.25,
+    // 전체 효과음 크기. 0.25 는 너무 작아 PC 스피커에서 거의 안 들렸다
+    volume: 0.8,
     // 같은 소리가 너무 촘촘히 겹치지 않게 하는 최소 간격(ms)
     minInterval: 40,
+    // 소리 끄기 버튼 상태를 이 브라우저에 기억하는 이름
+    muteStorageKey: 'toegeun-muted',
+  },
+
+  // 배경음악 (곡은 src/data/music.js)
+  music: {
+    // 전체 배경음악 크기 (효과음보다 작게 깔린다)
+    volume: 0.35,
+    // 승진 카드를 고르는 동안 이 비율로 줄인다
+    duck: 0.35,
+    // 크기가 바뀌는 데 걸리는 시간(초, 작을수록 빠름)
+    fade: 0.15,
+    // 이 시각(17:00부터 분)부터 근무 중 음악이 빨라진다
+    rushFrom: 50,
+    rushTempo: 1.15,
+    // 음을 미리 예약해 두는 시간(초)과 예약을 확인하는 간격(ms)
+    lookahead: 0.15,
+    tick: 25,
+    // 곡을 시작할 때 첫 음까지 여유(초)
+    startDelay: 0.05,
+    drums: {
+      K: { gain: 0.6, from: 150, to: 45, duration: 0.12 },
+      S: { gain: 0.25, highpass: 1500, duration: 0.09 },
+      h: { gain: 0.08, highpass: 7000, duration: 0.03 },
+    },
   },
 
   // 개발용 조절 패널 (GAME_SPEC.md 7장). 배포 빌드에서는 나오지 않는다

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { addText } from '../systems/Text.js';
 import Sfx from '../systems/Sfx.js';
+import { music } from '../systems/Music.js';
 import { projectileTexture } from '../art/projectiles.js';
 
 const toColor = (hex) => Phaser.Display.Color.HexStringToColor(hex).color;
@@ -46,6 +47,9 @@ export default class LevelUpScene extends Phaser.Scene {
     choices.forEach((choice, i) => this.input.keyboard?.on(`keydown-${keys[i]}`, (e) => !e.repeat && this.choose(choice)));
 
     new Sfx(this).play('levelUp');
+    // 카드를 고르는 동안 배경음악을 줄였다가 닫히면 되돌린다
+    music.use(this).duck(true);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => music.duck(false));
   }
 
   addCard(x, y, choice, index) {

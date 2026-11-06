@@ -10,6 +10,7 @@ import Hud from '../systems/Hud.js';
 import Pickups from '../systems/Pickups.js';
 import Promotion from '../systems/Promotion.js';
 import Player from '../entities/Player.js';
+import { music } from '../systems/Music.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 
 // 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
@@ -47,6 +48,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, lerp, lerp);
 
     this.showControlsHint();
+    music.use(this).play('game', { restart: true });
     // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
     this.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
     // 승진 카드를 고르는 동안 누르던 키·조이스틱이 돌아와서도 눌린 채로 남지 않게
@@ -123,6 +125,7 @@ export default class GameScene extends Phaser.Scene {
     this.ended = true;
     this.physics.world.pause();
     this.player.anims.pause();
+    music.stop();
     const summary = { result, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
     this.events.emit('shift-end', summary);
 
@@ -178,6 +181,8 @@ export default class GameScene extends Phaser.Scene {
     if (this.juice.update(time)) return; // 히트스톱 중
     this.updateClock(delta);
     if (this.ended) return;
+    // 17:50부터 음악이 빨라진다
+    music.setTempo(this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1);
     this.player.move(this.controls.read());
     this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
