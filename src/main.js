@@ -55,9 +55,16 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, GameScene, LevelUpScene, ResultScene],
 });
 
+let lastLayout = '';
+
 function layout() {
   if (!game.isBooted) return;
   const a = visibleArea();
+  // 아이폰은 주소창이 움직이거나 페이지가 살짝 튈 때마다 이 이벤트가 계속 온다
+  // 크기·위치가 그대로면 다시 배치하지 않는다 (다시 배치하면 끌고 있던 조이스틱이 풀렸다)
+  const key = `${a.w}x${a.h}@${a.top},${a.left}/${window.devicePixelRatio}`;
+  if (key === lastLayout) return;
+  lastLayout = key;
   Object.assign(parent.style, {
     width: `${a.w}px`,
     height: `${a.h}px`,

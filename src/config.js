@@ -327,6 +327,10 @@ export const CONFIG = {
     knobRadius: 10,
     // 이 비율보다 덜 밀면 멈춘 것으로 본다
     deadZone: 0.15,
+    // 원 반지름의 이 비율만큼 밀면 최고 속도 (1이면 끝까지 밀어야 최고 속도)
+    fullAt: 0.6,
+    // 원 밖으로 끌면 원이 손가락을 따라온다
+    follow: true,
     color: 0xffffff,
     baseAlpha: 0.25,
     knobAlpha: 0.6,
