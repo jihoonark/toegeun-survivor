@@ -195,6 +195,71 @@ function drawTeamLead(ctx) {
   rect(ctx, PAL.white, 29, 4, 1, 5);
 }
 
+// 회의 초대: 위에 고리 두 개 달린 탁상 달력, 빨간 머리띠에 "30", 화난 얼굴
+function drawMeeting(ctx) {
+  const o = PAL.outline;
+  drawFeet(ctx, 8, 18);
+  box(ctx, o, PAL.paper, 4, 6, 24, 21);
+  rect(ctx, PAL.paperDark, 5, 24, 22, 2);
+  // 빨간 머리띠
+  rect(ctx, PAL.alert, 5, 7, 22, 7);
+  rect(ctx, PAL.alertDark, 5, 13, 22, 1);
+  // 고리
+  for (const x of [10, 21]) {
+    rect(ctx, o, x, 3, 2, 6);
+    rect(ctx, PAL.keyboard, x, 4, 1, 4);
+  }
+  // "30" (5줄 높이)
+  rect(ctx, PAL.white, 11, 8, 4, 1);
+  rect(ctx, PAL.white, 12, 10, 3, 1);
+  rect(ctx, PAL.white, 11, 12, 4, 1);
+  rect(ctx, PAL.white, 14, 8, 1, 5);
+  rect(ctx, PAL.white, 17, 8, 4, 5);
+  rect(ctx, PAL.alert, 18, 9, 2, 3);
+  drawAngryFace(ctx, 16, 14);
+}
+
+// 포스트잇 "이것도요": 노란 쪽지, 귀퉁이가 살짝 들림. 작고 빠르게 떼로 온다
+function drawPostit(ctx) {
+  const o = PAL.outline;
+  drawFeet(ctx, 9, 17);
+  box(ctx, o, PAL.labelYellow, 6, 8, 20, 19);
+  rect(ctx, PAL.postitDark, 7, 24, 18, 2);
+  // 들린 귀퉁이
+  ctx.clearRect(22, 23, 4, 4);
+  for (let i = 0; i < 4; i++) dot(ctx, o, 22 + i, 26 - i);
+  rect(ctx, PAL.postitDark, 23, 24, 2, 1);
+  // 손글씨 줄
+  rect(ctx, PAL.postitDark, 9, 11, 9, 1);
+  drawAngryFace(ctx, 16, 13);
+}
+
+// 거래처 전화: 빨간 옛날 전화기. 끝까지 쫓아온다
+function drawClientCall(ctx) {
+  const o = PAL.outline;
+  drawFeet(ctx, 8, 18);
+  // 몸통
+  box(ctx, o, PAL.alert, 4, 13, 24, 14);
+  rect(ctx, PAL.alertDark, 5, 24, 22, 2);
+  // 다이얼
+  box(ctx, o, PAL.paper, 11, 16, 10, 8);
+  dot(ctx, o, 13, 18);
+  dot(ctx, o, 16, 17);
+  dot(ctx, o, 19, 18);
+  dot(ctx, o, 13, 21);
+  dot(ctx, o, 19, 21);
+  dot(ctx, o, 16, 22);
+  // 수화기
+  box(ctx, o, PAL.alertDark, 3, 7, 26, 5);
+  box(ctx, o, PAL.alertDark, 2, 6, 6, 4);
+  box(ctx, o, PAL.alertDark, 24, 6, 6, 4);
+  // 눈 (다이얼 양옆)
+  box(ctx, o, PAL.white, 6, 16, 4, 4);
+  box(ctx, o, PAL.white, 22, 16, 4, 4);
+  rect(ctx, o, 7, 17, 2, 2);
+  rect(ctx, o, 23, 17, 2, 2);
+}
+
 // 그림이 없는 몬스터용: 빨간 덩어리
 function drawDefault(ctx) {
   const o = PAL.outline;
@@ -209,6 +274,9 @@ const ENEMY_DRAWINGS = {
   pptx: drawPptx,
   deadline: drawDeadline,
   'team-lead': drawTeamLead,
+  meeting: drawMeeting,
+  postit: drawPostit,
+  'client-call': drawClientCall,
 };
 
 export function enemyTexture(scene, art) {

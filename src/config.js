@@ -46,6 +46,11 @@ export const CONFIG = {
     // 책상 앞(아래쪽) 이 범위에 서 있으면 holdTime(ms) 뒤 회사 PC 화면으로
     zone: { width: 44, height: 22 },
     holdTime: 450,
+    // 처음 열리는 시각(17:00 부터 분)과, 한 번 쓰면 다시 열리기까지(분)
+    firstOpen: 3,
+    cooldown: 8,
+    // 열린 직후 이 시간(ms) 동안 책상이 화면 밖이면 가장자리 화살표
+    arrowTime: 6000,
     // 모니터로 확대: 얼마나(배), 얼마 동안(ms). 모니터는 책상 발밑에서 위로 monitorOffsetY
     zoom: 4,
     zoomDuration: 380,
@@ -55,23 +60,31 @@ export const CONFIG = {
     progress: { radius: 7, offsetY: 34, color: 0xffd23f },
     // 알림 중 책상이 화면 밖이면 가장자리 화살표
     arrow: { margin: 14, marginTop: 70, marginBottom: 34, size: 6, color: 0xffd23f },
-    // 회사 PC 화면 메신저 속도(ms): 화면이 뜬 뒤, 입력 중 표시, 메시지 사이, 답을 고른 뒤 닫히기까지
-    screen: { openDelay: 300, typing: 550, between: 250, afterChoice: 800 },
+    // 회사 PC 화면 메신저 속도(ms): 화면이 뜬 뒤, 입력 중 표시, 메시지 사이, 끝난 뒤 닫히기까지
+    screen: { openDelay: 250, typing: 420, between: 200, afterChoice: 900 },
   },
+
+  // 몬스터가 쏘는 말풍선 (팀장 잔소리). 항목별 수치는 몬스터 데이터의 attack
+  enemyShot: { color: '#ffffff', back: '#a02424', hitRadius: 8, fadeTime: 300 },
 
   // 사무실 NPC (항목별 행동은 src/data/npcs.js)
   npc: {
-    // 머리 위 표시("읽씹")와 말풍선 높이(px), 말풍선이 떠 있는 시간(ms)
-    markOffsetY: 46,
-    bubbleOffsetY: 36,
+    // 말풍선 높이(px), 떠 있는 시간(ms), 바탕색
+    bubbleOffsetY: 38,
     bubbleTime: 1600,
     bubbleFade: 300,
+    bubbleBack: '#ffffff',
+    // 나타난 뒤 처음 막아 주기까지(ms), 막는 원 색, 밀린 몬스터가 쫓아오지 못하는 시간(ms)
+    firstGuardDelay: 1200,
+    guardColor: 0x7ec8e3,
+    pushHold: 140,
+    // 선배가 몬스터에 닿았다고 보는 거리(px), 한 번 맞은 뒤 다시 맞지 않는 시간(ms)
+    hitRadius: 12,
+    hurtCooldown: 700,
+    // 머리 위 체력 칸 (칸 하나 크기와 간격, px)
+    hpPip: { width: 4, height: 3, gap: 1, offsetY: 33, full: 0x5bd16a, empty: 0x3a3048 },
     // 나타나는 곳: 주인공 왼쪽(px)
     spawnOffsetX: 24,
-    // 방해할 때 메일을 풀어 놓는 거리(px)
-    pesterRadius: 18,
-    // 도와줄 때 타격 효과 (무기 데이터 hitFx 와 같은 형식)
-    allyHit: { hitFx: { sound: 'staple', particle: 'spark', text: '처리!' } },
   },
 
   // 가구 중 주인공이 지나갈 수 없는 발밑 부분(px). 몬스터와 투사체는 그냥 지나간다
@@ -283,6 +296,8 @@ export const CONFIG = {
     hopAirRatio: 0.75,
     // 스테이플러에 고정된 동안 몸 색 (곱해지는 색)과 몸에 박힌 철심 위치(가운데에서 x px)·기울기(도)
     stunTint: 0x8f9ab8,
+    // 화난 몬스터(팀장) 몸 색
+    rageTint: 0xff8a8a,
     stunMark: { offsetX: 5, angle: -25 },
   },
 

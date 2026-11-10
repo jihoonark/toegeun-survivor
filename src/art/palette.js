@@ -68,6 +68,9 @@ export const PAL = {
   bossTie: '#3f9a6a',
   bossTieDark: '#2a6a48',
 
+  // 포스트잇 몬스터
+  postitDark: '#d9a92a',
+
   // 선배
   cardigan: '#5f9a6a',
   cardiganDark: '#3f6e4a',

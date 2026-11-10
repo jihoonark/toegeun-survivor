@@ -26,6 +26,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.hp = Math.max(1, Math.round(def.hp * boost.hp));
     this.maxHp = this.hp;
     this.summonLeft = def.summon?.every ?? 0;
+    this.age = 0;
+    this.attackLeft = def.attack?.interval ?? 0;
+    this.raging = false;
     this.speed = def.speed * boost.speed;
     this.baseScale = def.scale ?? 1;
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
@@ -115,6 +118,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   // 하얀 깜빡임이 끝나면: 고정 중이면 바랜 색, 아니면 원래 색
   restoreTint() {
     if (this.stunLeft > 0) this.visual.setTint(CONFIG.enemy.stunTint);
+    else if (this.raging) this.visual.setTint(CONFIG.enemy.rageTint);
     else this.visual.clearTint();
   }
 

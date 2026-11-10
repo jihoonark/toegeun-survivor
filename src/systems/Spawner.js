@@ -95,7 +95,11 @@ export default class Spawner {
 
   spawnOne(minutes) {
     const pos = this.offscreenPoint();
-    if (pos) this.spawnAt(this.pickEnemy(minutes), pos.x, pos.y);
+    if (!pos) return;
+    const def = this.pickEnemy(minutes);
+    // group 이 있는 몬스터(포스트잇)는 한 자리에 여러 마리가 붙어서 나온다
+    const n = def.group ?? 1;
+    for (let i = 0; i < n; i++) this.spawnAt(def, pos.x + (i % 2) * 10 - 5, pos.y + Math.floor(i / 2) * 10 - 5);
   }
 
   // 보스: 화면 밖에서 나온다. 몬스터가 꽉 차 있어도 반드시 나오도록 가장 먼 몬스터 하나를 치운다

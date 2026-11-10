@@ -2,21 +2,24 @@ import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 import { DESK_EVENTS } from '../data/deskEvents.js';
+import { QUIZZES } from '../data/quizzes.js';
 import { getNpc } from '../data/npcs.js';
+import { getEnemy } from '../data/enemies.js';
 import Npc from '../entities/Npc.js';
 import PcScreen from './PcScreen.js';
 import Sfx from './Sfx.js';
 import { addText } from './Text.js';
 
-// 내 자리 (GAME_SPEC.md 12장): 사무실 가운데 내 책상
-// - 자리 이벤트 시각이 되면 모니터에 알림이 뜨고, 화면 밖이면 가장자리 화살표가 책상 쪽을 가리킨다
+// 내 자리 (GAME_SPEC.md 12장): 사무실 가운데 내 책상. 언제든 들르는 거점
+// - 열려 있으면 책상 위에 "퀴즈!"와 알림 배지. 닫혀 있으면 다시 열리기까지 남은 분
 // - 책상 앞에 잠깐 서 있으면 모니터로 확대되며 회사 PC 화면(PcScreen)으로 넘어간다 (그동안 게임은 멈춘다)
-// - 고른 답에 따라 그 자리에서 잠깐 꼼짝 못 하거나(busy), NPC가 나타나 따라다닌다
-// - 정해진 시간 안에 자리에 가지 않으면 expireChoice 를 고른 것으로 본다 (안 읽으면 읽씹)
+// - 메신저 퀴즈를 맞히면 보상 카드(멘탈·서류·선배 지원) 중 하나, 틀리면 벌칙 몬스터(거래처)가 쫓아온다
+// - 한 번 쓰면 config desk.cooldown 분 동안 닫힌다
 //
 // 장면 이벤트
-//   'desk-event-ready'  { event }           알림이 떴을 때
-//   'desk-event-done'   { event, choice }   답을 골랐을 때 (시간이 지나 저절로 골라진 경우 포함)
+//   'desk-ready'   {}                         책상이 열렸을 때
+//   'desk-done'    { event, correct, reward } 퀴즈가 끝났을 때
+//   'npc-joined'   { npc }                    NPC가 나타났을 때
 
 let pcScreen = null;
 
@@ -33,7 +36,7 @@ export default class Desk {
     pcScreen ??= new PcScreen(scene.game.canvas, d.screen);
 
     scene.add.image(d.x, d.y, OFFICE_TEXTURES.myDesk).setOrigin(0.5, 1).setDepth(d.y);
-    this.label = addText(scene, d.x, d.y - d.labelOffsetY, '내 자리', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.accent })
+    this.label = addText(scene, d.x, d.y - d.labelOffsetY, '내 자리', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.textDim })
       .setDepth(CONFIG.depth.flying);
     this.alert = scene.add.image(d.x + d.alertOffset.x, d.y + d.alertOffset.y, OFFICE_TEXTURES.alert).setDepth(CONFIG.depth.flying).setVisible(false);
     scene.tweens.add({ targets: this.alert, y: this.alert.y - 3, duration: 300, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
@@ -41,10 +44,11 @@ export default class Desk {
     this.progress = scene.add.graphics().setDepth(CONFIG.depth.flying);
     this.arrow = scene.add.graphics().setScrollFactor(0).setDepth(CONFIG.depth.hud);
 
-    this.queue = [...DESK_EVENTS].sort((a, b) => a.at - b.at);
-    this.pending = null;
+    this.quizzes = Phaser.Utils.Array.Shuffle([...QUIZZES]);
+    this.readyAt = d.firstOpen;
+    this.ready = false;
+    this.arrowLeft = 0;
     this.holdLeft = d.holdTime;
-    this.busyLeft = 0;
     this.transitioning = false;
     this.npcs = [];
   }
@@ -55,40 +59,42 @@ export default class Desk {
     return Math.abs(player.x - this.x) <= z.width / 2 && player.y >= this.y && player.y <= this.y + z.height;
   }
 
-  // 매 프레임. 주인공이 움직일 수 없으면 true (회사 PC 화면 전환 중이거나 그 자리에서 일하는 중)
+  // 매 프레임. 주인공이 움직일 수 없으면 true (회사 PC 화면 전환 중)
   update(delta, minutes, player, spawner) {
     if (this.transitioning) return true;
 
-    if (!this.pending && this.queue.length && minutes >= this.queue[0].at) {
-      this.pending = this.queue.shift();
-      this.alert.setVisible(true);
-      this.sfx.play('ping');
-      this.scene.events.emit('desk-event-ready', { event: this.pending });
-    }
-    if (this.pending && minutes >= this.pending.at + this.pending.expireAfter) {
-      const event = this.pending;
-      this.finish(event, event.choices.find((c) => c.key === event.expireChoice));
-    }
+    if (!this.ready && minutes >= this.readyAt) this.setReady(true);
+    if (!this.ready) this.label.setText(`내 자리 · ${Math.ceil(this.readyAt - minutes)}분 뒤`);
 
     this.npcs.forEach((npc) => npc.update(delta, player, spawner));
+    this.npcs = this.npcs.filter((npc) => !npc.done);
+
+    this.arrowLeft -= delta;
     this.drawArrow();
 
-    if (this.busyLeft > 0) {
-      this.busyLeft -= delta;
-      this.drawProgress(player, 1 - this.busyLeft / this.busyTotal);
-      if (this.busyLeft <= 0) this.endBusy();
-      return true;
-    }
-
-    if (this.pending && this.playerInFront(player)) {
+    if (this.ready && this.playerInFront(player)) {
       this.holdLeft -= delta;
       this.drawProgress(player, 1 - this.holdLeft / CONFIG.desk.holdTime);
-      if (this.holdLeft <= 0) this.open(this.pending);
+      if (this.holdLeft <= 0) this.open();
     } else {
       this.holdLeft = CONFIG.desk.holdTime;
       this.progress.clear();
     }
     return false;
+  }
+
+  setReady(on) {
+    this.ready = on;
+    this.alert.setVisible(on);
+    if (on) {
+      this.label.setText('내 자리 · 퀴즈!').setColor(CONFIG.colors.accent);
+      this.arrowLeft = CONFIG.desk.arrowTime;
+      this.sfx.play('ping');
+      this.scene.events.emit('desk-ready', {});
+    } else {
+      this.label.setColor(CONFIG.colors.textDim);
+      this.arrow.clear();
+    }
   }
 
   // 주인공 머리 위 동그란 진행 표시
@@ -104,10 +110,10 @@ export default class Desk {
       .strokePath();
   }
 
-  // 알림이 떠 있고 책상이 화면 밖이면 화면 가장자리에 책상 쪽 화살표
+  // 책상이 막 열렸고(arrowTime 동안) 화면 밖이면 화면 가장자리에 책상 쪽 화살표
   drawArrow() {
     this.arrow.clear();
-    if (!this.pending) return;
+    if (!this.ready || this.arrowLeft <= 0) return;
     const view = this.scene.cameras.main.worldView;
     if (view.contains(this.x, this.y - 16)) return;
     const a = CONFIG.desk.arrow;
@@ -119,25 +125,28 @@ export default class Desk {
     const tx = (width / 2 - a.margin) / Math.max(Math.abs(cos), 1e-6);
     const ty = (sin < 0 ? height / 2 - a.marginTop : height / 2 - a.marginBottom) / Math.max(Math.abs(sin), 1e-6);
     const t = Math.min(tx, ty);
-    const x = width / 2 + Math.cos(angle) * t;
-    const y = height / 2 + Math.sin(angle) * t;
+    const x = width / 2 + cos * t;
+    const y = height / 2 + sin * t;
     const s = a.size;
     const tip = (r, da) => [x + Math.cos(angle + da) * r, y + Math.sin(angle + da) * r];
-    const [x1, y1] = tip(s, 0);
-    const [x2, y2] = tip(s, 2.5);
-    const [x3, y3] = tip(s, -2.5);
     this.arrow.fillStyle(CONFIG.hud.mentalColors.outline).fillTriangle(...tip(s + 2, 0), ...tip(s + 2, 2.5), ...tip(s + 2, -2.5));
-    this.arrow.fillStyle(a.color).fillTriangle(x1, y1, x2, y2, x3, y3);
+    this.arrow.fillStyle(a.color).fillTriangle(...tip(s, 0), ...tip(s, 2.5), ...tip(s, -2.5));
   }
 
-  // 모니터로 확대 → 게임을 멈추고 회사 PC 화면 → 답을 고르면 다시 사무실로
-  open(event) {
+  nextQuiz() {
+    if (!this.quizzes.length) this.quizzes = Phaser.Utils.Array.Shuffle([...QUIZZES]);
+    return this.quizzes.pop();
+  }
+
+  // 모니터로 확대 → 게임을 멈추고 회사 PC 화면 → 끝나면 다시 사무실로
+  open() {
     const d = CONFIG.desk;
     const scene = this.scene;
     const cam = scene.cameras.main;
+    const event = Phaser.Utils.Array.GetRandom(DESK_EVENTS);
     this.transitioning = true;
+    this.setReady(false);
     this.progress.clear();
-    this.arrow.clear();
     scene.physics.world.pause();
     this.hideHud(true);
     cam.stopFollow();
@@ -145,14 +154,13 @@ export default class Desk {
     cam.zoomTo(d.zoom, d.zoomDuration, 'Sine.easeInOut', false, async (_cam, progress) => {
       if (progress < 1) return;
       scene.scene.pause();
-      const choice = await pcScreen.open(event, { onMessage: () => this.sfx.play('ping') });
+      const result = await pcScreen.quiz(event, this.nextQuiz(), { onMessage: () => this.sfx.play('ping') });
       scene.scene.resume();
-      this.finish(event, choice);
-      this.returnToOffice();
+      this.returnToOffice(() => this.finish(event, result));
     });
   }
 
-  returnToOffice() {
+  returnToOffice(then) {
     const d = CONFIG.desk;
     const scene = this.scene;
     const cam = scene.cameras.main;
@@ -165,6 +173,7 @@ export default class Desk {
       this.hideHud(false);
       scene.physics.world.resume();
       this.transitioning = false;
+      then();
     });
   }
 
@@ -182,37 +191,37 @@ export default class Desk {
     }
   }
 
-  // 고른 답의 결과를 적용한다
-  finish(event, choice) {
-    this.pending = null;
-    this.alert.setVisible(false);
-    this.arrow.clear();
-    const r = choice.result ?? {};
-    if (r.busy) {
-      this.busyLeft = r.busy;
-      this.busyTotal = r.busy;
-      this.busyNpc = r.npc ? { id: r.npc, mode: r.mode } : null;
-      this.busyText = addText(this.scene, this.scene.player.x, this.scene.player.y - CONFIG.desk.progress.offsetY - 14, r.busyText ?? '', {
-        size: CONFIG.ui.smallFontSize,
-      }).setDepth(CONFIG.depth.flying);
-    } else if (r.npc) {
-      this.addNpc(r.npc, r.mode);
+  // 퀴즈 결과 적용. 그 뒤 cooldown 분 동안 닫힌다
+  finish(event, { correct, reward }) {
+    const scene = this.scene;
+    this.readyAt = scene.shiftMinutes() + CONFIG.desk.cooldown;
+    if (correct) this.applyReward(reward.effect ?? {});
+    else this.penalty(event.penalty);
+    scene.events.emit('desk-done', { event, correct, reward });
+  }
+
+  applyReward(effect) {
+    const scene = this.scene;
+    if (effect.heal) scene.player.heal(effect.heal);
+    if (effect.xp) scene.events.emit('xp-gained', { amount: effect.xp });
+    if (effect.npc) this.addNpc(effect.npc, effect.mode);
+  }
+
+  // 벌칙 몬스터는 화면 밖에서 나타나 쫓아온다
+  penalty({ warning, enemy, count }) {
+    const spawner = this.scene.spawner;
+    for (let i = 0; i < count; i++) {
+      const pos = spawner.offscreenPoint();
+      if (pos) spawner.spawnAt(getEnemy(enemy), pos.x, pos.y);
     }
-    this.scene.events.emit('desk-event-done', { event, choice });
+    this.scene.events.emit('wave-warning', { text: warning });
   }
 
-  endBusy() {
-    this.busyLeft = 0;
-    this.progress.clear();
-    this.busyText?.destroy();
-    this.busyText = null;
-    if (this.busyNpc) this.addNpc(this.busyNpc.id, this.busyNpc.mode);
-    this.busyNpc = null;
-  }
-
-  // NPC는 주인공 옆, 책상 쪽에서 나타난다
+  // NPC는 주인공 왼쪽에서 튀어나온다
   addNpc(id, mode) {
     const p = this.scene.player;
-    this.npcs.push(new Npc(this.scene, getNpc(id), mode, p.x - CONFIG.npc.spawnOffsetX, p.y));
+    const npc = new Npc(this.scene, getNpc(id), mode, p.x - CONFIG.npc.spawnOffsetX, p.y);
+    this.npcs.push(npc);
+    this.scene.events.emit('npc-joined', { npc });
   }
 }

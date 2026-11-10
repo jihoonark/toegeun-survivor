@@ -79,6 +79,18 @@ export default class Hud {
     }
   }
 
+  // 아이템 칸 아래 지원 표시 ("🛡️ 선배 지원 32초"). 빈 글자면 숨긴다
+  setBuff(text) {
+    if (!this.buffText) {
+      const { margin, itemSlots: it } = CONFIG.hud;
+      const y = this.weaponSlotsY + CONFIG.hud.weaponSlots.size + it.offsetY + it.size + it.offsetY;
+      this.buffText = addText(this.scene, margin, y, '', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.accent, origin: 0, stroke: CONFIG.ui.bodyStroke })
+        .setScrollFactor(0)
+        .setDepth(CONFIG.depth.hud);
+    }
+    if (this.buffText.text !== text) this.buffText.setText(text);
+  }
+
   // slots: Items.slots
   setItems(slots) {
     const scale = CONFIG.hud.itemSlots.iconScale;
@@ -132,11 +144,11 @@ export default class Hud {
     if (this.nextRankText.text !== nextRank) this.nextRankText.setText(nextRank);
   }
 
-  // 화면 가운데 위쪽에 크게 잠깐 뜨는 경고
-  showWarning(message) {
+  // 화면 가운데 위쪽에 크게 잠깐 뜨는 경고 (color·size 를 주면 그 색·크기로)
+  showWarning(message, color = CONFIG.colors.danger, size = CONFIG.ui.titleFontSize) {
     const w = CONFIG.hud.warning;
     const { width, height } = CONFIG.screen;
-    const text = addText(this.scene, width / 2, height * w.y, message, { size: CONFIG.ui.titleFontSize, color: CONFIG.colors.danger })
+    const text = addText(this.scene, width / 2, height * w.y, message, { size, color })
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
     this.scene.tweens.add({ targets: text, scale: { from: 1.3, to: 1 }, duration: 180, ease: 'Back.Out' });

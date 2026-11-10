@@ -11,6 +11,7 @@ import Pickups from '../systems/Pickups.js';
 import Promotion from '../systems/Promotion.js';
 import Items from '../systems/Items.js';
 import Desk from '../systems/Desk.js';
+import EnemyShots from '../systems/EnemyShots.js';
 import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
@@ -19,7 +20,7 @@ import { OFFICE_TEXTURES } from '../art/office.js';
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
-  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-event-ready', 'desk-event-done',
+  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -44,7 +45,16 @@ export default class GameScene extends Phaser.Scene {
     this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
     this.desk = new Desk(this);
-    this.events.on('desk-event-ready', ({ event }) => this.hud.showNotice(event.notice));
+    this.enemyShots = new EnemyShots(this);
+    this.events.on('enemy-rage', ({ enemy }) => {
+      this.hud.showWarning(`${enemy.def.name}님이 화났다!`);
+      this.juice.sfx.play('alarm');
+    });
+    this.events.on('desk-ready', () => this.hud.showNotice('내 자리: 선배가 물어볼 게 있대요'));
+    this.events.on('npc-joined', ({ npc }) => this.hud.showWarning(npc.mode.join, CONFIG.colors.accent, CONFIG.ui.bodyFontSize));
+    this.events.on('npc-guard', () => this.juice.sfx.play('guard'));
+    this.events.on('npc-hit', () => this.juice.sfx.play('hurt'));
+    this.events.on('npc-defeated', ({ npc }) => this.hud.showNotice(npc.mode.defeatNotice));
     // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림과 무기 칸이 맞게 한다
     this.combat.addStarterWeapons();
     this.promotion.emitChanged();
@@ -211,8 +221,11 @@ export default class GameScene extends Phaser.Scene {
     this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
+    this.enemyShots.update(delta, this.enemies, this.player);
     this.pickups.update(delta);
     this.juice.trails(this.combat.projectiles, delta);
     this.hud.updateBoss();
+    const helper = this.desk.npcs.find((n) => !n.leaving);
+    this.hud.setBuff(helper ? `🛡️ ${helper.def.name} 지원 ${helper.secondsLeft}초` : '');
   }
 }

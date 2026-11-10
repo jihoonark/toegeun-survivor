@@ -30,6 +30,8 @@ const SOUNDS = {
   ],
   beep: [{ wave: 'sine', from: 1480, to: 1480, duration: 0.07, gain: 0.22 }],
   pickup: [{ wave: 'triangle', from: 880, to: 1320, duration: 0.05, gain: 0.18 }],
+  // 선배가 막아 줄 때 "슝"
+  guard: [{ wave: 'triangle', from: 300, to: 900, duration: 0.18, gain: 0.3 }],
   // 메신저 알림 "띠링"
   ping: [
     { wave: 'sine', from: 1175, to: 1175, duration: 0.08, gain: 0.3 },
