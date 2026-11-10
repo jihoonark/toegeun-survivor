@@ -10,6 +10,7 @@ import Hud from '../systems/Hud.js';
 import Pickups from '../systems/Pickups.js';
 import Promotion from '../systems/Promotion.js';
 import Items from '../systems/Items.js';
+import Desk from '../systems/Desk.js';
 import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
@@ -18,7 +19,7 @@ import { OFFICE_TEXTURES } from '../art/office.js';
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
-  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded',
+  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-event-ready', 'desk-event-done',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -42,6 +43,8 @@ export default class GameScene extends Phaser.Scene {
     this.items = new Items(this, this.player);
     this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
+    this.desk = new Desk(this);
+    this.events.on('desk-event-ready', ({ event }) => this.hud.showNotice(event.notice));
     // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림과 무기 칸이 맞게 한다
     this.combat.addStarterWeapons();
     this.promotion.emitChanged();
@@ -178,6 +181,9 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
+    const myBlock = CONFIG.furnitureBlock.desk;
+    this.furniture.add(this.add.zone(CONFIG.desk.x, CONFIG.desk.y - myBlock.height / 2, myBlock.width, myBlock.height));
+
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
   }
@@ -193,12 +199,15 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     if (this.ended) return;
+    if (this.desk.transitioning) return; // 회사 PC 화면으로 넘어가는 중
     if (this.juice.update(time)) return; // 히트스톱 중
     this.updateClock(delta);
     if (this.ended) return;
+    // 책상 앞에서 일하는 중에는 움직이지 못한다 (무기는 계속 나간다)
+    const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner);
     // 17:50부터 음악이 빨라진다
     music.setTempo(this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1);
-    this.player.move(this.controls.read());
+    this.player.move(locked ? Desk.STILL : this.controls.read());
     this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);

@@ -68,6 +68,10 @@ export const PAL = {
   bossTie: '#3f9a6a',
   bossTieDark: '#2a6a48',
 
+  // 선배
+  cardigan: '#5f9a6a',
+  cardiganDark: '#3f6e4a',
+
   // 아이템 아이콘
   bottle: '#8a4a1e',
   bottleDark: '#5e3012',

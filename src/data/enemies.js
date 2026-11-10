@@ -54,7 +54,7 @@ export const ENEMIES = [
     contactDamage: 1,
     xp: 2,
     spawnWeight: 0.45,
-    appearAt: 10,
+    appearAt: 14,
     bodyWidth: 18,
     bodyHeight: 9,
     hitRadius: 13,

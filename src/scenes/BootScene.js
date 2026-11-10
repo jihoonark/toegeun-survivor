@@ -6,6 +6,7 @@ import { createProjectileTextures } from '../art/projectiles.js';
 import { createEnemyTextures } from '../art/enemies.js';
 import { createEffectTextures } from '../art/effects.js';
 import { createItemTextures } from '../art/items.js';
+import { createNpcTextures } from '../art/npcs.js';
 
 // 코드로 그린 도트 이미지(src/art)를 여기서 만들어 둔다
 export default class BootScene extends Phaser.Scene {
@@ -21,6 +22,7 @@ export default class BootScene extends Phaser.Scene {
     createEnemyTextures(this);
     createEffectTextures(this);
     createItemTextures(this);
+    createNpcTextures(this);
     this.scene.start('Title');
   }
 }

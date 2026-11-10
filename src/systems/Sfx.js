@@ -30,6 +30,11 @@ const SOUNDS = {
   ],
   beep: [{ wave: 'sine', from: 1480, to: 1480, duration: 0.07, gain: 0.22 }],
   pickup: [{ wave: 'triangle', from: 880, to: 1320, duration: 0.05, gain: 0.18 }],
+  // 메신저 알림 "띠링"
+  ping: [
+    { wave: 'sine', from: 1175, to: 1175, duration: 0.08, gain: 0.3 },
+    { wave: 'sine', from: 1568, to: 1568, duration: 0.14, gain: 0.3, delay: 0.09 },
+  ],
   hurt: [{ wave: 'sawtooth', from: 240, to: 80, duration: 0.2, gain: 0.45 }],
 };
 

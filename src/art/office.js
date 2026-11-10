@@ -6,6 +6,8 @@ export const OFFICE_TEXTURES = {
   floor: 'office-floor',
   desk: 'office-desk',
   plant: 'office-plant',
+  myDesk: 'office-my-desk',
+  alert: 'ui-alert',
 };
 
 const TILE = 16;
@@ -73,6 +75,27 @@ function drawDesk(ctx) {
   dot(ctx, o, 43, 15);
 }
 
+// 내 책상: 보통 책상에 모니터 옆 포스트잇, 앞판에 하얀 이름표
+function drawMyDesk(ctx) {
+  drawDesk(ctx);
+  const o = PAL.outline;
+  // 모니터 가장자리 포스트잇 3장
+  rect(ctx, PAL.labelYellow, 33, 1, 3, 3);
+  rect(ctx, PAL.capOrange, 33, 5, 3, 3);
+  rect(ctx, PAL.labelYellow, 12, 2, 3, 3);
+  // 앞판 이름표
+  box(ctx, o, PAL.white, 9, 23, 14, 5);
+  rect(ctx, PAL.keyboardDark, 11, 25, 10, 1);
+}
+
+// 9x9 빨간 알림 배지 "!"
+function drawAlert(ctx) {
+  disc(ctx, 4, 4, 4, () => PAL.outline);
+  disc(ctx, 4, 4, 3, (dx, dy) => (dx + dy > 2 ? PAL.alertDark : PAL.alert));
+  rect(ctx, PAL.white, 4, 2, 1, 3);
+  dot(ctx, PAL.white, 4, 6);
+}
+
 // 16x24 화분: 잎 덩어리 몇 개를 겹쳐 그린 뒤 화분을 얹는다
 function drawPlant(ctx) {
   const o = PAL.outline;
@@ -106,4 +129,6 @@ export function createOfficeTextures(scene) {
   createCanvasTexture(scene, OFFICE_TEXTURES.floor, TILE * 2, TILE * 2, drawFloor);
   createCanvasTexture(scene, OFFICE_TEXTURES.desk, 48, 32, drawDesk);
   createCanvasTexture(scene, OFFICE_TEXTURES.plant, 16, 24, drawPlant);
+  createCanvasTexture(scene, OFFICE_TEXTURES.myDesk, 48, 32, drawMyDesk);
+  createCanvasTexture(scene, OFFICE_TEXTURES.alert, 9, 9, drawAlert);
 }

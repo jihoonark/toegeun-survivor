@@ -35,6 +35,45 @@ export const CONFIG = {
     ],
   },
 
+  // 내 자리 (GAME_SPEC.md 12장). 자리 이벤트는 src/data/deskEvents.js
+  desk: {
+    // 책상 발밑 위치. 주인공이 시작하는 곳 바로 위
+    x: 480,
+    y: 238,
+    labelOffsetY: 40,
+    // 모니터 위 알림 배지 위치 (책상 발밑 기준)
+    alertOffset: { x: 12, y: -34 },
+    // 책상 앞(아래쪽) 이 범위에 서 있으면 holdTime(ms) 뒤 회사 PC 화면으로
+    zone: { width: 44, height: 22 },
+    holdTime: 450,
+    // 모니터로 확대: 얼마나(배), 얼마 동안(ms). 모니터는 책상 발밑에서 위로 monitorOffsetY
+    zoom: 4,
+    zoomDuration: 380,
+    returnDuration: 260,
+    monitorOffsetY: -26,
+    // 주인공 머리 위 진행 표시
+    progress: { radius: 7, offsetY: 34, color: 0xffd23f },
+    // 알림 중 책상이 화면 밖이면 가장자리 화살표
+    arrow: { margin: 14, marginTop: 70, marginBottom: 34, size: 6, color: 0xffd23f },
+    // 회사 PC 화면 메신저 속도(ms): 화면이 뜬 뒤, 입력 중 표시, 메시지 사이, 답을 고른 뒤 닫히기까지
+    screen: { openDelay: 300, typing: 550, between: 250, afterChoice: 800 },
+  },
+
+  // 사무실 NPC (항목별 행동은 src/data/npcs.js)
+  npc: {
+    // 머리 위 표시("읽씹")와 말풍선 높이(px), 말풍선이 떠 있는 시간(ms)
+    markOffsetY: 46,
+    bubbleOffsetY: 36,
+    bubbleTime: 1600,
+    bubbleFade: 300,
+    // 나타나는 곳: 주인공 왼쪽(px)
+    spawnOffsetX: 24,
+    // 방해할 때 메일을 풀어 놓는 거리(px)
+    pesterRadius: 18,
+    // 도와줄 때 타격 효과 (무기 데이터 hitFx 와 같은 형식)
+    allyHit: { hitFx: { sound: 'staple', particle: 'spark', text: '처리!' } },
+  },
+
   // 가구 중 주인공이 지나갈 수 없는 발밑 부분(px). 몬스터와 투사체는 그냥 지나간다
   furnitureBlock: {
     desk: { width: 44, height: 12 },
@@ -69,7 +108,7 @@ export const CONFIG = {
     maxRankInRun: '대리',
     // n번째 레벨업에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
     firstNeed: 4,
-    growth: 1.25,
+    growth: 1.15,
   },
 
   // 결재 서류 줍기
@@ -190,13 +229,13 @@ export const CONFIG = {
     //   interval: 다음 적이 나오기까지 간격(ms), batch: 한 번에 나오는 수 [최소, 최대]
     //   hp / speed: 몬스터 기본 체력·속도에 곱하는 배율
     stages: [
-      { at: 0, interval: 1300, batch: [1, 1], hp: 1, speed: 1 },
-      { at: 10, interval: 1000, batch: [1, 2], hp: 1.2, speed: 1 },
-      { at: 20, interval: 800, batch: [1, 2], hp: 1.45, speed: 1.03 },
-      { at: 30, interval: 700, batch: [1, 2], hp: 1.75, speed: 1.05 },
-      { at: 40, interval: 550, batch: [2, 3], hp: 2.1, speed: 1.1 },
-      { at: 50, interval: 450, batch: [2, 3], hp: 2.6, speed: 1.15 },
-      { at: 55, interval: 380, batch: [2, 3], hp: 3, speed: 1.2 },
+      { at: 0, interval: 1400, batch: [1, 1], hp: 1, speed: 1 },
+      { at: 10, interval: 1150, batch: [1, 1], hp: 1.1, speed: 1 },
+      { at: 20, interval: 900, batch: [1, 2], hp: 1.25, speed: 1 },
+      { at: 30, interval: 750, batch: [1, 2], hp: 1.45, speed: 1.03 },
+      { at: 40, interval: 600, batch: [1, 2], hp: 1.7, speed: 1.06 },
+      { at: 50, interval: 480, batch: [2, 3], hp: 2, speed: 1.1 },
+      { at: 55, interval: 400, batch: [2, 3], hp: 2.3, speed: 1.15 },
     ],
     // 전체 간격 배율 (조절 패널용. 작을수록 많이 나온다)
     intervalMultiplier: 1,
@@ -206,20 +245,20 @@ export const CONFIG = {
     //   enemy: 나올 몬스터 id (없으면 그 시각에 나올 수 있는 몬스터 중에서 고른다)
     //   warning: 있으면 그 글자를 화면에 크게 띄운다 (ring 은 없어도 "전체 회신 폭탄!")
     waves: [
-      { at: 6, type: 'line', count: 6, gap: 16, enemy: 'email' },
-      { at: 12, type: 'line', count: 8, gap: 16, enemy: 'email' },
-      { at: 16, type: 'ring', count: 8 },
-      { at: 20, type: 'line', count: 10, gap: 16, enemy: 'email' },
-      { at: 25, type: 'line', count: 10, gap: 16, enemy: 'email' },
+      { at: 6, type: 'line', count: 5, gap: 16, enemy: 'email' },
+      { at: 12, type: 'line', count: 6, gap: 16, enemy: 'email' },
+      { at: 16, type: 'ring', count: 6 },
+      { at: 20, type: 'line', count: 8, gap: 16, enemy: 'email' },
+      { at: 25, type: 'line', count: 8, gap: 16, enemy: 'email' },
       { at: 30, type: 'boss', enemy: 'team-lead', warning: '팀장님 등장!' },
-      { at: 36, type: 'line', count: 12, gap: 14, enemy: 'email' },
-      { at: 40, type: 'ring', count: 12 },
-      { at: 44, type: 'line', count: 12, gap: 14, enemy: 'email' },
-      { at: 48, type: 'line', count: 14, gap: 14, enemy: 'email' },
-      { at: 50, type: 'ring', count: 16 },
+      { at: 36, type: 'line', count: 10, gap: 14, enemy: 'email' },
+      { at: 40, type: 'ring', count: 10 },
+      { at: 44, type: 'line', count: 10, gap: 14, enemy: 'email' },
+      { at: 48, type: 'line', count: 12, gap: 14, enemy: 'email' },
+      { at: 50, type: 'ring', count: 12 },
       { at: 55, type: 'warning', warning: '퇴근 5분 전!' },
-      { at: 55.2, type: 'ring', count: 20 },
-      { at: 58, type: 'line', count: 16, gap: 12, enemy: 'email' },
+      { at: 55.2, type: 'ring', count: 16 },
+      { at: 58, type: 'line', count: 12, gap: 12, enemy: 'email' },
     ],
     // 보스가 부르는 부하: every(ms)마다 count 마리를 보스 둘레 radius(px)에
     summonRadius: 28,

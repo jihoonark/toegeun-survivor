@@ -184,9 +184,14 @@ export default class Hud {
   // 시청자 무기를 얻으면 "○○님의 [무기]"를 시계 아래에 잠깐 띄운다 (GAME_SPEC.md 4장)
   showCredit(item) {
     if (!item.credit) return;
+    this.showNotice(`${item.credit.nickname}님의 ${item.name}`);
+  }
+
+  // 시계 아래에 잠깐 뜨는 작은 알림 글자 (여러 개면 아래로 쌓인다)
+  showNotice(message) {
     const t = CONFIG.hud.creditToast;
     const y = CONFIG.hud.margin + t.offsetY + this.toasts * t.gap;
-    const toast = addText(this.scene, CONFIG.screen.width / 2, y, `${item.credit.nickname}님의 ${item.name}`, {
+    const toast = addText(this.scene, CONFIG.screen.width / 2, y, message, {
       size: CONFIG.ui.smallFontSize,
       color: CONFIG.colors.accent,
       stroke: CONFIG.ui.bodyStroke,
