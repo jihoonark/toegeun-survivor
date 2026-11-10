@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { WEAPONS, maxLevelOf, levelDesc } from '../data/weapons.js';
-import { UPGRADES } from '../data/upgrades.js';
+import { SLOT_ITEMS, FALLBACK_ITEMS } from '../data/upgrades.js';
+import Items from './Items.js';
 
 // 레벨업: 결재 서류가 막대를 채우면 호봉이 오르고(호봉 UP!), 호봉이 다 차면 직급이 오른다(승진!)
 // 그때마다 게임을 멈추고 카드 3장(LevelUp 장면)을 보여 준다
@@ -12,10 +13,11 @@ import { UPGRADES } from '../data/upgrades.js';
 //   'xp-changed'  { xp, need, level, rank, nextRank }
 //   'promoted'    { level, rank }
 export default class Promotion {
-  constructor(scene, combat, player) {
+  constructor(scene, combat, player, items) {
     this.scene = scene;
     this.combat = combat;
     this.player = player;
+    this.items = items;
     this.level = 1;
     this.xp = 0;
     this.need = Promotion.needFor(1);
@@ -100,11 +102,19 @@ export default class Promotion {
     const fresh = slots.length < CONFIG.weapons.slots
       ? WEAPONS.filter((w) => !owned.has(w.id)).map((w) => ({ type: 'new', weapon: w, level: 1, desc: w.description }))
       : [];
-    const welfare = UPGRADES.filter((u) => u.fallback).map((u) => ({ type: 'upgrade-item', item: u, desc: u.description }));
-    const picks = Phaser.Utils.Array.Shuffle([...upgrades, ...fresh]).slice(0, CONFIG.levelUp.cardCount);
+    // 아이템: 가진 것은 강화, 칸이 남으면 새 아이템
+    const items = this.items.slots;
+    const itemUps = items
+      .filter((s) => s.level < Items.maxLevelOf(s.def))
+      .map((s) => ({ type: 'item-upgrade', item: s.def, level: s.level + 1, desc: s.def.levelDesc ?? s.def.description }));
+    const itemNew = items.length < CONFIG.items.slots
+      ? SLOT_ITEMS.filter((u) => !this.items.has(u.id)).map((u) => ({ type: 'new-item', item: u, level: 1, desc: u.description }))
+      : [];
+    const welfare = FALLBACK_ITEMS.map((u) => ({ type: 'upgrade-item', item: u, desc: u.description }));
+    const picks = Phaser.Utils.Array.Shuffle([...upgrades, ...fresh, ...itemUps, ...itemNew]).slice(0, CONFIG.levelUp.cardCount);
     if (!picks.length) return welfare;
     // 멘탈이 많이 깎였으면 마지막 카드 자리에 복지 카드를 넣는다
-    const low = this.player.mental <= CONFIG.player.maxMental * CONFIG.progression.welfareBelow;
+    const low = this.player.mental <= this.player.maxMental * CONFIG.progression.welfareBelow;
     if (low && welfare.length) picks.splice(Math.min(picks.length, CONFIG.levelUp.cardCount - 1), 1, welfare[0]);
     return picks;
   }
@@ -112,7 +122,9 @@ export default class Promotion {
   pick(choice) {
     if (choice.type === 'new') this.combat.addWeapon(choice.weapon);
     else if (choice.type === 'upgrade') this.combat.upgradeWeapon(choice.weapon.id);
-    else if (choice.type === 'upgrade-item') this.applyItem(choice.item);
+    else if (choice.type === 'new-item') this.items.add(choice.item);
+    else if (choice.type === 'item-upgrade') this.items.upgrade(choice.item.id);
+    else if (choice.type === 'upgrade-item') this.items.use(choice.item);
 
     this.pending--;
     this.choosing = false;
@@ -123,8 +135,4 @@ export default class Promotion {
     this.scene.scene.resume();
   }
 
-  applyItem(item) {
-    const { heal } = item.effect ?? {};
-    if (heal) this.player.heal(heal);
-  }
 }

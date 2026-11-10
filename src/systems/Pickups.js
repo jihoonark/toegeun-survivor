@@ -12,10 +12,15 @@ export default class Pickups {
     this.scene = scene;
     this.player = player;
     this.pool = [];
-    scene.events.on('enemy-killed', ({ def, x, y }) => this.drop(x, y, def.xp ?? 1));
+    // 보스처럼 xpPieces 가 있으면 여러 장으로 나눠 흩뿌린다
+    scene.events.on('enemy-killed', ({ def, x, y }) => {
+      const pieces = def.xpPieces ?? 1;
+      const value = (def.xp ?? 1) / pieces;
+      for (let i = 0; i < pieces; i++) this.drop(x, y, value, pieces > 1 ? CONFIG.pickup.bossScatter : undefined);
+    });
   }
 
-  drop(x, y, value) {
+  drop(x, y, value, scatter = CONFIG.pickup.scatter) {
     if (value <= 0) return;
     let paper = this.pool.find((p) => !p.active);
     if (!paper) {
@@ -23,7 +28,7 @@ export default class Pickups {
       paper = this.scene.add.image(0, 0, EFFECT_TEXTURES.document).setOrigin(0.5, 1);
       this.pool.push(paper);
     }
-    const s = CONFIG.pickup.scatter;
+    const s = scatter;
     paper
       .setPosition(x + Phaser.Math.Between(-s, s), y + Phaser.Math.Between(-s, s))
       .setActive(true)

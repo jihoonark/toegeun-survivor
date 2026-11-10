@@ -18,6 +18,11 @@
 //   hitRadius      투사체에 맞는 판정 반지름. 바닥이 아니라 몸 한가운데 기준(px)
 //   hop            통통 뛰기 { height: 높이 px, duration: 한 번 뛰는 시간 ms, squash: 착지 찌그러짐 0~1 }
 //                  안 뛰는 몬스터는 null
+//   boss           true 면 화면 위에 체력 막대가 뜬다 (config spawn.waves 의 boss 로 나온다)
+//   summon         있으면 every(ms)마다 id 몬스터를 count 마리 불러낸다 { id, count, every }
+//   knockbackScale 넉백 받는 비율 (없으면 1, 0이면 안 밀림)
+//   stunScale      스테이플러 고정 시간 비율 (없으면 1)
+//   xpPieces       처치 시 결재 서류를 몇 장으로 나눠 떨어뜨리는지 (없으면 1)
 //   credit         시청자 아이디어면 { nickname, comment }, 아니면 null
 //                  credit이 있으면 등장할 때 "○○님의 [이름]" 이름표가 붙는다
 
@@ -113,6 +118,29 @@ export const ENEMIES = [
     bodyHeight: 8,
     hitRadius: 10,
     hop: { height: 3, duration: 260, squash: 0.15 },
+    credit: null,
+  },
+  {
+    // 17:30 중간 보스. 느리지만 튼튼하고, 이메일을 계속 불러낸다
+    id: 'team-lead',
+    name: '팀장',
+    label: '이거 하나만 더',
+    art: 'team-lead',
+    scale: 1.6,
+    hp: 160,
+    speed: 32,
+    contactDamage: 2,
+    xp: 40,
+    xpPieces: 10,
+    spawnWeight: 0,
+    boss: true,
+    summon: { id: 'email', count: 3, every: 3500 },
+    knockbackScale: 0.1,
+    stunScale: 0.3,
+    bodyWidth: 22,
+    bodyHeight: 10,
+    hitRadius: 18,
+    hop: null,
     credit: null,
   },
 ];

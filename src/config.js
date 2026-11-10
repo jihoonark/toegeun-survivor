@@ -83,6 +83,8 @@ export const CONFIG = {
     collectRadius: 8,
     // 처치한 자리에서 살짝 흩어지는 거리(px)
     scatter: 6,
+    // 보스가 여러 장으로 흩뿌릴 때 퍼지는 거리(px)
+    bossScatter: 24,
     // 동시에 바닥에 있을 수 있는 서류 수
     poolSize: 200,
   },
@@ -90,6 +92,13 @@ export const CONFIG = {
   // 무기 칸과 레벨
   weapons: {
     slots: 4,
+    maxLevel: 5,
+  },
+
+  // 아이템 칸 (무기 칸 아래). 아이템 목록은 src/data/upgrades.js
+  items: {
+    slots: 4,
+    // 아이템에 maxLevel 이 없을 때 최대 레벨
     maxLevel: 5,
   },
 
@@ -103,8 +112,10 @@ export const CONFIG = {
     cardsY: 0.62,
     card: { width: 128, height: 136, gap: 14 },
     // 카드 안 줄 위치: 카드 위쪽에서 떨어진 거리(px). credit 은 카드 아래쪽에서 떨어진 거리
-    cardRows: { badge: 12, icon: 38, name: 66, desc: 92, credit: 12 },
+    cardRows: { badge: 12, icon: 38, name: 66, desc: 92, credit: 12, creditBottom: 5 },
     iconScale: 3,
+    // 아이템 아이콘은 무기 투사체 그림보다 커서 덜 키운다
+    itemIconScale: 2.5,
   },
 
   // 무기별 수치는 src/data/weapons.js, 여기는 전체 배율
@@ -127,7 +138,8 @@ export const CONFIG = {
   clock: {
     startHour: 17,
     endHour: 18,
-    realDuration: 60000,
+    // 17:00→18:00 을 실제로 몇 ms 동안 (3화: 1분 → 4분. 기획서 "한 판 3~5분")
+    realDuration: 240000,
     // 이 분(分)부터 시계가 강조색으로 바뀐다
     warnMinute: 50,
   },
@@ -142,6 +154,8 @@ export const CONFIG = {
     mentalLow: 0.3,
     // 멘탈 바 아래 무기 칸 (아이콘 + 레벨)
     weaponSlots: { size: 20, gap: 3, offsetY: 6, iconScale: 1.4 },
+    // 무기 칸 아래 아이템 칸 (무기 칸보다 작게)
+    itemSlots: { size: 16, gap: 3, offsetY: 4, iconScale: 1 },
     // 화면 아래 승진 막대
     // 게임 시작 때 조작 안내가 화면 아래에서 떨어진 거리(px). 승진 막대 위에 뜨게
     controlsHintBottom: 30,
@@ -150,6 +164,8 @@ export const CONFIG = {
     creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
     // "전체 회신 폭탄!" 같은 경고 글자: 화면 높이 비율 위치, 떠 있는 시간(ms), 사라지는 시간(ms)
     warning: { y: 0.3, duration: 1300, fade: 500 },
+    // 보스 체력 막대 (화면 위 가운데, 시계 아래)
+    bossBar: { width: 160, height: 6, y: 42, labelGap: 2, fill: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
   },
 
   // 결과 화면
@@ -174,25 +190,39 @@ export const CONFIG = {
     //   interval: 다음 적이 나오기까지 간격(ms), batch: 한 번에 나오는 수 [최소, 최대]
     //   hp / speed: 몬스터 기본 체력·속도에 곱하는 배율
     stages: [
-      { at: 0, interval: 1400, batch: [1, 1], hp: 1, speed: 1 },
-      { at: 15, interval: 1000, batch: [1, 2], hp: 1.15, speed: 1 },
-      { at: 30, interval: 750, batch: [1, 2], hp: 1.3, speed: 1.05 },
-      { at: 45, interval: 500, batch: [2, 3], hp: 1.6, speed: 1.12 },
-      { at: 52, interval: 400, batch: [2, 3], hp: 1.8, speed: 1.18 },
+      { at: 0, interval: 1300, batch: [1, 1], hp: 1, speed: 1 },
+      { at: 10, interval: 1000, batch: [1, 2], hp: 1.2, speed: 1 },
+      { at: 20, interval: 800, batch: [1, 2], hp: 1.45, speed: 1.03 },
+      { at: 30, interval: 700, batch: [1, 2], hp: 1.75, speed: 1.05 },
+      { at: 40, interval: 550, batch: [2, 3], hp: 2.1, speed: 1.1 },
+      { at: 50, interval: 450, batch: [2, 3], hp: 2.6, speed: 1.15 },
+      { at: 55, interval: 380, batch: [2, 3], hp: 3, speed: 1.2 },
     ],
     // 전체 간격 배율 (조절 패널용. 작을수록 많이 나온다)
     intervalMultiplier: 1,
     // 몰려오는 패턴: 그 시각(17:00 부터 분)에 한꺼번에 나온다
     //   ring: "전체 회신 폭탄!" 주인공을 빙 둘러 사방에서 / line: 한쪽에서 줄지어 (gap: 줄 간격 px)
+    //   boss: 보스 한 마리 (enemy 필수) / warning: 글자만 띄우는 알림
     //   enemy: 나올 몬스터 id (없으면 그 시각에 나올 수 있는 몬스터 중에서 고른다)
+    //   warning: 있으면 그 글자를 화면에 크게 띄운다 (ring 은 없어도 "전체 회신 폭탄!")
     waves: [
+      { at: 6, type: 'line', count: 6, gap: 16, enemy: 'email' },
       { at: 12, type: 'line', count: 8, gap: 16, enemy: 'email' },
-      { at: 22, type: 'line', count: 10, gap: 16, enemy: 'email' },
-      { at: 30, type: 'ring', count: 8 },
-      { at: 38, type: 'line', count: 12, gap: 14, enemy: 'email' },
-      { at: 46, type: 'line', count: 14, gap: 14, enemy: 'email' },
+      { at: 16, type: 'ring', count: 8 },
+      { at: 20, type: 'line', count: 10, gap: 16, enemy: 'email' },
+      { at: 25, type: 'line', count: 10, gap: 16, enemy: 'email' },
+      { at: 30, type: 'boss', enemy: 'team-lead', warning: '팀장님 등장!' },
+      { at: 36, type: 'line', count: 12, gap: 14, enemy: 'email' },
+      { at: 40, type: 'ring', count: 12 },
+      { at: 44, type: 'line', count: 12, gap: 14, enemy: 'email' },
+      { at: 48, type: 'line', count: 14, gap: 14, enemy: 'email' },
       { at: 50, type: 'ring', count: 16 },
+      { at: 55, type: 'warning', warning: '퇴근 5분 전!' },
+      { at: 55.2, type: 'ring', count: 20 },
+      { at: 58, type: 'line', count: 16, gap: 12, enemy: 'email' },
     ],
+    // 보스가 부르는 부하: every(ms)마다 count 마리를 보스 둘레 radius(px)에
+    summonRadius: 28,
     // 쪼개져 나온 몬스터가 튕겨 나가는 세기(px/초)와 시간(ms)
     splitPop: { strength: 140, duration: 160 },
     // 화면 밖 얼마나 떨어진 곳에서 나오는지(px)
@@ -265,7 +295,7 @@ export const CONFIG = {
     // 크기가 바뀌는 데 걸리는 시간(초, 작을수록 빠름)
     fade: 0.15,
     // 이 시각(17:00부터 분)부터 근무 중 음악이 빨라진다
-    rushFrom: 50,
+    rushFrom: 55,
     rushTempo: 1.15,
     // 음을 미리 예약해 두는 시간(초)과 예약을 확인하는 간격(ms)
     lookahead: 0.15,

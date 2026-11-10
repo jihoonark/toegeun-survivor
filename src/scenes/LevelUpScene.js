@@ -4,6 +4,7 @@ import { addText } from '../systems/Text.js';
 import Sfx from '../systems/Sfx.js';
 import { music } from '../systems/Music.js';
 import { projectileTexture } from '../art/projectiles.js';
+import { itemTexture } from '../art/items.js';
 
 const toColor = (hex) => Phaser.Display.Color.HexStringToColor(hex).color;
 
@@ -55,25 +56,32 @@ export default class LevelUpScene extends Phaser.Scene {
   addCard(x, y, choice, index) {
     const { width: cw, height: ch } = CONFIG.levelUp.card;
     const { colors, ui } = CONFIG;
-    const isNew = choice.type === 'new';
+    const isNew = choice.type === 'new' || choice.type === 'new-item';
     const weapon = choice.weapon;
     const name = weapon?.name ?? choice.item.name;
-    const iconKey = weapon ? projectileTexture(this, weapon.projectile) : choice.item.icon;
+    const iconKey = weapon ? projectileTexture(this, weapon.projectile) : itemTexture(this, choice.item.icon);
+    const badgeText = { new: '새 무기', 'new-item': '새 아이템', 'upgrade-item': '복지' }[choice.type] ?? `Lv ${choice.level}`;
     const credit = (weapon ?? choice.item).credit;
     const top = y - ch / 2;
     const rows = CONFIG.levelUp.cardRows;
 
     const box = this.add.rectangle(x, y, cw, ch, toColor('#2a2238')).setStrokeStyle(2, toColor(isNew ? colors.accent : colors.textDim));
-    const badge = addText(this, x, top + rows.badge, isNew ? '새 무기' : weapon ? `Lv ${choice.level}` : '복지', {
+    const badge = addText(this, x, top + rows.badge, badgeText, {
       size: ui.smallFontSize,
       color: isNew ? colors.accent : colors.textDim,
       stroke: 0,
     });
-    const icon = this.add.image(x, top + rows.icon, iconKey).setScale(CONFIG.levelUp.iconScale);
+    const iconScale = weapon ? CONFIG.levelUp.iconScale : CONFIG.levelUp.itemIconScale;
+    const icon = this.add.image(x, top + rows.icon, iconKey).setScale(iconScale);
     const title = addText(this, x, top + rows.name, name, { size: ui.smallFontSize, wrap: cw - 12 });
     const desc = addText(this, x, top + rows.desc, choice.desc, { size: ui.smallFontSize, color: colors.textDim, stroke: 0, wrap: cw - 14 });
     const parts = [box, badge, icon, title, desc];
-    if (credit) parts.push(addText(this, x, top + ch - rows.credit, `${credit.nickname}님의 아이디어`, { size: ui.smallFontSize, color: colors.accent, stroke: 0 }));
+    // 닉네임이 길면 두 줄로 (카드 밖으로 넘치지 않게 아래쪽에 붙인다)
+    if (credit) {
+      const nick = credit.nickname.replace(/^@/, '');
+      const line = addText(this, x, top + ch - rows.credit, `${nick}님의 아이디어`, { size: ui.smallFontSize, color: colors.accent, stroke: 0, wrap: cw - 10 });
+      parts.push(line.setOrigin(0.5, 1).setY(top + ch - rows.creditBottom));
+    }
     parts.push(addText(this, x - cw / 2 + 8, top + 8, String(index + 1), { size: ui.smallFontSize, color: colors.textDim, origin: 0, stroke: 0 }));
 
     // 카드 위에서 누르고 카드 위에서 뗀 경우에만 고른다 (Button.js 와 같은 규칙)

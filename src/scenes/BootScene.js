@@ -5,6 +5,7 @@ import { createHeroTextures, createHeroAnimations } from '../art/hero.js';
 import { createProjectileTextures } from '../art/projectiles.js';
 import { createEnemyTextures } from '../art/enemies.js';
 import { createEffectTextures } from '../art/effects.js';
+import { createItemTextures } from '../art/items.js';
 
 // 코드로 그린 도트 이미지(src/art)를 여기서 만들어 둔다
 export default class BootScene extends Phaser.Scene {
@@ -19,6 +20,7 @@ export default class BootScene extends Phaser.Scene {
     createProjectileTextures(this);
     createEnemyTextures(this);
     createEffectTextures(this);
+    createItemTextures(this);
     this.scene.start('Title');
   }
 }

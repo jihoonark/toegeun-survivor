@@ -24,6 +24,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.def = def;
     this.spawnId = nextSpawnId++;
     this.hp = Math.max(1, Math.round(def.hp * boost.hp));
+    this.maxHp = this.hp;
+    this.summonLeft = def.summon?.every ?? 0;
     this.speed = def.speed * boost.speed;
     this.baseScale = def.scale ?? 1;
     this.hopTime = Math.random() * (def.hop?.duration ?? 1);
@@ -69,6 +71,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   // 고정: ms 동안 움직이지 않고, 점프도 멈추고, 색이 바랜다 (이어서 맞으면 더 긴 쪽으로)
   // markTexture 가 있으면 고정된 동안 몸에 그 그림(스테이플러 철심)이 박혀 보인다
   stun(ms, markTexture) {
+    ms *= this.def.stunScale ?? 1;
+    if (ms <= 0) return;
     this.stunLeft = Math.max(this.stunLeft, ms);
     if (this.flashLeft <= 0) this.visual.setTint(CONFIG.enemy.stunTint);
     if (markTexture) {
@@ -79,6 +83,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
   // 넉백: (dx, dy) 방향으로 잠깐 밀려난다
   knockback(dx, dy, strength, ms) {
+    strength *= this.def.knockbackScale ?? 1;
     const len = Math.hypot(dx, dy);
     if (len === 0 || strength <= 0) return;
     this.knockLeft = ms;

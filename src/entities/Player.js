@@ -21,13 +21,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.facing = 'down';
     this.play('hero-idle-down');
 
+    this.maxMental = maxMental;
     this.mental = maxMental;
+    // 아이템(자양강장제 등)이 올리는 이동 속도 배율
+    this.speedMultiplier = 1;
     this.invulnerableLeft = 0;
     this.flashLeft = 0;
   }
 
   move(dir) {
-    const speed = CONFIG.player.speed;
+    const speed = CONFIG.player.speed * this.speedMultiplier;
     this.setVelocity(dir.x * speed, dir.y * speed);
 
     const moving = dir.lengthSq() > 0;
@@ -58,8 +61,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   // 멘탈 회복 (승진 카드 등)
   heal(amount) {
-    this.mental = Math.min(CONFIG.player.maxMental, this.mental + amount);
+    this.mental = Math.min(this.maxMental, this.mental + amount);
     this.scene.events.emit('player-healed', { player: this, amount, mental: this.mental });
+  }
+
+  // 최대 멘탈을 올린다 (종합비타민). 늘어난 만큼 칸만 생기고, 회복은 따로 한다
+  raiseMaxMental(amount) {
+    this.maxMental += amount;
+    this.scene.events.emit('player-healed', { player: this, amount: 0, mental: this.mental });
   }
 
   // 피격 깜빡임: 하얗게

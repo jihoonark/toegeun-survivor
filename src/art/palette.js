@@ -59,4 +59,19 @@ export const PAL = {
   shoe: '#2a2230',
   darkCircle: '#a37a9a',
   mouth: '#a05a4a',
+
+  // 팀장 (중간 보스)
+  bossHair: '#2a2430',
+  bossHairLight: '#4a4250',
+  suit: '#4a5068',
+  suitDark: '#353a4e',
+  bossTie: '#3f9a6a',
+  bossTieDark: '#2a6a48',
+
+  // 아이템 아이콘
+  bottle: '#8a4a1e',
+  bottleDark: '#5e3012',
+  capGold: '#e0b040',
+  labelYellow: '#ffd23f',
+  capOrange: '#f08a2a',
 };

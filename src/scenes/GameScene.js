@@ -9,6 +9,7 @@ import DebugPanel from '../systems/DebugPanel.js';
 import Hud from '../systems/Hud.js';
 import Pickups from '../systems/Pickups.js';
 import Promotion from '../systems/Promotion.js';
+import Items from '../systems/Items.js';
 import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
@@ -17,6 +18,7 @@ import { OFFICE_TEXTURES } from '../art/office.js';
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
+  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -37,7 +39,8 @@ export default class GameScene extends Phaser.Scene {
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
     this.pickups = new Pickups(this, this.player);
-    this.promotion = new Promotion(this, this.combat, this.player);
+    this.items = new Items(this, this.player);
+    this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
     // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림과 무기 칸이 맞게 한다
     this.combat.addStarterWeapons();
@@ -78,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
     this.tasksDone = 0;
     this.ended = false;
 
-    this.hud.setMental(this.player.mental, CONFIG.player.maxMental);
+    this.hud.setMental(this.player.mental, this.player.maxMental);
     this.hud.setClock(0);
     this.hud.setTasks(0);
 
@@ -87,21 +90,33 @@ export default class GameScene extends Phaser.Scene {
       this.player.hurt(enemy.def.contactDamage);
     });
     this.events.on('player-hit', ({ mental }) => {
-      this.hud.setMental(mental, CONFIG.player.maxMental);
+      this.hud.setMental(mental, this.player.maxMental);
       if (mental <= 0) this.endShift('overtime');
     });
     this.events.on('enemy-killed', () => this.hud.setTasks(++this.tasksDone));
-    this.events.on('player-healed', ({ mental }) => this.hud.setMental(mental, CONFIG.player.maxMental));
+    this.events.on('player-healed', ({ mental }) => this.hud.setMental(mental, this.player.maxMental));
 
     // 무기 칸과 승진 막대
     const refreshWeapons = () => this.hud.setWeapons(this.combat.weapons);
     this.events.on('weapon-added', refreshWeapons);
     this.events.on('weapon-upgraded', refreshWeapons);
+    const refreshItems = () => this.hud.setItems(this.items.slots);
+    this.events.on('item-added', refreshItems);
+    this.events.on('item-upgraded', refreshItems);
     this.events.on('xp-changed', (state) => this.hud.setXp(state));
     this.events.on('xp-gained', () => this.juice.sfx.play('pickup'));
     this.events.on('mail-bomb', () => {
       this.hud.showWarning('전체 회신 폭탄!');
       this.juice.sfx.play('alarm');
+    });
+    this.events.on('wave-warning', ({ text }) => {
+      this.hud.showWarning(text);
+      this.juice.sfx.play('alarm');
+    });
+    // 보스: 체력 막대, 처치하면 먼저 퇴근한다
+    this.events.on('boss-spawned', ({ enemy }) => this.hud.showBoss(enemy));
+    this.events.on('enemy-killed', ({ def }) => {
+      if (def.boss) this.hud.showWarning(`${def.name}님 퇴근!`);
     });
   }
 
@@ -189,5 +204,6 @@ export default class GameScene extends Phaser.Scene {
     this.combat.update(delta);
     this.pickups.update(delta);
     this.juice.trails(this.combat.projectiles, delta);
+    this.hud.updateBoss();
   }
 }

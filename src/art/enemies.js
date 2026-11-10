@@ -144,6 +144,57 @@ function drawDeadline(ctx) {
   dot(ctx, o, 20, 20);
 }
 
+// 팀장 "이거 하나만 더": 짧은 검은 머리, 회색 정장에 초록 넥타이
+// 오른손에 서류 뭉치를 들고 내민다. 서류에 빨간 "+1" 배지
+function drawTeamLead(ctx) {
+  const o = PAL.outline;
+  // 다리와 구두
+  box(ctx, o, PAL.suitDark, 11, 24, 4, 5);
+  box(ctx, o, PAL.suitDark, 17, 24, 4, 5);
+  rect(ctx, PAL.shoe, 11, 28, 4, 1);
+  rect(ctx, PAL.shoe, 17, 28, 4, 1);
+  // 몸통 (정장)
+  box(ctx, o, PAL.suit, 8, 14, 16, 11);
+  rect(ctx, PAL.suitDark, 9, 22, 14, 2);
+  // 셔츠 V와 넥타이
+  rect(ctx, PAL.shirt, 14, 15, 4, 4);
+  rect(ctx, PAL.bossTie, 15, 16, 2, 6);
+  rect(ctx, PAL.bossTieDark, 15, 21, 2, 1);
+  // 왼팔
+  box(ctx, o, PAL.suit, 5, 15, 4, 8);
+  rect(ctx, PAL.skin, 6, 22, 2, 1);
+  // 머리
+  box(ctx, o, PAL.skin, 9, 3, 14, 12);
+  rect(ctx, PAL.skinDark, 10, 13, 12, 1);
+  // 짧은 머리 (가르마)
+  rect(ctx, o, 9, 2, 14, 1);
+  rect(ctx, PAL.bossHair, 10, 3, 12, 3);
+  rect(ctx, PAL.bossHair, 10, 6, 2, 2);
+  rect(ctx, PAL.bossHair, 20, 6, 2, 2);
+  rect(ctx, PAL.bossHairLight, 17, 3, 1, 3);
+  // 내려간 눈썹, 반쯤 감은 눈, 한쪽만 올라간 입 (능글맞게)
+  rect(ctx, o, 11, 7, 3, 1);
+  rect(ctx, o, 18, 7, 3, 1);
+  dot(ctx, o, 14, 8);
+  dot(ctx, o, 17, 8);
+  rect(ctx, o, 11, 9, 3, 1);
+  rect(ctx, o, 18, 9, 3, 1);
+  rect(ctx, o, 14, 12, 4, 1);
+  dot(ctx, o, 18, 11);
+  // 오른팔을 앞으로 내밀며 서류 뭉치
+  box(ctx, o, PAL.suit, 23, 15, 4, 5);
+  box(ctx, o, PAL.paper, 22, 9, 9, 8);
+  rect(ctx, PAL.paperDark, 23, 15, 7, 1);
+  rect(ctx, PAL.paperDark, 23, 11, 7, 1);
+  rect(ctx, PAL.paperDark, 23, 13, 7, 1);
+  // "+1" 배지
+  disc(ctx, 28, 6, 4, () => o);
+  disc(ctx, 28, 6, 3, (dx, dy) => (dx + dy > 2 ? PAL.alertDark : PAL.alert));
+  rect(ctx, PAL.white, 25, 6, 3, 1);
+  rect(ctx, PAL.white, 26, 5, 1, 3);
+  rect(ctx, PAL.white, 29, 4, 1, 5);
+}
+
 // 그림이 없는 몬스터용: 빨간 덩어리
 function drawDefault(ctx) {
   const o = PAL.outline;
@@ -157,6 +208,7 @@ const ENEMY_DRAWINGS = {
   email: drawEmail,
   pptx: drawPptx,
   deadline: drawDeadline,
+  'team-lead': drawTeamLead,
 };
 
 export function enemyTexture(scene, art) {

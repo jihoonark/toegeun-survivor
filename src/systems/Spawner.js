@@ -11,7 +11,9 @@ import { ENEMY_ART } from '../art/enemies.js';
 // - splitInto 가 있는 몬스터는 처치하면 다음 프레임에 그 자리에서 쪼개져 나온다
 //
 // 장면 이벤트
-//   'mail-bomb'  { count }   전체 회신 폭탄(ring)이 터질 때 (경고 글자에서 쓴다)
+//   'mail-bomb'     { count }   전체 회신 폭탄(ring)이 터질 때 (경고 글자에서 쓴다)
+//   'wave-warning'  { text }    웨이브에 warning 글자가 있을 때 ("팀장님 등장!", "퇴근 5분 전!")
+//   'boss-spawned'  { enemy }   보스가 나왔을 때 (체력 막대에서 쓴다)
 export default class Spawner {
   constructor(scene) {
     this.scene = scene;
@@ -47,9 +49,12 @@ export default class Spawner {
     for (const wave of CONFIG.spawn.waves) {
       if (minutes < wave.at || this.wavesDone.has(wave)) continue;
       this.wavesDone.add(wave);
-      if (wave.type === 'ring') this.mailBomb(wave.count, minutes);
-      else this.line(wave, minutes);
+      if (wave.warning) this.scene.events.emit('wave-warning', { text: wave.warning });
+      if (wave.type === 'ring') this.mailBomb(wave.count, minutes, !wave.warning);
+      else if (wave.type === 'line') this.line(wave, minutes);
+      else if (wave.type === 'boss') this.boss(getEnemy(wave.enemy));
     }
+    this.summons(delta);
 
     this.timeLeft -= delta;
     if (this.timeLeft > 0) return;
@@ -93,8 +98,42 @@ export default class Spawner {
     if (pos) this.spawnAt(this.pickEnemy(minutes), pos.x, pos.y);
   }
 
+  // 보스: 화면 밖에서 나온다. 몬스터가 꽉 차 있어도 반드시 나오도록 가장 먼 몬스터 하나를 치운다
+  boss(def) {
+    const pos = this.offscreenPoint();
+    if (!pos) return;
+    if (this.enemies.countActive(true) >= CONFIG.spawn.maxAlive) {
+      const { x, y } = this.scene.player;
+      const far = this.enemies
+        .getChildren()
+        .filter((e) => e.active && !e.def.boss)
+        .sort((a, b) => Phaser.Math.Distance.Between(b.x, b.y, x, y) - Phaser.Math.Distance.Between(a.x, a.y, x, y))[0];
+      far?.remove();
+    }
+    const enemy = this.spawnAt(def, pos.x, pos.y);
+    if (enemy) this.scene.events.emit('boss-spawned', { enemy });
+  }
+
+  // summon 이 있는 몬스터(보스)는 every 마다 둘레에 부하를 불러낸다
+  summons(delta) {
+    for (const e of this.enemies.getChildren()) {
+      const s = e.active && e.def.summon;
+      if (!s) continue;
+      e.summonLeft -= delta;
+      if (e.summonLeft > 0) continue;
+      e.summonLeft += s.every;
+      const def = getEnemy(s.id);
+      const r = CONFIG.spawn.summonRadius;
+      for (let i = 0; i < s.count; i++) {
+        const angle = (Math.PI * 2 * i) / s.count + Math.random();
+        this.spawnAt(def, e.x + Math.cos(angle) * r, e.y + Math.sin(angle) * r);
+      }
+    }
+  }
+
   // 전체 회신 폭탄: 화면 바로 바깥 원 위에 고르게 늘어놓는다 (사무실 밖으로 나가면 안쪽으로 당긴다)
-  mailBomb(count, minutes) {
+  // announce 가 false 면 "전체 회신 폭탄!" 대신 웨이브의 warning 글자가 이미 떠 있다
+  mailBomb(count, minutes, announce = true) {
     const view = this.scene.cameras.main.worldView;
     const { worldWidth: W, worldHeight: H } = CONFIG.office;
     const { x: px, y: py } = this.scene.player;
@@ -105,7 +144,7 @@ export default class Spawner {
       const y = Phaser.Math.Clamp(py + Math.sin(angle) * radius, 0, H);
       this.spawnAt(this.pickEnemy(minutes), x, y);
     }
-    this.scene.events.emit('mail-bomb', { count });
+    if (announce) this.scene.events.emit('mail-bomb', { count });
   }
 
   // 한쪽 변 바깥에서 줄지어 나온다. 변은 사무실 안쪽으로 열린 곳 중에서 고른다
