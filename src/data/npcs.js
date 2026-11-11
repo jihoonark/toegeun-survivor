@@ -12,6 +12,7 @@
 //     duration  함께 있는 시간(ms). 지나면 leaveLine 을 남기고 떠난다
 //     hp        체력. 몬스터에 닿으면 깎이고, 0이 되면 defeatLine 을 남기고 먼저 떠난다
 //     join      나타날 때 화면에 뜨는 알림
+//     refreshLine / refreshNotice  이미 함께 있는데 또 불렀을 때 (새로 오지 않고 시간만 처음부터)
 //     lines     막을 때 머리 위에 뜨는 말 (차례로)
 //   credit      시청자 아이디어면 { nickname, comment }, 아니면 null
 
@@ -32,6 +33,8 @@ export const NPCS = [
         join: '선배 합류! 5초마다 업무를 막아 줍니다',
         lines: ['이건 내가 받을게!', '결재는 내 담당!', '여기 맡겨!', '접수 완료!'],
         leaveLine: '먼저 퇴근할게~ 수고해!',
+        refreshLine: '또 불렀어? 좋아, 더 있어 줄게!',
+        refreshNotice: '선배 지원 시간이 다시 40초로!',
         hp: 6,
         hurtLine: '아야!',
         defeatLine: '더는 못 버티겠어… 먼저 갈게 😵',

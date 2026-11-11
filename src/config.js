@@ -85,7 +85,13 @@ export const CONFIG = {
     // 머리 위로 든 서류철 높이(px)
     folderOffsetY: 34,
     guardShake: { duration: 120, intensity: 0.004 },
-    stamp: { text: '접수!', color: '#e03a3a', max: 8, duration: 650 },
+    // tilt: 기울기 범위(도), fromScale→1 로 slamTime(ms) 동안 쾅, fadeTime(ms) 동안 사라짐, flashColor: 찍힌 몬스터 번쩍 색
+    stamp: { text: '접수!', color: '#e03a3a', max: 8, duration: 650, tilt: 15, fromScale: 2, slamTime: 120, fadeTime: 200, flashColor: 0xff6a6a },
+    // 막는 원: 처음 startScale 크기에서 active 의 growPart 비율 동안 다 커짐, 채움·선 투명도, 주인공 발밑에서 위로 offsetY
+    ring: { startScale: 0.4, growPart: 0.2, fillAlpha: 0.12, fillMin: 0.06, lineAlpha: 0.9, lineFade: 0.5, offsetY: 6 },
+    // 등장(appearScale→1, appearTime ms), 서류철(folderFrom→folderTo, folderTime ms), 충격파(waveFrom→waveTo),
+    // 걸을 때 통통(bobPeriod ms, bobHeight px), 떠날 때 사라지는 시간(leaveFade ms)
+    anim: { appearScale: 0.2, appearTime: 260, folderFrom: 0.3, folderTo: 1.4, folderTime: 180, waveFrom: 0.3, waveTo: 1.3, bobPeriod: 90, bobHeight: 2, leaveFade: 400 },
     // 선배가 몬스터에 닿았다고 보는 거리(px), 한 번 맞은 뒤 다시 맞지 않는 시간(ms)
     hitRadius: 12,
     hurtCooldown: 700,

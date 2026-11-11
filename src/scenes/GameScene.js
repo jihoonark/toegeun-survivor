@@ -20,7 +20,7 @@ import { OFFICE_TEXTURES } from '../art/office.js';
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
-  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
+  'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -52,6 +52,7 @@ export default class GameScene extends Phaser.Scene {
     });
     this.events.on('desk-ready', () => this.hud.showNotice('내 자리: 선배가 물어볼 게 있대요'));
     this.events.on('npc-joined', ({ npc }) => this.hud.showWarning(npc.mode.join, CONFIG.colors.accent, CONFIG.ui.bodyFontSize));
+    this.events.on('npc-refreshed', ({ npc }) => this.hud.showNotice(npc.mode.refreshNotice));
     this.events.on('npc-guard', () => this.juice.sfx.play('guard'));
     this.events.on('npc-hit', () => this.juice.sfx.play('hurt'));
     this.events.on('npc-defeated', ({ npc }) => this.hud.showNotice(npc.mode.defeatNotice));

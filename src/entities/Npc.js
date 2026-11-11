@@ -33,8 +33,9 @@ export default class Npc {
     this.pips = scene.add.graphics().setDepth(CONFIG.depth.flying);
     this.pos = new Phaser.Math.Vector2(x, y);
     // 나타날 때 통 튀어나온다
-    this.sprite.setScale(0.2);
-    scene.tweens.add({ targets: this.sprite, scale: 1, duration: 260, ease: 'Back.Out' });
+    const a = CONFIG.npc.anim;
+    this.sprite.setScale(a.appearScale);
+    scene.tweens.add({ targets: this.sprite, scale: 1, duration: a.appearTime, ease: 'Back.Out' });
   }
 
   update(delta, player, spawner) {
@@ -49,6 +50,8 @@ export default class Npc {
     }
     this.checkHits(delta, spawner);
     if (this.leaving) return;
+    // 원을 펴고 있는 동안에도 다음 차례까지의 시간은 계속 준다 (interval 마다 정확히 한 번)
+    this.timer -= delta;
     if (this.activeLeft > 0) {
       this.activeLeft -= delta;
       this.guard(delta, player, spawner);
@@ -56,13 +59,17 @@ export default class Npc {
         this.ring.clear();
         this.folder.setVisible(false);
       }
-      return;
     }
-    this.timer -= delta;
     if (this.timer > 0) return;
     this.timer += this.mode.interval;
     this.activeLeft = this.mode.active;
     this.startGuard(player, spawner);
+  }
+
+  // 같은 선배를 또 불렀을 때: 새로 만들지 않고 함께 있는 시간을 처음부터 다시
+  refresh() {
+    this.lifeLeft = this.mode.duration ?? Infinity;
+    this.say(this.mode.refreshLine);
   }
 
   // 막아 주기 시작: 서류철을 번쩍 들고, 충격파, 원 안 몬스터마다 "접수!" 도장과 약한 피해
@@ -70,19 +77,20 @@ export default class Npc {
     const scene = this.scene;
     const n = CONFIG.npc;
     this.say(this.nextLine());
-    this.folder.setVisible(true).setScale(0.3).setAlpha(1);
-    scene.tweens.add({ targets: this.folder, scale: 1.4, duration: 180, ease: 'Back.Out' });
+    const a = n.anim;
+    this.folder.setVisible(true).setScale(a.folderFrom).setAlpha(1);
+    scene.tweens.add({ targets: this.folder, scale: a.folderTo, duration: a.folderTime, ease: 'Back.Out' });
 
     this.wave
       .clear()
       .lineStyle(3, n.guardColor, 1)
       .strokeCircle(0, 0, this.mode.radius)
-      .setPosition(player.x, player.y - 6)
+      .setPosition(player.x, player.y - CONFIG.npc.ring.offsetY)
       .setDepth(CONFIG.depth.flying - 1)
-      .setScale(0.3)
+      .setScale(a.waveFrom)
       .setAlpha(1)
       .setVisible(true);
-    scene.tweens.add({ targets: this.wave, scale: 1.3, alpha: 0, duration: n.guardWave, ease: 'Quad.Out', onComplete: () => this.wave.setVisible(false) });
+    scene.tweens.add({ targets: this.wave, scale: a.waveTo, alpha: 0, duration: n.guardWave, ease: 'Quad.Out', onComplete: () => this.wave.setVisible(false) });
     scene.cameras.main.shake(n.guardShake.duration, n.guardShake.intensity * CONFIG.juice.shake.strength);
 
     const r = this.mode.radius;
@@ -95,7 +103,7 @@ export default class Npc {
       const aim = e.getAimPoint();
       if (stamps++ < n.stamp.max) this.stamp(aim.x, aim.y);
       e.takeDamage(this.mode.damage ?? 0);
-      if (e.active) e.flash?.(CONFIG.juice.flash.duration, 0xff6a6a);
+      if (e.active) e.flash?.(CONFIG.juice.flash.duration, n.stamp.flashColor);
     }
     scene.events.emit('npc-guard', { npc: this, stamps });
   }
@@ -105,26 +113,27 @@ export default class Npc {
     const s = CONFIG.npc.stamp;
     const text = addText(this.scene, x, y, s.text, { size: CONFIG.ui.smallFontSize, color: s.color })
       .setDepth(CONFIG.depth.flying)
-      .setAngle(Phaser.Math.Between(-15, 15))
-      .setScale(2);
-    this.scene.tweens.add({ targets: text, scale: 1, duration: 120, ease: 'Quad.In' });
-    this.scene.tweens.add({ targets: text, alpha: 0, delay: s.duration, duration: 200, onComplete: () => text.destroy() });
+      .setAngle(Phaser.Math.Between(-s.tilt, s.tilt))
+      .setScale(s.fromScale);
+    this.scene.tweens.add({ targets: text, scale: 1, duration: s.slamTime, ease: 'Quad.In' });
+    this.scene.tweens.add({ targets: text, alpha: 0, delay: s.duration, duration: s.fadeTime, onComplete: () => text.destroy() });
   }
 
   // 원 안 몬스터를 바깥으로 민다. 원은 주인공을 감싸고, 처음엔 퍼지듯 커진다
   guard(_delta, player, spawner) {
     const { radius, push, active } = this.mode;
+    const g = CONFIG.npc.ring;
     const t = 1 - this.activeLeft / active;
-    const grow = Math.min(1, t * 5);
-    const r = radius * (0.4 + 0.6 * grow);
+    const grow = Math.min(1, t / g.growPart);
+    const r = radius * (g.startScale + (1 - g.startScale) * grow);
     const c = CONFIG.npc.guardColor;
     this.ring
       .clear()
       .setDepth(player.y - 2)
-      .fillStyle(c, 0.12 * (1 - t) + 0.06)
-      .fillCircle(player.x, player.y - 6, r)
-      .lineStyle(2, c, 0.9 - 0.5 * t)
-      .strokeCircle(player.x, player.y - 6, r);
+      .fillStyle(c, g.fillAlpha * (1 - t) + g.fillMin)
+      .fillCircle(player.x, player.y - g.offsetY, r)
+      .lineStyle(2, c, g.lineAlpha - g.lineFade * t)
+      .strokeCircle(player.x, player.y - g.offsetY, r);
     for (const e of spawner.enemies.getChildren()) {
       if (!e.active) continue;
       const dx = e.x - player.x;
@@ -149,7 +158,8 @@ export default class Npc {
       this.sprite.setFlipX(toTarget.x < 0);
     }
     this.walkTime = moving ? this.walkTime + delta : 0;
-    const bob = moving ? Math.abs(Math.sin(this.walkTime / 90)) * 2 : 0;
+    const a = CONFIG.npc.anim;
+    const bob = moving ? Math.abs(Math.sin(this.walkTime / a.bobPeriod)) * a.bobHeight : 0;
     this.sprite.setPosition(this.pos.x, this.pos.y - bob).setDepth(this.pos.y);
     this.shadow.setPosition(this.pos.x, this.pos.y).setDepth(this.pos.y - 1);
     this.bubble?.setPosition(this.pos.x, this.pos.y - CONFIG.npc.bubbleOffsetY);
@@ -224,7 +234,7 @@ export default class Npc {
       targets: [this.sprite, this.shadow],
       alpha: 0,
       delay: CONFIG.npc.bubbleTime,
-      duration: 400,
+      duration: CONFIG.npc.anim.leaveFade,
       onComplete: () => this.destroy(),
     });
   }

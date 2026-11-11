@@ -17,6 +17,6 @@ export const QUIZZES = [
   { q: "'간단한 건데요'로 시작한 일의 크기는?", choices: ['간단함', '5분 컷', '간단하지 않음'], answer: 2, credit: null },
   { q: '회의실 예약이 겹쳤다. 가장 먼저 할 일은?', choices: ['그냥 들어간다', '예약 내역 확인', '복도에서 회의'], answer: 1, credit: null },
   { q: "금요일 17:50 '월요일에 봐도 돼요'의 진짜 뜻은?", choices: ['월요일에 보면 됨', '지금 봐 주면 좋겠음', '안 봐도 됨'], answer: 1, credit: null },
-  { q: '엑셀에 #REF! 가 떴다. 원인은?', choices: ['참조한 셀이 사라짐', '컴퓨터 고장', '엑셀이 화남'], answer: 0, credit: null },
+  { q: '스프레드시트에 #REF! 가 떴다. 원인은?', choices: ['참조한 셀이 사라짐', '컴퓨터 고장', '표가 화남'], answer: 0, credit: null },
   { q: '퇴근 직전 가장 피해야 할 말은?', choices: ['수고하셨습니다', '혹시 시간 되세요?', '내일 뵙겠습니다'], answer: 1, credit: null },
 ];

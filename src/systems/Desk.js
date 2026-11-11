@@ -219,6 +219,12 @@ export default class Desk {
 
   // NPC는 주인공 왼쪽에서 튀어나온다
   addNpc(id, mode) {
+    const same = this.npcs.find((n) => n.def.id === id && n.modeName === mode && !n.leaving);
+    if (same) {
+      same.refresh();
+      this.scene.events.emit('npc-refreshed', { npc: same });
+      return;
+    }
     const p = this.scene.player;
     const npc = new Npc(this.scene, getNpc(id), mode, p.x - CONFIG.npc.spawnOffsetX, p.y);
     this.npcs.push(npc);

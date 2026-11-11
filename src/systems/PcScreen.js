@@ -62,6 +62,19 @@ export default class PcScreen {
     }
     document.body.appendChild(this.root);
     this.onKey = this.onKey.bind(this);
+    // 열려 있는 동안 주소창이 접히거나 화면을 돌려 캔버스가 다시 배치되면 따라간다
+    this.refit = () => requestAnimationFrame(() => this.fit());
+    this.resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(this.refit) : null;
+  }
+
+  watchLayout(on) {
+    const method = on ? 'addEventListener' : 'removeEventListener';
+    window[method]('resize', this.refit);
+    window[method]('orientationchange', this.refit);
+    window.visualViewport?.[method]('resize', this.refit);
+    window.visualViewport?.[method]('scroll', this.refit);
+    if (on) this.resizeObserver?.observe(this.canvas);
+    else this.resizeObserver?.disconnect();
   }
 
   // 캔버스가 보이는 자리와 크기에 맞춘다. 글자 크기도 캔버스 너비를 따라간다
@@ -89,6 +102,7 @@ export default class PcScreen {
     this.chat = this.root.querySelector('.chat');
     this.panel = this.root.querySelector('.panel');
     this.root.hidden = false;
+    this.watchLayout(true);
     requestAnimationFrame(() => this.root.classList.add('show'));
     await wait(this.timing.openDelay);
 
@@ -193,6 +207,7 @@ export default class PcScreen {
   }
 
   close() {
+    this.watchLayout(false);
     window.removeEventListener('keydown', this.onKey);
     this.root.classList.remove('show');
     this.root.hidden = true;

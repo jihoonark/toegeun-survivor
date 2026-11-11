@@ -23,7 +23,7 @@
 //   knockbackScale 넉백 받는 비율 (없으면 1, 0이면 안 밀림)
 //   stunScale      스테이플러 고정 시간 비율 (없으면 1)
 //   xpPieces       처치 시 결재 서류를 몇 장으로 나눠 떨어뜨리는지 (없으면 1)
-//   group          있으면 저절로 나올 때 이만큼 한꺼번에 모여서 나온다 (포스트잇 떼)
+//   group          있으면 저절로 나올 때 이만큼 한꺼번에 모여서 나온다 (포스트잇 떼) / groupGap: 서로 떨어진 거리(px)
 //   attack         있으면 말풍선을 쏜다 (systems/EnemyShots.js)
 //                  { lines: 쏘는 말, interval(ms), speed(px/초), damage, range(px), lifetime(ms),
 //                    rageAfter(ms): 나온 뒤 이만큼 지나면 화남, rageBelow: 체력이 이 비율 아래면 화남,
@@ -199,6 +199,7 @@ export const ENEMIES = [
     xp: 1,
     spawnWeight: 0.18,
     group: 3,
+    groupGap: 10,
     appearAt: 25,
     bodyWidth: 10,
     bodyHeight: 6,
