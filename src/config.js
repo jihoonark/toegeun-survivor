@@ -224,8 +224,9 @@ export const CONFIG = {
     creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
     // "전체 회신 폭탄!" 같은 경고 글자: 화면 높이 비율 위치, 떠 있는 시간(ms), 사라지는 시간(ms)
     warning: { y: 0.3, duration: 1300, fade: 500 },
-    // 보스 체력 막대 (화면 위 가운데, 시계 아래)
-    bossBar: { width: 160, height: 6, y: 42, labelGap: 2, fill: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
+    // 보스 체력 막대 (화면 아래 가운데)
+    // 위쪽은 시계·알림 글자와 겹쳐서(3화: "17:30팀장", 알림과 겹침) 승진 막대 바로 위에 둔다
+    bossBar: { width: 160, height: 6, y: 236, labelGap: 2, fill: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
   },
 
   // 결과 화면

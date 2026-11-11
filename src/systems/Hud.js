@@ -155,7 +155,8 @@ export default class Hud {
     this.scene.tweens.add({ targets: text, alpha: 0, delay: w.duration, duration: w.fade, onComplete: () => text.destroy() });
   }
 
-  // 보스 체력 막대: 시계 아래 가운데. 보스 이름을 막대 위에 작게
+  // 보스 체력 막대: 화면 아래 승진 막대 바로 위. 보스 이름을 막대 위에 작게
+  // (위쪽은 시계와 알림 글자가 쌓이는 자리라 겹친다)
   showBoss(enemy) {
     const b = CONFIG.hud.bossBar;
     const { width } = CONFIG.screen;
