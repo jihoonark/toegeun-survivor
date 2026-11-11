@@ -28,6 +28,8 @@ export default class Npc {
     this.shadow = scene.add.image(x, y, HERO.shadow);
     this.sprite = scene.add.image(x, y, npcTexture(def.art)).setOrigin(0.5, NPC_ART.footY / NPC_ART.size);
     this.ring = scene.add.graphics();
+    this.wave = scene.add.graphics().setVisible(false);
+    this.folder = scene.add.image(x, y, NPC_ART.folder).setVisible(false);
     this.pips = scene.add.graphics().setDepth(CONFIG.depth.flying);
     this.pos = new Phaser.Math.Vector2(x, y);
     // 나타날 때 통 튀어나온다
@@ -50,15 +52,63 @@ export default class Npc {
     if (this.activeLeft > 0) {
       this.activeLeft -= delta;
       this.guard(delta, player, spawner);
-      if (this.activeLeft <= 0) this.ring.clear();
+      if (this.activeLeft <= 0) {
+        this.ring.clear();
+        this.folder.setVisible(false);
+      }
       return;
     }
     this.timer -= delta;
     if (this.timer > 0) return;
     this.timer += this.mode.interval;
     this.activeLeft = this.mode.active;
+    this.startGuard(player, spawner);
+  }
+
+  // 막아 주기 시작: 서류철을 번쩍 들고, 충격파, 원 안 몬스터마다 "접수!" 도장과 약한 피해
+  startGuard(player, spawner) {
+    const scene = this.scene;
+    const n = CONFIG.npc;
     this.say(this.nextLine());
-    this.scene.events.emit('npc-guard', { npc: this });
+    this.folder.setVisible(true).setScale(0.3).setAlpha(1);
+    scene.tweens.add({ targets: this.folder, scale: 1.4, duration: 180, ease: 'Back.Out' });
+
+    this.wave
+      .clear()
+      .lineStyle(3, n.guardColor, 1)
+      .strokeCircle(0, 0, this.mode.radius)
+      .setPosition(player.x, player.y - 6)
+      .setDepth(CONFIG.depth.flying - 1)
+      .setScale(0.3)
+      .setAlpha(1)
+      .setVisible(true);
+    scene.tweens.add({ targets: this.wave, scale: 1.3, alpha: 0, duration: n.guardWave, ease: 'Quad.Out', onComplete: () => this.wave.setVisible(false) });
+    scene.cameras.main.shake(n.guardShake.duration, n.guardShake.intensity * CONFIG.juice.shake.strength);
+
+    const r = this.mode.radius;
+    let stamps = 0;
+    for (const e of spawner.enemies.getChildren()) {
+      if (!e.active) continue;
+      const dx = e.x - player.x;
+      const dy = e.y - player.y;
+      if (dx * dx + dy * dy > r * r) continue;
+      const aim = e.getAimPoint();
+      if (stamps++ < n.stamp.max) this.stamp(aim.x, aim.y);
+      e.takeDamage(this.mode.damage ?? 0);
+      if (e.active) e.flash?.(CONFIG.juice.flash.duration, 0xff6a6a);
+    }
+    scene.events.emit('npc-guard', { npc: this, stamps });
+  }
+
+  // 빨간 "접수!" 도장 글자가 쾅 찍혔다 사라진다
+  stamp(x, y) {
+    const s = CONFIG.npc.stamp;
+    const text = addText(this.scene, x, y, s.text, { size: CONFIG.ui.smallFontSize, color: s.color })
+      .setDepth(CONFIG.depth.flying)
+      .setAngle(Phaser.Math.Between(-15, 15))
+      .setScale(2);
+    this.scene.tweens.add({ targets: text, scale: 1, duration: 120, ease: 'Quad.In' });
+    this.scene.tweens.add({ targets: text, alpha: 0, delay: s.duration, duration: 200, onComplete: () => text.destroy() });
   }
 
   // 원 안 몬스터를 바깥으로 민다. 원은 주인공을 감싸고, 처음엔 퍼지듯 커진다
@@ -84,10 +134,12 @@ export default class Npc {
     }
   }
 
-  // 주인공 왼쪽 뒤에 붙어 다닌다
+  // 평소에는 주인공 왼쪽 뒤에 붙어 다니고, 막아 주는 동안은 주인공이 바라보는 앞으로 뛰어나온다
   followPlayer(delta, player) {
-    const { distance, speed } = this.def.follow;
-    const target = new Phaser.Math.Vector2(player.x - distance, player.y + 2);
+    const { distance } = this.def.follow;
+    const guarding = this.activeLeft > 0 && !this.leaving;
+    const speed = guarding ? CONFIG.npc.guardDash.speed : this.def.follow.speed;
+    const target = guarding ? this.frontOf(player) : new Phaser.Math.Vector2(player.x - distance, player.y + 2);
     const toTarget = target.subtract(this.pos);
     const len = toTarget.length();
     const step = (speed * delta) / 1000;
@@ -101,7 +153,15 @@ export default class Npc {
     this.sprite.setPosition(this.pos.x, this.pos.y - bob).setDepth(this.pos.y);
     this.shadow.setPosition(this.pos.x, this.pos.y).setDepth(this.pos.y - 1);
     this.bubble?.setPosition(this.pos.x, this.pos.y - CONFIG.npc.bubbleOffsetY);
+    this.folder.setPosition(this.pos.x, this.pos.y - bob - CONFIG.npc.folderOffsetY).setDepth(CONFIG.depth.flying);
     this.drawPips();
+  }
+
+  frontOf(player) {
+    const d = CONFIG.npc.guardDash.distance;
+    if (player.facing === 'up') return new Phaser.Math.Vector2(player.x, player.y - d);
+    if (player.facing === 'down') return new Phaser.Math.Vector2(player.x, player.y + d);
+    return new Phaser.Math.Vector2(player.x + (player.flipX ? -d : d), player.y + 2);
   }
 
   // 몬스터에 닿으면 체력이 깎인다. 0이 되면 먼저 떠난다
@@ -156,6 +216,7 @@ export default class Npc {
     this.leaving = true;
     this.ring.clear();
     this.pips.clear();
+    this.folder.setVisible(false);
     // 맞아서 하얗게 번쩍이던 중에 떠나도 원래 색으로
     this.sprite.clearTint();
     this.say(line);
@@ -173,6 +234,8 @@ export default class Npc {
     this.sprite.destroy();
     this.shadow.destroy();
     this.ring.destroy();
+    this.wave.destroy();
+    this.folder.destroy();
     this.pips.destroy();
     this.bubble?.destroy();
   }

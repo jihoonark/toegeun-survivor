@@ -70,7 +70,7 @@ export const CONFIG = {
   // 사무실 NPC (항목별 행동은 src/data/npcs.js)
   npc: {
     // 말풍선 높이(px), 떠 있는 시간(ms), 바탕색
-    bubbleOffsetY: 38,
+    bubbleOffsetY: 48,
     bubbleTime: 1600,
     bubbleFade: 300,
     bubbleBack: '#ffffff',
@@ -78,11 +78,19 @@ export const CONFIG = {
     firstGuardDelay: 1200,
     guardColor: 0x7ec8e3,
     pushHold: 140,
+    // 막아 줄 때: 주인공 앞으로 뛰어나오는 거리(px)와 속도(px/초), 충격파 퍼지는 시간(ms),
+    // 화면 흔들림, 몬스터에 찍히는 "접수!" 도장 글자 (한 번에 최대 개수, 떠 있는 시간 ms)
+    guardDash: { distance: 20, speed: 300 },
+    guardWave: 380,
+    // 머리 위로 든 서류철 높이(px)
+    folderOffsetY: 34,
+    guardShake: { duration: 120, intensity: 0.004 },
+    stamp: { text: '접수!', color: '#e03a3a', max: 8, duration: 650 },
     // 선배가 몬스터에 닿았다고 보는 거리(px), 한 번 맞은 뒤 다시 맞지 않는 시간(ms)
     hitRadius: 12,
     hurtCooldown: 700,
     // 머리 위 체력 칸 (칸 하나 크기와 간격, px)
-    hpPip: { width: 4, height: 3, gap: 1, offsetY: 33, full: 0x5bd16a, empty: 0x3a3048 },
+    hpPip: { width: 4, height: 3, gap: 1, offsetY: -4, full: 0x5bd16a, empty: 0x3a3048 },
     // 나타나는 곳: 주인공 왼쪽(px)
     spawnOffsetX: 24,
   },

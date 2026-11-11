@@ -7,7 +7,8 @@
 //   art         그림 키 (src/art/npcs.js)
 //   follow      따라다니기 { distance: 주인공과 떨어지는 거리(px), speed: px/초 }
 //   modes       행동 방식별 설정. 내 자리 보상의 mode 로 고른다
-//     guard     막아 주기: interval(ms)마다 active(ms) 동안 주인공 둘레 radius(px) 안의 몬스터를 push(px/초)로 밀어낸다
+//     guard     막아 주기: interval(ms)마다 주인공 앞으로 뛰어나와 서류철을 들고, active(ms) 동안 주인공 둘레 radius(px) 안의
+//               몬스터를 push(px/초)로 밀어낸다. 펴는 순간 원 안 몬스터에게 "접수!" 도장과 damage 만큼 피해
 //     duration  함께 있는 시간(ms). 지나면 leaveLine 을 남기고 떠난다
 //     hp        체력. 몬스터에 닿으면 깎이고, 0이 되면 defeatLine 을 남기고 먼저 떠난다
 //     join      나타날 때 화면에 뜨는 알림
@@ -26,9 +27,10 @@ export const NPCS = [
         active: 1500,
         radius: 64,
         push: 180,
+        damage: 1,
         duration: 40000,
         join: '선배 합류! 5초마다 업무를 막아 줍니다',
-        lines: ['이건 내가 막을게!', '잠깐, 내가 처리할게', '여기 맡겨!', '이 메일 내가 받을게'],
+        lines: ['이건 내가 받을게!', '결재는 내 담당!', '여기 맡겨!', '접수 완료!'],
         leaveLine: '먼저 퇴근할게~ 수고해!',
         hp: 6,
         hurtLine: '아야!',

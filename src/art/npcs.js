@@ -8,6 +8,8 @@ const SIZE = 32;
 export const NPC_ART = {
   size: SIZE,
   footY: 29,
+  // 선배가 막아 줄 때 머리 위로 드는 서류철 (12x9)
+  folder: 'npc-folder',
 };
 
 // 선배: 갈색 단발, 동그란 안경, 초록 가디건, 겨드랑이에 노트북
@@ -54,6 +56,16 @@ function drawSenior(ctx) {
   dot(ctx, o, 13, 11);
 }
 
+// 파란 서류철: 위로 삐져나온 하얀 서류 두 장
+function drawFolder(ctx) {
+  const o = PAL.outline;
+  rect(ctx, PAL.paper, 2, 0, 7, 3);
+  rect(ctx, PAL.white, 4, 1, 6, 2);
+  box(ctx, o, PAL.badge, 0, 2, 12, 7);
+  rect(ctx, PAL.badgeDark, 1, 7, 10, 1);
+  rect(ctx, PAL.badgeCard, 4, 4, 4, 1);
+}
+
 const NPC_DRAWINGS = {
   senior: drawSenior,
 };
@@ -61,6 +73,7 @@ const NPC_DRAWINGS = {
 export const npcTexture = (art) => PREFIX + art;
 
 export function createNpcTextures(scene) {
+  createCanvasTexture(scene, NPC_ART.folder, 12, 9, drawFolder);
   for (const [art, draw] of Object.entries(NPC_DRAWINGS)) {
     createCanvasTexture(scene, PREFIX + art, SIZE, SIZE, draw);
   }
