@@ -22,6 +22,8 @@ const BOT_BASE = {
   stairsWeight: 0.06, // 계단까지 남은 길(px)당 감점
   roomWeight: 50, // 회의실 안 감점
   keepDir: 0.15, // 방금 가던 방향 유지 보너스
+  bombRange: 200, // 이 안의 폭탄은 주우러 간다
+  bombWeight: 4,
   deadEnd: 1.5, // 곧 막히는 방향 감점 (내다본 거리 한 칸마다)
   grid: 16, // 계단 길찾기 칸 크기(px)
 };
@@ -120,6 +122,10 @@ function makeMover(scene, tune = {}) {
       if (x < m || y < m || x > width - m || y > height - m) s += 5;
       s += BOT.centerPull * (Math.abs(x - width / 2) / width + Math.abs(y - height / 2) / height);
       if (field) s += BOT.stairsWeight * field(x, y);
+      for (const b of scene.bombs?.items ?? []) {
+        const d = Phaser.Math.Distance.Between(b.x, b.y, x, y);
+        if (d < BOT.bombRange) s -= BOT.bombWeight * (1 - d / BOT.bombRange);
+      }
       return s;
     };
     let best = STILL;
@@ -158,6 +164,8 @@ export function installSim(game) {
     let brain = null;
     let summary = null;
     let hits = {};
+    let levelUps = 0;
+    let levelUpsBefore30 = 0;
     for (let frame = 0; frame < maxFrames; frame++) {
       t += FRAME;
       game.step(t, FRAME);
@@ -182,9 +190,11 @@ export function installSim(game) {
         };
       }
       const levelUp = game.scene.getScene('LevelUp');
-      if (levelUp.sys.isActive() && levelUp.choices) {
+      if (levelUp.sys.isActive() && levelUp.choices && !levelUp.picked) {
         levelUp.ready = true;
         levelUp.choose(Phaser.Utils.Array.GetRandom(levelUp.choices));
+        levelUps++;
+        if (scene.shiftMinutes() < 30) levelUpsBefore30++;
       }
       // 내 자리 화면은 실제 시간으로 흘러가므로 잠깐 기다린다 (봇은 일부러 들르지 않는다)
       while (scene.desk?.transitioning || game.scene.isPaused('Game') && !levelUp.sys.isActive()) {
@@ -199,7 +209,7 @@ export function installSim(game) {
     game.scene.stop('Result');
     game.scene.stop('Game');
     game.loop.wake();
-    return { ...(summary ?? { result: 'timeout' }), hits };
+    return { ...(summary ?? { result: 'timeout' }), hits, levelUps, levelUpsBefore30 };
   }
 
   // 진행 상황은 __sim.status 에 쌓인다 (오래 걸리므로 start 로 돌려 두고 나중에 읽는다)
@@ -209,7 +219,7 @@ export function installSim(game) {
     status.push(entry);
     for (let i = 0; i < runs; i++) {
       const r = await run({ floor, bot, tune });
-      entry.results.push(`${r.result}@${r.minutes?.toFixed(1)}`);
+      entry.results.push(`${r.result}@${r.minutes?.toFixed(1)} 승진${r.levelUps}(17:30전 ${r.levelUpsBefore30})`);
       if (r.result === 'clear') entry.clears++;
       for (const [k, v] of Object.entries(r.hits)) entry.hits[k] = (entry.hits[k] ?? 0) + v;
     }

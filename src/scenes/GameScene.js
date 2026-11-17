@@ -17,6 +17,8 @@ import { music } from '../systems/Music.js';
 import Elites from '../systems/Elites.js';
 import Stairs from '../systems/Stairs.js';
 import Rooms from '../systems/Rooms.js';
+import Takedowns from '../systems/Takedowns.js';
+import Bombs from '../systems/Bombs.js';
 import FloorRules from '../systems/FloorRules.js';
 import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
 import { FLOORS, getFloor } from '../data/floors.js';
@@ -28,6 +30,7 @@ const GAME_EVENTS = [
   'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
   'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing', 'stairs-open',
   'meeting-door', 'meeting-stop',
+  'shot-parried', 'elite-reflect', 'elite-returned', 'bomb-dropped', 'bomb-exploded',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -53,6 +56,7 @@ export default class GameScene extends Phaser.Scene {
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
     this.pickups = new Pickups(this, this.player);
+    this.bombs = new Bombs(this, this.player);
     this.items = new Items(this, this.player);
     this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
@@ -155,8 +159,24 @@ export default class GameScene extends Phaser.Scene {
       const s = CONFIG.elite.landingShake;
       this.cameras.main.shake(s.duration, s.intensity * CONFIG.juice.shake.strength);
     });
-    this.events.on('enemy-killed', ({ def }) => {
-      if (def.boss || def.elite) this.hud.showWarning(`${def.name}님 퇴근!`);
+    // 처치 연출(삭제·불참·반려 도장), 보스·엘리트 퇴근 장면
+    this.takedowns = new Takedowns(this);
+    this.events.on('shot-parried', ({ x, y, line }) => {
+      if (line) this.takedowns.stamp(x, y, line);
+      this.juice.sfx.play('hit');
+    });
+    this.events.on('elite-reflect', ({ x, y }) => {
+      this.takedowns.stamp(x, y, '반송!');
+      this.juice.sfx.play('guard');
+    });
+    this.events.on('elite-returned', () => this.juice.shake(CONFIG.elite.landingShake));
+    this.events.on('bomb-dropped', () => this.juice.sfx.play('ping'));
+    this.events.on('bomb-exploded', () => {
+      const b = CONFIG.bomb;
+      this.cameras.main.flash(b.flash, 255, 240, 200);
+      this.juice.shake(b.shake);
+      this.juice.sfx.play('alarm');
+      this.hud.showWarning('전체 회신!', CONFIG.colors.accent);
     });
   }
 
@@ -260,9 +280,10 @@ export default class GameScene extends Phaser.Scene {
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
     if (this.juice.frozen) return; // 방금 처치로 히트스톱이 걸렸다
-    this.enemyShots.update(delta, this.enemies, this.player);
-    this.elites.update(delta, this.enemies, this.player);
+    this.enemyShots.update(delta, this.enemies, this.player, this.combat.projectiles);
+    this.elites.update(delta, this.enemies, this.player, this.combat.projectiles);
     this.pickups.update(delta);
+    this.bombs.update(delta);
     this.juice.trails(this.combat.projectiles, delta);
     this.hud.updateBoss();
     const helper = this.desk.npcs.find((n) => !n.leaving);

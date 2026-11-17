@@ -18,7 +18,8 @@ import { getElite } from '../data/elites.js';
 export const SKILLS = {
   // 떠넘기기 (옆 팀 과장): 주인공 발밑에 예고 원 → 자기 둘레 일반 몬스터를 원 안으로 던진다
   // 떨어지는 순간 주인공이 원 안에 있으면 멘탈이 깎인다. 던져진 몬스터는 내려앉은 뒤 다시 쫓아온다
-  //   skill: { range, radius, grabRadius, count, filler, flightTime, arcHeight, scatter, damage }
+  //   skill: { range, radius, grabRadius, count, filler, flightTime, arcHeight, scatter, damage, reflectTime, reflectDamage }
+  // 날아오는 몬스터를 무기로 맞히면 "반송!": 과장에게 되돌아가 reflectDamage 를 주고 그 몬스터는 처리된다
   toss: {
     aim(_elites, e, player) {
       const s = e.def.skill;
@@ -43,7 +44,7 @@ export const SKILLS = {
       const members = picked.map((o) => {
         const angle = Math.random() * Math.PI * 2;
         const r = Math.random() * s.scatter;
-        elites.throw(o, cast.x + Math.cos(angle) * r, cast.y + Math.sin(angle) * r, s.flightTime, s.arcHeight);
+        elites.throw(o, cast.x + Math.cos(angle) * r, cast.y + Math.sin(angle) * r, s.flightTime, s.arcHeight, e);
         return { enemy: o, spawnId: o.spawnId };
       });
       elites.landings.push({ x: cast.x, y: cast.y, r: cast.r, left: s.flightTime, damage: s.damage, members });
@@ -102,17 +103,36 @@ export default class Elites {
   }
 
   // 몬스터를 (x, y) 로 포물선을 그리며 던진다. 날아가는 동안은 쫓지도, 주인공·다른 몬스터에 닿지도, 무기에 맞지도 않는다
-  throw(enemy, x, y, ms, height) {
-    enemy.flight = { fromX: enemy.x, fromY: enemy.y, toX: x, toY: y, t: 0, ms, height };
+  // by: 던진 엘리트 (반송될 때 돌아갈 곳)
+  throw(enemy, x, y, ms, height, by) {
+    enemy.flight = { fromX: enemy.x, fromY: enemy.y, toX: x, toY: y, t: 0, ms, height, by, bySpawnId: by?.spawnId };
     enemy.body.setVelocity(0, 0);
     enemy.body.checkCollision.none = true;
     this.flights.push({ enemy, spawnId: enemy.spawnId });
   }
 
-  updateFlights(delta, player) {
+  // 날아오는 몬스터에 무기가 맞으면 던진 엘리트 쪽으로 되돌린다
+  reflect(enemy, projectiles) {
+    const f = enemy.flight;
+    if (f.reflected || !f.by?.active || f.by.spawnId !== f.bySpawnId) return;
+    const aim = enemy.getAimPoint();
+    for (const p of projectiles.getChildren()) {
+      if (!p.active) continue;
+      const reach = enemy.def.hitRadius + p.radius;
+      if (Phaser.Math.Distance.Squared(aim.x, aim.y, p.x, p.y) > reach * reach) continue;
+      if (!p.hit(enemy)) continue;
+      const s = f.by.def.skill;
+      Object.assign(f, { fromX: enemy.x, fromY: enemy.y, toX: f.by.x, toY: f.by.y, t: 0, ms: s.reflectTime, reflected: true });
+      this.scene.events.emit('elite-reflect', { x: aim.x, y: aim.y });
+      return;
+    }
+  }
+
+  updateFlights(delta, player, projectiles) {
     this.flights = this.flights.filter(({ enemy, spawnId }) => {
       if (!enemy.active || enemy.spawnId !== spawnId || !enemy.flight) return false; // 공중에서 처치됨 (다시 나올 때 Enemy.spawn 이 되돌린다)
       const f = enemy.flight;
+      if (projectiles) this.reflect(enemy, projectiles);
       f.t += delta;
       const k = Math.min(1, f.t / f.ms);
       enemy.body.reset(Phaser.Math.Linear(f.fromX, f.toX, k), Phaser.Math.Linear(f.fromY, f.toY, k));
@@ -121,13 +141,20 @@ export default class Elites {
       enemy.flight = null;
       enemy.lift = 0;
       enemy.body.checkCollision.none = false;
+      // 반송된 몬스터는 던진 엘리트에게 맞고 처리된다
+      if (f.reflected) {
+        if (f.by.active && f.by.spawnId === f.bySpawnId) f.by.takeDamage(f.by.def.skill.reflectDamage);
+        this.scene.events.emit('elite-returned', { x: enemy.x, y: enemy.y });
+        enemy.kill();
+      }
       return false;
     });
     // 던진 몬스터가 공중에서 처치되거나 풀에서 다른 몬스터로 다시 나왔으면 그 몬스터는 착지하지 않은 것
     this.landings = this.landings.filter((l) => {
       l.left -= delta;
       if (l.left > 0) return true;
-      const landed = l.members.some(({ enemy, spawnId }) => enemy.active && enemy.spawnId === spawnId);
+      // 반송돼 되돌아가는 중인 몬스터는 착지한 것이 아니다
+      const landed = l.members.some(({ enemy, spawnId }) => enemy.active && enemy.spawnId === spawnId && !enemy.flight);
       if (!landed) return false;
       if (Phaser.Math.Distance.Between(l.x, l.y, player.x, player.y) <= l.r) player.hurt(l.damage);
       this.scene.events.emit('elite-landing', l);
@@ -142,7 +169,8 @@ export default class Elites {
     enemy.cast = null;
   }
 
-  update(delta, enemies, player) {
+  // projectiles: 무기 투사체 (날아오는 몬스터를 맞혀 반송할 때)
+  update(delta, enemies, player, projectiles) {
     for (const e of enemies.getChildren()) {
       const s = e.active && e.def.skill;
       if (!s) continue;
@@ -171,7 +199,7 @@ export default class Elites {
       if (s.lines?.length) this.say(e, Phaser.Utils.Array.GetRandom(s.lines));
       this.scene.events.emit('elite-aim', { enemy: e, cast });
     }
-    this.updateFlights(delta, player);
+    this.updateFlights(delta, player, projectiles);
     this.updateBubbles(delta);
     this.draw(enemies);
   }

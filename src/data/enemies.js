@@ -27,7 +27,10 @@
 //                  { lines: 쏘는 말, interval(ms), speed(px/초), damage, range(px), lifetime(ms),
 //                    rageAfter(ms): 나온 뒤 이만큼 지나면 화남, rageBelow: 체력이 이 비율 아래면 화남,
 //                    rageInterval, rageCount: 화나면 몇 갈래, rageSpread: 갈래 사이 각도(도),
-//                    rageSpeed: 화나면 이동 속도 배율, rageLabel: 화나면 바뀌는 머리 위 글자 }
+//                    rageSpeed: 화나면 이동 속도 배율, rageLabel: 화나면 바뀌는 머리 위 글자,
+//                    parryLines: 무기로 말풍선을 맞혀 깨뜨렸을 때 찍히는 글자 (하나를 고른다) }
+//   defeat         처치될 때 날아가는 연출 { text: 도장 글자, fx: 'fling' | 'stamp' | 'shrink' } (systems/Takedowns.js, 없으면 종이 조각만)
+//   defeatLine     보스를 잡았을 때 화면에 크게 뜨는 말 (없으면 "○○님 퇴근!")
 //   credit         시청자 아이디어면 { nickname, comment }, 아니면 null
 //                  credit이 있으면 등장할 때 "○○님의 [이름]" 이름표가 붙는다
 
@@ -44,6 +47,7 @@ export const ENEMIES = [
     bodyHeight: 8,
     hitRadius: 11,
     hop: { height: 6, duration: 480, squash: 0.25 },
+    defeat: { text: '삭제', fx: 'fling' },
     credit: null,
   },
   {
@@ -62,6 +66,7 @@ export const ENEMIES = [
     hitRadius: 13,
     hop: { height: 4, duration: 620, squash: 0.2 },
     splitInto: { id: 'pptx-final2', count: 2 },
+    defeat: { text: '반려', fx: 'stamp' },
     credit: null,
   },
   {
@@ -80,6 +85,7 @@ export const ENEMIES = [
     hitRadius: 10,
     hop: { height: 4, duration: 480, squash: 0.2 },
     splitInto: { id: 'pptx-real-final', count: 2 },
+    defeat: { text: '반려', fx: 'stamp' },
     credit: null,
   },
   {
@@ -98,6 +104,7 @@ export const ENEMIES = [
     hitRadius: 7,
     hop: { height: 3, duration: 360, squash: 0.2 },
     splitInto: null,
+    defeat: { text: '반려', fx: 'fling' },
     credit: null,
   },
   {
@@ -116,6 +123,7 @@ export const ENEMIES = [
     bodyHeight: 8,
     hitRadius: 10,
     hop: { height: 3, duration: 260, squash: 0.15 },
+    defeat: { text: '내일 할게요', fx: 'fling' },
     credit: null,
   },
   {
@@ -147,6 +155,7 @@ export const ENEMIES = [
       rageSpread: 24,
       rageSpeed: 1.3,
       rageLabel: '화났다!!',
+      parryLines: ['넵(안 함)', '확인했습니다(안 봄)', '네네~', '검토해 보겠습니다'],
     },
     knockbackScale: 0.1,
     stunScale: 0.3,
@@ -154,6 +163,7 @@ export const ENEMIES = [
     bodyHeight: 10,
     hitRadius: 18,
     hop: null,
+    defeatLine: '팀장님, 내일 뵙겠습니다!',
     credit: null,
   },
   {
@@ -172,6 +182,7 @@ export const ENEMIES = [
     bodyHeight: 9,
     hitRadius: 13,
     hop: { height: 3, duration: 700, squash: 0.2 },
+    defeat: { text: '불참', fx: 'stamp' },
     credit: null,
   },
   {
@@ -192,6 +203,7 @@ export const ENEMIES = [
     bodyHeight: 6,
     hitRadius: 8,
     hop: { height: 4, duration: 320, squash: 0.25 },
+    defeat: { text: '완료', fx: 'fling' },
     credit: null,
   },
   {
@@ -211,6 +223,7 @@ export const ENEMIES = [
     bodyHeight: 9,
     hitRadius: 14,
     hop: { height: 5, duration: 240, squash: 0.15 },
+    defeat: { text: '통화 종료', fx: 'shrink' },
     credit: null,
   },
 ];

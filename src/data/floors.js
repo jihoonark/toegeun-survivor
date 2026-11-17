@@ -110,7 +110,7 @@ export const FLOORS = [
     id: 14,
     name: '14층',
     zone: '회의실 층',
-    intro: '유리벽 회의실 미로. 들어가면 회의에 붙잡힌다',
+    intro: '유리벽 회의실 미로. 회의 진행자와 팀장님까지 회의에 들어온다',
     theme: {
       floor: { pattern: 'tile', base: '#b9a98c', dark: '#a08f72', light: '#d4c6aa' },
       light: { color: 0xfff2c0, alpha: 0.07 },
@@ -153,18 +153,19 @@ export const FLOORS = [
       ],
     },
     stages: [
-      { at: 0, interval: 900, batch: [1, 2], hp: 1.15, speed: 1.02 },
-      { at: 10, interval: 760, batch: [1, 2], hp: 1.35, speed: 1.05 },
-      { at: 20, interval: 640, batch: [1, 2], hp: 1.55, speed: 1.07 },
-      { at: 30, interval: 560, batch: [2, 2], hp: 1.8, speed: 1.09 },
+      // 초반 밀도는 15층과 비슷하게 (14층의 어려움은 회의실 규칙·엘리트·팀장·미로에서)
+      { at: 0, interval: 1150, batch: [1, 1], hp: 1, speed: 1 },
+      { at: 10, interval: 950, batch: [1, 2], hp: 1.2, speed: 1.03 },
+      { at: 20, interval: 760, batch: [1, 2], hp: 1.4, speed: 1.06 },
+      { at: 30, interval: 640, batch: [1, 2], hp: 1.6, speed: 1.08 },
       { at: 40, interval: 480, batch: [2, 3], hp: 2.05, speed: 1.12 },
       { at: 50, interval: 420, batch: [2, 3], hp: 2.3, speed: 1.14 },
       { at: 55, interval: 400, batch: [2, 3], hp: 2.45, speed: 1.16 },
     ],
-    // 회의 초대가 주인공. 이메일은 줄이고 포스트잇·보고서가 일찍 나온다
+    // 회의 초대가 주인공 (처음 5분은 시작 무기로도 잡히는 이메일 위주). 포스트잇·보고서가 15층보다 일찍 나온다
     enemies: [
-      { id: 'meeting', weight: 1 },
-      { id: 'email', weight: 0.7 },
+      { id: 'meeting', weight: 1, from: 5 },
+      { id: 'email', weight: 0.8 },
       { id: 'pptx-final', weight: 0.35, from: 8 },
       { id: 'postit', weight: 0.25, from: 12 },
       { id: 'deadline', weight: 1, from: 48 },
@@ -174,7 +175,8 @@ export const FLOORS = [
       { at: 10, type: 'ring', count: 8 },
       { at: 18, type: 'line', count: 8, gap: 18, enemy: 'meeting' },
       { at: 25, type: 'ring', count: 10 },
-      { at: 32, type: 'line', count: 10, gap: 14, enemy: 'email' },
+      { at: 30, type: 'boss', enemy: 'team-lead', warning: '팀장님도 회의 들어오심!' },
+      { at: 34, type: 'line', count: 10, gap: 14, enemy: 'email' },
       { at: 38, type: 'ring', count: 12 },
       { at: 45, type: 'line', count: 10, gap: 18, enemy: 'meeting' },
       { at: 50, type: 'ring', count: 12 },
@@ -182,16 +184,19 @@ export const FLOORS = [
       { at: 55.2, type: 'ring', count: 14 },
       { at: 58, type: 'line', count: 12, gap: 12, enemy: 'email' },
     ],
+    // 회의 진행자 → 옆 팀 과장(15층에서 따라 내려옴) → 17:30 팀장 → 회의 진행자 한 번 더
     elites: [
       { id: 'facilitator', at: 12 },
-      { id: 'facilitator', at: 40 },
+      { id: 'neighbor-manager', at: 21 },
+      { id: 'facilitator', at: 42 },
     ],
     rules: [
       {
         type: 'meetingDoors',
-        first: 4000,
+        // 17:06 부터 (시작 무기만으로 회의 초대 떼를 감당하기 어렵다)
+        first: 24000,
         every: 4500,
-        count: [3, 5],
+        count: [2, 4],
         enemy: 'meeting',
         range: 320,
         minDistance: 70,

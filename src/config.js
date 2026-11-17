@@ -85,6 +85,51 @@ export const CONFIG = {
     labelRise: 10,
   },
 
+  // 날려버리기 연출 (systems/Takedowns.js). 몬스터별 연출 종류와 글자는 몬스터 데이터 defeat
+  takedown: {
+    // 처치된 모습 그림을 동시에 몇 개까지, 몇 ms 뒤 정리
+    ghostPool: 24,
+    ghostLife: 700,
+    fling: { distanceX: 70, distanceY: 50, spin: 540, endScale: 0.3, duration: 550 },
+    stamp: { hold: 120, tearX: 10, fallY: 14, tilt: 25, duration: 380 },
+    shrink: { widen: 1.6, duration: 260 },
+    // 도장 글자: 동시에 몇 개, 크기, 색, 몸 위로 높이, 기울기(도), 커졌다 쾅(배율, ms), 떠 있다 사라지기(ms), 떠오르는 높이
+    stampPool: 10,
+    stampSize: 12,
+    stampColor: '#e03a3a',
+    stampOffsetY: 6,
+    stampTilt: 12,
+    stampFrom: 2,
+    stampSlam: 110,
+    stampHold: 380,
+    stampFade: 250,
+    stampRise: 8,
+    // 보스·엘리트 퇴근: 멈춤(ms), 하얀 번쩍임(ms), 흔들림, 종이 조각 수
+    boss: { hitStop: 320, flash: 220, shake: { duration: 260, intensity: 0.014 }, paper: 40 },
+  },
+
+  // 맞받아치기: 무기로 잔소리 말풍선을 맞히면 깨진다 (말풍선 판정 반지름 px)
+  parry: { radius: 10 },
+
+  // 줍는 "전체 회신 폭탄" (systems/Bombs.js)
+  bomb: {
+    // 몬스터를 잡을 때 떨어질 확률과, 마지막으로 떨어진 뒤 다음까지 최소(ms). 보스·엘리트는 반드시
+    dropChance: 0.02,
+    minGap: 30000,
+    // 바닥에 있는 시간(ms), 사라지기 전 깜빡이는 시간·간격(ms)·투명도, 통통 높이(px)·시간(ms)
+    lifetime: 15000,
+    blinkFrom: 4000,
+    blinkInterval: 150,
+    blinkAlpha: 0.3,
+    bob: 3,
+    bobTime: 350,
+    // 터질 때 화면 밖 이만큼(px)까지, 보스·엘리트는 최대 체력의 이 비율만큼 피해
+    margin: 24,
+    bossDamage: 0.2,
+    flash: 300,
+    shake: { duration: 300, intensity: 0.018 },
+  },
+
   // 엘리트 (항목별 기술은 src/data/elites.js, 기술 동작은 systems/Elites.js)
   elite: {
     // 기술을 쓸 대상이 없을 때 다시 노리기까지(ms)
@@ -167,7 +212,7 @@ export const CONFIG = {
     maxRankInRun: '대리',
     // n번째 레벨업에 필요한 서류 수 = firstNeed × growth^(n-1) 반올림
     firstNeed: 4,
-    growth: 1.15,
+    growth: 1.2,
   },
 
   // 결재 서류 줍기

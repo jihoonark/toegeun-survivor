@@ -84,10 +84,10 @@ export default class Juice {
     this.sfx.play('hurt');
   }
 
-  // 히트스톱: 물리를 잠깐 멈춘다. 마지막으로 건 뒤 cooldown 이 지나야 다시 건다
-  hitStop(ms) {
+  // 히트스톱: 물리를 잠깐 멈춘다. 마지막으로 건 뒤 cooldown 이 지나야 다시 건다 (force 면 바로: 보스 퇴근 장면)
+  hitStop(ms, force = false) {
     const now = this.scene.time.now;
-    if (ms <= 0 || now - this.lastHitStop < CONFIG.juice.hitStop.cooldown) return;
+    if (ms <= 0 || (!force && now - this.lastHitStop < CONFIG.juice.hitStop.cooldown)) return;
     this.lastHitStop = now;
     this.frozenUntil = Math.max(this.frozenUntil, now + ms);
     if (!this.frozen) {

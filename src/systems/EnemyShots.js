@@ -6,15 +6,18 @@ import { addText } from './Text.js';
 // 몬스터 데이터의 attack 이 있으면 interval 마다 사거리 안의 주인공에게 말풍선 하나를 날린다
 // 화가 나면(rageAfter 가 지나거나 체력이 rageBelow 아래) 더 자주, rageCount 갈래로 부채꼴 발사
 //
+// 무기 투사체로 말풍선을 맞히면 깨진다 (맞받아치기). 그 자리에 attack.parryLines 중 하나가 도장처럼 찍힌다
+//
 // 장면 이벤트
-//   'enemy-rage'  { enemy }   몬스터가 화났을 때 (경고 글자)
+//   'enemy-rage'    { enemy }         몬스터가 화났을 때 (경고 글자)
+//   'shot-parried'  { x, y, line }    말풍선을 깨뜨렸을 때
 export default class EnemyShots {
   constructor(scene) {
     this.scene = scene;
     this.pool = [];
   }
 
-  update(delta, enemies, player) {
+  update(delta, enemies, player, projectiles) {
     for (const e of enemies.getChildren()) {
       const a = e.active && e.def.attack;
       if (!a) continue;
@@ -28,6 +31,24 @@ export default class EnemyShots {
       this.volley(e, player);
     }
     this.moveShots(delta, player);
+    if (projectiles) this.parry(projectiles);
+  }
+
+  parry(projectiles) {
+    const r = CONFIG.parry.radius;
+    for (const shot of this.pool) {
+      if (!shot.active) continue;
+      for (const p of projectiles.getChildren()) {
+        if (!p.active) continue;
+        const reach = r + p.radius;
+        if (Phaser.Math.Distance.Squared(shot.x, shot.y, p.x, p.y) > reach * reach) continue;
+        if (!p.hit(shot)) continue;
+        shot.setActive(false).setVisible(false);
+        const line = shot.parryLines?.length ? Phaser.Utils.Array.GetRandom(shot.parryLines) : null;
+        this.scene.events.emit('shot-parried', { x: shot.x, y: shot.y, line });
+        break;
+      }
+    }
   }
 
   enrage(e) {
@@ -68,6 +89,7 @@ export default class EnemyShots {
     shot.vy = Math.sin(angle) * a.speed;
     shot.life = a.lifetime;
     shot.damage = a.damage;
+    shot.parryLines = a.parryLines;
   }
 
   moveShots(delta, player) {

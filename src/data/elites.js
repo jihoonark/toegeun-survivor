@@ -7,6 +7,7 @@
 //   id        고유 이름 (영문)
 //   name      머리 위 이름표와 체력 막대에 보이는 이름
 //   warning   나올 때 화면에 크게 뜨는 글자
+//   defeatLine 잡았을 때 화면에 크게 뜨는 말
 //   skill     기술 { type, first, every, telegraph, lines, ... }
 //               type: systems/Elites.js 의 SKILLS 에 있는 기술 이름
 //               first: 나온 뒤 첫 기술까지(ms), every: 그다음부터 간격(ms)
@@ -20,6 +21,7 @@ export const ELITES = [
     id: 'neighbor-manager',
     name: '옆 팀 과장',
     warning: '옆 팀 과장 등장!',
+    defeatLine: '그건 그쪽 팀 일입니다!',
     art: 'neighbor-manager',
     scale: 1.4,
     hp: 70,
@@ -51,6 +53,9 @@ export const ELITES = [
       arcHeight: 30,
       scatter: 14,
       damage: 1,
+      // 날아오는 몬스터를 무기로 맞히면 과장에게 되돌아간다("반송!"): 돌아가는 시간(ms), 과장이 받는 피해
+      reflectTime: 450,
+      reflectDamage: 6,
     },
     credit: null,
   },
@@ -59,6 +64,7 @@ export const ELITES = [
     id: 'facilitator',
     name: '회의 진행자',
     warning: '회의 진행자 등장!',
+    defeatLine: '회의는 여기까지 하시죠!',
     art: 'facilitator',
     scale: 1.4,
     hp: 80,

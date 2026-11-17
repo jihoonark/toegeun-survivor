@@ -6,6 +6,7 @@ export const EFFECT_TEXTURES = {
   paper: 'fx-paper',
   paperFrames: ['paper-0', 'paper-1', 'paper-2'],
   document: 'pickup-document',
+  bomb: 'pickup-bomb',
   lock: 'ui-lock',
   // 무기별 맞힐 때 파편 (무기 데이터 hitFx.particle 키 → 프레임들)
   hit: 'fx-hit',
@@ -55,6 +56,26 @@ function drawLock(ctx) {
 
 const FRAME = 4;
 
+// 14x14 "전체 회신 폭탄": 빨간 편지봉투에 노란 "전체" 띠, 위로 심지와 불꽃
+function drawBomb(ctx) {
+  const o = PAL.outline;
+  rect(ctx, PAL.shadow, 2, 12, 11, 2);
+  box(ctx, o, PAL.alert, 1, 5, 13, 8);
+  // 봉투 접힌 선
+  rect(ctx, PAL.alertDark, 2, 6, 1, 1);
+  rect(ctx, PAL.alertDark, 3, 7, 2, 1);
+  rect(ctx, PAL.alertDark, 5, 8, 5, 1);
+  rect(ctx, PAL.alertDark, 10, 7, 2, 1);
+  rect(ctx, PAL.alertDark, 12, 6, 1, 1);
+  rect(ctx, PAL.labelYellow, 2, 10, 11, 1);
+  // 심지와 불꽃
+  rect(ctx, o, 11, 2, 1, 3);
+  rect(ctx, o, 12, 1, 1, 1);
+  dot(ctx, PAL.labelYellow, 13, 0);
+  dot(ctx, PAL.capOrange, 12, 0);
+  dot(ctx, PAL.capOrange, 13, 1);
+}
+
 export function createEffectTextures(scene) {
   const tex = createCanvasTexture(scene, EFFECT_TEXTURES.paper, FRAME * 3, FRAME, (ctx) => {
     // 작은 종이
@@ -69,6 +90,7 @@ export function createEffectTextures(scene) {
   });
   EFFECT_TEXTURES.paperFrames.forEach((name, i) => tex.add(name, 0, i * FRAME, 0, FRAME, FRAME));
   createCanvasTexture(scene, EFFECT_TEXTURES.document, 7, 9, drawDocument);
+  createCanvasTexture(scene, EFFECT_TEXTURES.bomb, 14, 14, drawBomb);
   const hit = createCanvasTexture(scene, EFFECT_TEXTURES.hit, HIT_CELL * 6, HIT_CELL, drawHitBits);
   Object.values(EFFECT_TEXTURES.hitFrames).flat().forEach((name, i) => hit.add(name, 0, i * HIT_CELL, 0, HIT_CELL, HIT_CELL));
   createCanvasTexture(scene, EFFECT_TEXTURES.lock, 7, 8, drawLock);
