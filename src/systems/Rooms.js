@@ -22,7 +22,7 @@ export default class Rooms {
     this.scene.add.rectangle(x, y, w, h, R.floorColor).setOrigin(0).setDepth(CONFIG.depth.floor + 1);
     this.scene.add.image(x + w / 2, y + h / 2 + R.tableOffsetY, OFFICE_TEXTURES.meetingTable).setOrigin(0.5, 1).setDepth(y + h / 2 + R.tableOffsetY);
     this.scene.add.image(x + w / 2, y + R.boardOffsetY, OFFICE_TEXTURES.whiteboard).setOrigin(0.5, 1).setDepth(y + R.boardOffsetY);
-    addText(this.scene, x + R.nameInset, y + R.nameInset, room.name, { size: CONFIG.ui.smallFontSize, color: R.nameColor, origin: 0, stroke: 0 })
+    addText(this.scene, x + R.nameInset, y + R.nameInset, room.name, { size: CONFIG.ui.smallFontSize, color: R.nameColor, origin: 0, stroke: CONFIG.ui.bodyStroke })
       .setDepth(y + R.nameInset);
 
     const half = R.doorWidth / 2;
@@ -80,8 +80,13 @@ export default class Rooms {
       const len = Math.abs(y2 - y1);
       if (len <= 0) return;
       this.walls.add(this.scene.add.zone(x1, top + len / 2, t, len));
+      // 휴대폰 작은 화면에서도 보이게 바닥 그림자와 굵은 테두리
+      const v = R.vertical;
+      g.fillStyle(R.frame, v.shadowAlpha).fillRect(x1 + t / 2, top, v.shadow, len);
       g.fillStyle(R.glass, R.glassAlpha).fillRect(x1 - t / 2, top - R.glassHeight, t, len + R.glassHeight);
-      g.fillStyle(R.frame).fillRect(x1 - t / 2, top - R.glassHeight, 1, len + R.glassHeight).fillRect(x1 + t / 2 - 1, top - R.glassHeight, 1, len + R.glassHeight);
+      g.fillStyle(R.frame)
+        .fillRect(x1 - t / 2 - v.frame, top - R.glassHeight, v.frame, len + R.glassHeight)
+        .fillRect(x1 + t / 2, top - R.glassHeight, v.frame, len + R.glassHeight);
       g.setDepth(top + len);
     }
   }

@@ -74,7 +74,8 @@ export default class Desk {
     this.arrowLeft -= delta;
     this.drawArrow();
 
-    if (this.ready && this.playerInFront(player)) {
+    // 회의 진행자에게 붙잡혀 서 있는 동안에는 게이지가 차지 않는다 (원해서 서 있는 게 아니므로)
+    if (this.ready && !player.frozen && this.playerInFront(player)) {
       this.holdLeft -= delta;
       this.drawProgress(player, 1 - this.holdLeft / CONFIG.desk.holdTime);
       if (this.holdLeft <= 0) this.open();

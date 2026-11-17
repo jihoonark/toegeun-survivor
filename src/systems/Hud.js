@@ -39,7 +39,7 @@ export default class Hud {
     this.clockMinute = null;
     this.clockWarn = null;
     this.toasts = 0;
-    this.warnings = 0;
+    this.warnings = [];
     scene.events.on('weapon-added', ({ weapon }) => this.showCredit(weapon));
     scene.events.on('item-added', ({ item }) => this.showCredit(item));
   }
@@ -149,10 +149,10 @@ export default class Hud {
   showWarning(message, color = CONFIG.colors.danger, size = CONFIG.ui.titleFontSize) {
     const w = CONFIG.hud.warning;
     const { width, height } = CONFIG.screen;
-    const text = addText(this.scene, width / 2, height * w.y + this.warnings * w.stackGap, message, { size, color })
+    const text = addText(this.scene, width / 2, height * w.y + this.warnings.length * w.stackGap, message, { size, color })
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
-    this.warnings++;
+    this.warnings.push(text);
     this.scene.tweens.add({ targets: text, scale: { from: 1.3, to: 1 }, duration: 180, ease: 'Back.Out' });
     this.scene.tweens.add({
       targets: text,
@@ -161,7 +161,8 @@ export default class Hud {
       duration: w.fade,
       onComplete: () => {
         text.destroy();
-        this.warnings--;
+        this.warnings = this.warnings.filter((t) => t !== text);
+        this.warnings.forEach((t, i) => t.setY(height * w.y + i * w.stackGap));
       },
     });
   }

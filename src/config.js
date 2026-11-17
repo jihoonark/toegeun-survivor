@@ -64,6 +64,8 @@ export const CONFIG = {
     glassAlpha: 0.5,
     frame: 0x4a5068,
     mullionGap: 30,
+    // 세로 벽: 양쪽 테두리 두께, 오른쪽 바닥 그림자 너비와 진하기
+    vertical: { frame: 2, shadow: 3, shadowAlpha: 0.35 },
     shine: 0xffffff,
     shineAlpha: 0.6,
     shineLength: 24,

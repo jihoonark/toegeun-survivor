@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CONFIG } from '../config.js';
 import { getEnemy } from '../data/enemies.js';
 
 // 층 특별 규칙 (GAME_SPEC.md 12장 "층 구성"). 층 데이터 rules 의 type 으로 부른다
@@ -9,7 +10,9 @@ import { getEnemy } from '../data/enemies.js';
 //   'meeting-stop'  { room }          주인공이 회의실에 들어가 붙잡혔을 때
 export const RULES = {
   // 회의실 문이 수시로 열리며 몬스터가 쏟아진다
-  //   { type: 'meetingDoors', first, every(ms), count: [최소, 최대], enemy, range(px): 주인공에게서 이 거리 안 회의실만,
+  // 문이 먼저 번쩍이며 "회의 끝!"이 뜨고, config rooms.doorOpenTime 뒤에 몬스터가 나온다 (피할 틈)
+  //   { type: 'meetingDoors', first, every(ms), count: [최소, 최대], enemy,
+  //     range(px): 주인공에게서 이 거리 안 회의실만, minDistance(px): 이보다 가까운 문은 열지 않는다 (주인공이 있는 회의실도),
   //     push: { strength(px/초), duration(ms), spread: 부채꼴 벌어짐 } 문 밖으로 튀어 나가는 세기,
   //     inset(px): 문에서 이만큼 안쪽에서 나온다, label: 문 위 글자 }
   meetingDoors: class {
@@ -24,9 +27,19 @@ export const RULES = {
       if (this.left > 0) return;
       this.left += this.rule.every;
       const { rooms } = this.scene;
-      const near = rooms.rooms.filter((r) => Phaser.Math.Distance.Between(r.door.x, r.door.y, player.x, player.y) <= this.rule.range);
+      const inside = rooms.roomAt(player.x, player.y);
+      const near = rooms.rooms.filter((r) => {
+        const d = Phaser.Math.Distance.Between(r.door.x, r.door.y, player.x, player.y);
+        return r !== inside && d <= this.rule.range && d >= this.rule.minDistance;
+      });
       const room = Phaser.Utils.Array.GetRandom(near);
       if (!room) return;
+      rooms.openDoor(room, this.rule.label);
+      this.scene.time.delayedCall(CONFIG.rooms.doorOpenTime, () => this.release(room));
+    }
+
+    release(room) {
+      if (this.scene.ended) return;
       const def = getEnemy(this.rule.enemy);
       const count = Phaser.Math.Between(...this.rule.count);
       const { strength, duration, spread: fan } = this.rule.push;
@@ -39,7 +52,6 @@ export const RULES = {
         const enemy = this.scene.spawner.spawnAt(def, room.door.x - room.out[0] * inset, room.door.y - room.out[1] * inset);
         enemy?.knockback(dx, dy, strength, duration);
       }
-      rooms.openDoor(room, this.rule.label);
       this.scene.events.emit('meeting-door', { room, count });
     }
   },

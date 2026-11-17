@@ -194,6 +194,7 @@ export const FLOORS = [
         count: [3, 5],
         enemy: 'meeting',
         range: 320,
+        minDistance: 70,
         push: { strength: 120, duration: 300, spread: 0.35 },
         inset: 6,
         label: '회의 끝!',

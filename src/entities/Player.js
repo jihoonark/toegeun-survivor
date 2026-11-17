@@ -40,6 +40,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   // ms 동안 제자리. 머리 위에 label 글자 (이어서 붙잡히면 더 긴 쪽으로)
   freeze(ms, label) {
     this.frozenLeft = Math.max(this.frozenLeft, ms);
+    this.setVelocity(0, 0);
     this.tag ??= addText(this.scene, this.x, this.y, '', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.accent, stroke: CONFIG.ui.bodyStroke })
       .setDepth(CONFIG.depth.flying);
     this.tag.setText(label).setVisible(true);
