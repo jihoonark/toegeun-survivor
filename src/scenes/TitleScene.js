@@ -31,9 +31,11 @@ export default class TitleScene extends Phaser.Scene {
     // 버튼판과 층 표시창
     const p = E.panel;
     const g = this.add.graphics();
-    g.fillStyle(toColor(colors.outline)).fillRoundedRect(p.x - 1, p.y - 1, p.width + 2, p.height + 2, p.radius + 1);
+    const o = p.outline;
+    g.fillStyle(toColor(colors.outline)).fillRoundedRect(p.x - o, p.y - o, p.width + o * 2, p.height + o * 2, p.radius + o);
     g.fillStyle(E.colors.panel).fillRoundedRect(p.x, p.y, p.width, p.height, p.radius);
-    g.fillStyle(E.colors.panelDark).fillRect(p.x + 4, p.y + p.height - 5, p.width - 8, 2);
+    const sh = p.shade;
+    g.fillStyle(E.colors.panelDark).fillRect(p.x + sh.inset, p.y + p.height - sh.bottom, p.width - sh.inset * 2, sh.height);
     const d = E.display;
     const cx = p.x + p.width / 2;
     g.fillStyle(E.colors.display).fillRect(cx - d.width / 2, d.y, d.width, d.height);
@@ -60,6 +62,8 @@ export default class TitleScene extends Phaser.Scene {
     addText(this, width / 2, height - ui.title.creditBottom, '임시 그래픽: 코드로 그린 도트', { size: ui.smallFontSize, color: colors.textDim });
 
     this.leaving = false;
+    // 지금 누르고 있는 버튼과 손가락 (같은 손가락으로 같은 버튼에서 뗐을 때만 출발)
+    this.pressing = null;
     this.select(progress.suggested());
 
     const keys = this.input.keyboard;
@@ -80,7 +84,7 @@ export default class TitleScene extends Phaser.Scene {
     const fill = open ? E.colors.lit : floor ? E.colors.locked : E.colors.unbuilt;
     const r = E.button.radius;
     const ring = this.add.graphics();
-    const circle = this.add.circle(x, y, r, fill).setStrokeStyle(2, toColor(CONFIG.colors.outline));
+    const circle = this.add.circle(x, y, r, fill).setStrokeStyle(E.button.outline, toColor(CONFIG.colors.outline));
     const label = addText(this, x, y, String(id), {
       size: CONFIG.ui.smallFontSize,
       color: open ? CONFIG.colors.outline : E.colors.lockedText,
@@ -91,7 +95,14 @@ export default class TitleScene extends Phaser.Scene {
     }
     // 휴대폰에서 누르기 쉽게 그림보다 넓게 받는다
     circle.setInteractive(new Phaser.Geom.Circle(r, r, r + E.button.touchPad), Phaser.Geom.Circle.Contains);
+    circle.on('pointerdown', (pointer) => (this.pressing = { id, pointerId: pointer.id }));
+    circle.on('pointerout', (pointer) => {
+      if (this.pressing?.pointerId === pointer.id) this.pressing = null;
+    });
     circle.on('pointerup', (pointer) => {
+      const same = this.pressing?.id === id && this.pressing.pointerId === pointer.id;
+      this.pressing = null;
+      if (!same) return;
       if (pointer.wasTouch && CONFIG.fullscreen.autoOnTouchStart) requestFullscreen();
       this.select(id);
       this.depart(id);
@@ -105,7 +116,8 @@ export default class TitleScene extends Phaser.Scene {
     for (const button of this.buttons) {
       button.ring.clear();
       if (button.id !== id) continue;
-      button.ring.lineStyle(2, E.colors.selected).strokeCircle(button.x, button.y, E.button.radius + 3);
+      const s = E.button.selectedRing;
+      button.ring.lineStyle(s.width, E.colors.selected).strokeCircle(button.x, button.y, E.button.radius + s.gap);
     }
     const floor = FLOORS.find((f) => f.id === id);
     this.displayText.setText(`▼ ${id}`);

@@ -478,10 +478,12 @@ export const CONFIG = {
       // 버튼판 1~(rows × columns)층, 위쪽 줄이 높은 층
       rows: 5,
       columns: 3,
-      panel: { x: 150, y: 62, width: 120, height: 182, radius: 6 },
-      display: { y: 68, width: 72, height: 18 },
-      // 버튼 반지름, 첫 버튼 위치, 버튼 사이, 누르는 범위를 그림보다 넓게(px)
-      button: { radius: 11, startX: 180, startY: 104, gapX: 30, gapY: 29, touchPad: 4 },
+      // outline: 테두리 두께, shade: 아래쪽 그늘 { 양옆 안쪽, 아래에서, 두께 }
+      panel: { x: 146, y: 60, width: 128, height: 188, radius: 6, outline: 1, shade: { inset: 4, bottom: 5, height: 2 } },
+      display: { y: 66, width: 72, height: 18 },
+      // 버튼 반지름, 첫 버튼 위치, 버튼 사이, 누르는 범위를 그림보다 넓게(px). 누르는 범위끼리 겹치지 않게 간격 > (반지름 + touchPad) × 2
+      // outline: 버튼 테두리, selectedRing: 고른 버튼 둘레 고리 { 두께, 버튼에서 떨어진 거리 }
+      button: { radius: 11, startX: 178, startY: 102, gapX: 32, gapY: 32, touchPad: 4, outline: 2, selectedRing: { width: 2, gap: 3 } },
       info: { x: 370, nameY: 110, statusY: 136, introY: 168, promptY: 222, wrap: 160 },
       colors: {
         panel: 0xc9ccd6,

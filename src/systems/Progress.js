@@ -3,16 +3,28 @@ import { FLOORS } from '../data/floors.js';
 
 // 진행 상황 저장 (GAME_SPEC.md 12장 "판 구조"): 클리어한 층 번호를 이 브라우저(localStorage)에 남긴다
 // 층 목록(FLOORS) 첫 층은 처음부터 열려 있고, 바로 앞 층을 클리어하면 다음 층이 열린다
-// 저장이 막힌 브라우저(사생활 보호 모드 등)에서도 게임은 돌아가고, 그 판 동안만 기억한다
+// 저장이 막힌 브라우저(사생활 보호 모드 등)에서도 게임은 돌아가고, 그 실행 동안만 기억한다
+// 저장소는 처음 한 번만 읽고 그 뒤에는 메모리 값을 기준으로 한다 (쓰기만 실패하는 브라우저에서 옛 값으로 돌아가지 않게)
 
-let memory = [];
+let memory = null;
+
+// 첫 층부터 순서대로 이어서 깬 층만 인정한다 (망가진 저장값으로 앞 층을 건너뛰지 않게)
+function normalize(ids) {
+  const set = new Set(Array.isArray(ids) ? ids : []);
+  const cleared = [];
+  for (const f of FLOORS) {
+    if (!set.has(f.id)) break;
+    cleared.push(f.id);
+  }
+  return cleared;
+}
 
 function load() {
+  if (memory) return memory;
   try {
-    const saved = JSON.parse(localStorage.getItem(CONFIG.progress.storageKey));
-    if (Array.isArray(saved?.cleared)) memory = saved.cleared.filter((id) => typeof id === 'number');
+    memory = normalize(JSON.parse(localStorage.getItem(CONFIG.progress.storageKey))?.cleared);
   } catch {
-    // 저장소를 못 쓰면 메모리 값 그대로
+    memory = [];
   }
   return memory;
 }
