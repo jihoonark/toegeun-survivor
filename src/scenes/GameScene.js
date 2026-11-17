@@ -16,6 +16,8 @@ import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
 import Elites from '../systems/Elites.js';
 import Stairs from '../systems/Stairs.js';
+import Rooms from '../systems/Rooms.js';
+import FloorRules from '../systems/FloorRules.js';
 import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
 import { FLOORS, getFloor } from '../data/floors.js';
 
@@ -25,6 +27,7 @@ const GAME_EVENTS = [
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
   'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
   'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing', 'stairs-open',
+  'meeting-door', 'meeting-stop',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -40,10 +43,12 @@ export default class GameScene extends Phaser.Scene {
     const [startX, startY] = this.floor.map.start;
     this.player = new Player(this, startX, startY);
     this.physics.add.collider(this.player, this.furniture);
+    this.physics.add.collider(this.player, this.walls);
     this.controls = new Controls(this);
 
     this.elites = new Elites(this, this.floor);
     this.spawner = new Spawner(this, this.floor);
+    this.floorRules = new FloorRules(this, this.floor);
     this.enemies = this.spawner.enemies;
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
@@ -53,6 +58,8 @@ export default class GameScene extends Phaser.Scene {
     this.setupShift();
     this.desk = new Desk(this);
     this.stairs = new Stairs(this);
+    this.events.on('meeting-door', () => this.juice.sfx.play('alarm'));
+    this.events.on('meeting-stop', () => this.juice.sfx.play('ping'));
     this.events.on('stairs-open', () => {
       this.hud.showWarning('계단 열림!', CONFIG.colors.accent);
       this.juice.sfx.play('levelUp');
@@ -214,6 +221,10 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
+    // 유리벽 회의실 (없는 층은 빈 벽 묶음)
+    this.rooms = new Rooms(this, this.floor.map);
+    this.walls = this.rooms.walls;
+
     const myBlock = CONFIG.furnitureBlock.desk;
     this.furniture.add(this.add.zone(desk[0], desk[1] - myBlock.height / 2, myBlock.width, myBlock.height));
 
@@ -237,8 +248,10 @@ export default class GameScene extends Phaser.Scene {
     this.updateClock(delta);
     // 계단 도착은 이 프레임의 공격을 다 처리한 뒤 맨 끝에 판정한다 (같은 프레임에 멘탈이 0이 되면 야근이 먼저)
     const atStairs = this.stairs.update(this.shiftMinutes(), this.player);
-    // 책상 앞에서 일하는 중에는 움직이지 못한다 (무기는 계속 나간다)
-    const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner);
+    // 층 특별 규칙 (14층: 회의실 문 열림, 회의실에 들어가면 붙잡힘)
+    this.floorRules.update(delta, this.shiftMinutes(), this.player);
+    // 회사 PC 화면으로 넘어가는 중이거나, 회의실에 붙잡히거나 회의 진행자에게 지목되면 제자리 (무기는 계속 나간다)
+    const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner) || this.player.frozen;
     if (this.desk.transitioning) return; // 방금 회사 PC 화면으로 넘어가기 시작
     // 17:50부터 음악이 빨라진다
     music.setTempo(this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1);

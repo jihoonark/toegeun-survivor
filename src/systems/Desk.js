@@ -37,7 +37,8 @@ export default class Desk {
     pcScreen ??= new PcScreen(scene.game.canvas, d.screen);
 
     scene.add.image(this.x, this.y, OFFICE_TEXTURES.myDesk).setOrigin(0.5, 1).setDepth(this.y);
-    this.label = addText(scene, this.x, this.y - d.labelOffsetY, '내 자리', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.textDim })
+    // 밝은 바닥(14층)에서도 읽히게 외곽선을 두른다
+    this.label = addText(scene, this.x, this.y - d.labelOffsetY, '내 자리', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.textDim, stroke: CONFIG.ui.bodyStroke })
       .setDepth(CONFIG.depth.flying);
     this.alert = scene.add.image(this.x + d.alertOffset.x, this.y + d.alertOffset.y, OFFICE_TEXTURES.alert).setDepth(CONFIG.depth.flying).setVisible(false);
     scene.tweens.add({ targets: this.alert, y: this.alert.y - 3, duration: 300, yoyo: true, repeat: -1, ease: 'Sine.InOut' });

@@ -22,6 +22,7 @@ const BOT_BASE = {
   stairsWeight: 0.06, // 계단까지 남은 길(px)당 감점
   roomWeight: 50, // 회의실 안 감점
   keepDir: 0.15, // 방금 가던 방향 유지 보너스
+  deadEnd: 1.5, // 곧 막히는 방향 감점 (내다본 거리 한 칸마다)
   grid: 16, // 계단 길찾기 칸 크기(px)
 };
 const BOT = BOT_BASE;
@@ -92,7 +93,7 @@ function distanceField(scene, blocks, tx, ty) {
 function makeMover(scene, tune = {}) {
   const BOT = { ...BOT_BASE, ...tune };
   const blocks = rectsOf(scene);
-  const rooms = scene.floorRules?.rooms ?? [];
+  const rooms = scene.rooms?.rooms ?? [];
   const { width, height } = scene.floor.map;
   let last = STILL;
   let field = null;
@@ -124,19 +125,18 @@ function makeMover(scene, tune = {}) {
     let best = STILL;
     let bestScore = score(p.x, p.y) + (stairs ? 1 : 0);
     for (const d of DIRS) {
+      // 막힌 곳 앞까지만 내다본다. 바로 앞부터 막혔으면 그쪽으로는 안 간다
       let s = 0;
-      let bad = false;
+      let n = 0;
       for (const L of BOT.look) {
         const qx = p.x + d.x * L;
         const qy = p.y + d.y * L;
-        if (blocked(blocks, p.x, p.y, qx, qy, 6)) {
-          bad = true;
-          break;
-        }
+        if (blocked(blocks, p.x, p.y, qx, qy, 4)) break;
         s += score(qx, qy);
+        n++;
       }
-      if (bad) continue;
-      s /= BOT.look.length;
+      if (n === 0) continue;
+      s = s / n + (BOT.look.length - n) * BOT.deadEnd;
       if (d === last) s -= BOT.keepDir;
       if (s < bestScore) {
         bestScore = s;

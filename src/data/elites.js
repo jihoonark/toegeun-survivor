@@ -54,6 +54,43 @@ export const ELITES = [
     },
     credit: null,
   },
+  {
+    // 14층. 돌아가며 지목한다: 주인공 근처 몬스터 → … → 주인공. 노란 원이 다 찰 때 원 안이면 잠시 제자리
+    id: 'facilitator',
+    name: '회의 진행자',
+    warning: '회의 진행자 등장!',
+    art: 'facilitator',
+    scale: 1.4,
+    hp: 80,
+    speed: 34,
+    contactDamage: 2,
+    xp: 25,
+    xpPieces: 6,
+    knockbackScale: 0.2,
+    stunScale: 0.4,
+    bodyWidth: 20,
+    bodyHeight: 10,
+    hitRadius: 16,
+    hop: null,
+    skill: {
+      type: 'spotlight',
+      first: 2000,
+      every: 3600,
+      telegraph: 950,
+      lines: ['한 분씩 의견 말씀해 주세요', '다음 분?', '이쪽 분 생각은요?', '돌아가면서 한마디씩요'],
+      // 주인공이 range(px) 안에 있을 때만. 예고 원 반지름 radius(px), 노란 원
+      range: 220,
+      radius: 30,
+      color: 0xffd23f,
+      // playerEvery 번째 차례마다 주인공을 지목 (나머지는 주인공 근처 몬스터)
+      playerEvery: 2,
+      // 지목되면 hold(ms) 동안 제자리, 머리 위 글자와 진행자 대사
+      hold: 1300,
+      heldLabel: '의견 말씀 중…',
+      heldLine: '네, 좋은 의견 감사합니다~',
+    },
+    credit: null,
+  },
 ];
 
 // 엘리트 표시를 붙이고, 머리 위 이름표는 name 으로

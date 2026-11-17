@@ -50,6 +50,38 @@ export const SKILLS = {
       scene.events.emit('elite-fire', { enemy: e });
     },
   },
+
+  // 돌아가며 지목 (회의 진행자): 차례마다 주인공 근처 몬스터 → … → playerEvery 번째엔 주인공 발밑에 노란 예고 원
+  // 원이 다 차는 순간 원 안에 있으면 hold(ms) 동안 제자리 ("의견 말씀 중…"). 지목된 몬스터도 그동안 멈춘다
+  //   skill: { range, radius, playerEvery, hold, heldLabel, heldLine, color }
+  spotlight: {
+    aim(elites, e, player) {
+      const s = e.def.skill;
+      if (Phaser.Math.Distance.Between(e.x, e.y, player.x, player.y) > s.range) return null;
+      e.turn = (e.turn ?? 0) + 1;
+      const near = (o) => Phaser.Math.Distance.Between(o.x, o.y, player.x, player.y);
+      const other =
+        e.turn % s.playerEvery !== 0 &&
+        elites.scene.enemies
+          .getChildren()
+          .filter((o) => o.active && !o.def.boss && !o.def.elite && near(o) < s.range)
+          .sort((a, b) => near(a) - near(b))[0];
+      const target = other || player;
+      return { x: target.x, y: target.y, r: s.radius, color: s.color };
+    },
+    fire(elites, e, cast, player) {
+      const s = e.def.skill;
+      const inside = (o) => Phaser.Math.Distance.Between(o.x, o.y, cast.x, cast.y) <= cast.r;
+      for (const o of elites.scene.enemies.getChildren()) {
+        if (o.active && o !== e && !o.def.boss && !o.def.elite && inside(o)) o.stun(s.hold);
+      }
+      if (inside(player)) {
+        player.freeze(s.hold, s.heldLabel);
+        elites.say(e, s.heldLine);
+      }
+      elites.scene.events.emit('elite-fire', { enemy: e });
+    },
+  },
 };
 
 export default class Elites {
@@ -155,10 +187,11 @@ export default class Elites {
       const c = e.cast;
       const p = 1 - c.left / c.total;
       this.marks.push(c);
-      this.gfx.fillStyle(t.color, Phaser.Math.Linear(t.fillFrom, t.fillTo, p)).fillCircle(c.x, c.y, c.r);
+      const color = c.color ?? t.color;
+      this.gfx.fillStyle(color, Phaser.Math.Linear(t.fillFrom, t.fillTo, p)).fillCircle(c.x, c.y, c.r);
       // 바깥 선은 고정, 안쪽 원이 바깥까지 차오르면 실행
-      this.gfx.lineStyle(t.outerLine, t.color, t.lineAlpha).strokeCircle(c.x, c.y, c.r);
-      this.gfx.lineStyle(t.innerLine, t.color, t.lineAlpha).strokeCircle(c.x, c.y, Math.max(t.minRadius, c.r * p));
+      this.gfx.lineStyle(t.outerLine, color, t.lineAlpha).strokeCircle(c.x, c.y, c.r);
+      this.gfx.lineStyle(t.innerLine, color, t.lineAlpha).strokeCircle(c.x, c.y, Math.max(t.minRadius, c.r * p));
       const icon = (this.icons[used++] ??= this.scene.add.image(0, 0, OFFICE_TEXTURES.alert).setDepth(CONFIG.depth.flying));
       icon.setVisible(true).setScale(t.iconScale).setPosition(e.x + t.iconOffsetX * e.baseScale, e.y - t.iconOffsetY * e.baseScale);
     }

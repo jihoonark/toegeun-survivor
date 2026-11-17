@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { HERO } from '../art/hero.js';
+import { addText } from '../systems/Text.js';
 
 // 장면 이벤트
 //   'player-hit'  { player, damage, mental }   멘탈이 깎였을 때 (타격감·HUD에서 쓴다)
@@ -27,6 +28,21 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.speedMultiplier = 1;
     this.invulnerableLeft = 0;
     this.flashLeft = 0;
+    // 붙잡혀 못 움직이는 남은 시간(ms)과 머리 위 글자 (회의실 "회의 중", 회의 진행자 지목)
+    this.frozenLeft = 0;
+    this.tag = null;
+  }
+
+  get frozen() {
+    return this.frozenLeft > 0;
+  }
+
+  // ms 동안 제자리. 머리 위에 label 글자 (이어서 붙잡히면 더 긴 쪽으로)
+  freeze(ms, label) {
+    this.frozenLeft = Math.max(this.frozenLeft, ms);
+    this.tag ??= addText(this.scene, this.x, this.y, '', { size: CONFIG.ui.smallFontSize, color: CONFIG.colors.accent, stroke: CONFIG.ui.bodyStroke })
+      .setDepth(CONFIG.depth.flying);
+    this.tag.setText(label).setVisible(true);
   }
 
   move(dir) {
@@ -90,6 +106,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       const dim = this.invulnerableLeft > 0 && Math.floor((hurtCooldown - this.invulnerableLeft) / hurtBlinkInterval) % 2 === 0;
       this.setAlpha(dim ? hurtBlinkAlpha : 1);
     }
+    if (this.frozenLeft > 0) {
+      this.frozenLeft = Math.max(0, this.frozenLeft - delta);
+      if (this.frozenLeft <= 0) this.tag.setVisible(false);
+    }
+    this.tag?.setPosition(this.x, this.y - CONFIG.player.tagOffsetY);
     this.shadow.setPosition(this.x, this.y).setDepth(this.y - 1);
     this.setDepth(this.y);
   }

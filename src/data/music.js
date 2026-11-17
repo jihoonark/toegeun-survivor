@@ -70,6 +70,37 @@ export const MUSIC = {
             K h S h K K S h | K h S h K K S h | K h S h K K S h | K h S h S S S S`,
   },
 
+  // 14층 회의실 층: 똑딱똑딱 시계 소리 위에 끝나지 않는 회의. 단조로 느리고 답답하게
+  meeting: {
+    bpm: 112,
+    stepsPerBeat: 2,
+    loop: true,
+    voices: [
+      {
+        wave: 'square',
+        gain: 0.13,
+        staccato: 0.6,
+        notes: `D5 - F5 - A5 . G5 F5 | E5 - G5 - C5 . . - |
+                D5 - F5 - A5 . C6 A5 | G5 . E5 . D5 . . -`,
+      },
+      {
+        wave: 'triangle',
+        gain: 0.35,
+        staccato: 0.5,
+        notes: `D4 A3 D4 A3 D4 A3 D4 A3 | C4 G3 C4 G3 C4 G3 C4 G3 |
+                A#3 F3 A#3 F3 A#3 F3 A#3 F3 | A3 E3 A3 E3 A3 C#4 E4 A4`,
+      },
+      {
+        wave: 'triangle',
+        gain: 0.55,
+        staccato: 0.9,
+        notes: `D3 . . . D3 . . . | C3 . . . C3 . . . |
+                A#2 . . . A#2 . . . | A2 . . . A2 . . .`,
+      },
+    ],
+    drums: `K - h - S - h h | K - h - S - h - | K - h - S - h h | K - h - S h S h`,
+  },
+
   // 칼퇴 성공: 한 번만
   clear: {
     bpm: 150,

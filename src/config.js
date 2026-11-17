@@ -54,6 +54,35 @@ export const CONFIG = {
     arrow: { margin: 14, marginTop: 70, marginBottom: 34, size: 9, color: 0x5bd16a },
   },
 
+  // 유리벽 회의실 (systems/Rooms.js). 회의실 위치는 층 데이터 map.rooms
+  rooms: {
+    // 벽 두께(주인공을 막는 부분), 문 틈 너비, 유리 높이(3/4 시점, px)
+    wallThickness: 4,
+    doorWidth: 30,
+    glassHeight: 16,
+    glass: 0x9fd6ea,
+    glassAlpha: 0.5,
+    frame: 0x4a5068,
+    mullionGap: 30,
+    shine: 0xffffff,
+    shineAlpha: 0.6,
+    shineLength: 24,
+    // 회의실 안 바닥 색, 탁자·화이트보드 위치(회의실 가운데·위쪽 벽에서 px), 이름 글자
+    floorColor: 0x5a6e66,
+    tableOffsetY: 18,
+    boardOffsetY: 22,
+    nameInset: 4,
+    nameColor: '#e8f0ff',
+    // 문: 평소 색, 열릴 때 번쩍이는 색과 시간(ms), "회의 끝!" 글자가 문에서 떨어진 거리·떠오르는 높이(px)
+    doorColor: 0x8f94a3,
+    doorAlpha: 0.5,
+    doorOpenColor: 0xffd23f,
+    doorOpenTime: 600,
+    doorFade: 500,
+    labelDistance: 14,
+    labelRise: 10,
+  },
+
   // 엘리트 (항목별 기술은 src/data/elites.js, 기술 동작은 systems/Elites.js)
   elite: {
     // 기술을 쓸 대상이 없을 때 다시 노리기까지(ms)
@@ -121,6 +150,8 @@ export const CONFIG = {
     hurtCooldown: 900,
     hurtBlinkInterval: 80,
     hurtBlinkAlpha: 0.3,
+    // 붙잡혔을 때("회의 중") 머리 위 글자 높이(발밑에서 px)
+    tagOffsetY: 40,
   },
 
   // 승진(레벨업): 몬스터가 떨어뜨린 결재 서류(경험치)를 모으면 직급이 오른다 (GAME_SPEC.md 12장)
@@ -228,7 +259,8 @@ export const CONFIG = {
     // 시청자 무기를 얻었을 때 시계 아래에 뜨는 "○○님의 [무기]" 알림
     creditToast: { offsetY: 22, gap: 14, duration: 2500, fade: 600 },
     // "전체 회신 폭탄!" 같은 경고 글자: 화면 높이 비율 위치, 떠 있는 시간(ms), 사라지는 시간(ms)
-    warning: { y: 0.3, duration: 1300, fade: 500 },
+    // 여러 개가 동시에 뜨면 stackGap(px)씩 아래로 쌓는다
+    warning: { y: 0.3, duration: 1300, fade: 500, stackGap: 30 },
     // 보스 체력 막대 (화면 아래 가운데)
     // 위쪽은 시계·알림 글자와 겹쳐서(3화: "17:30팀장", 알림과 겹침) 승진 막대 바로 위에 둔다
     // 보스와 엘리트가 같이 있으면 위로 쌓는다(stackGap px). 엘리트 막대는 eliteFill 색

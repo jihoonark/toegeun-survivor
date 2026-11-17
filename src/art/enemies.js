@@ -303,6 +303,43 @@ function drawNeighborManager(ctx) {
   dot(ctx, PAL.white, 17, 21);
 }
 
+// 회의 진행자 "한 분씩 의견 말씀해 주세요": 청록 재킷, 머리띠 마이크, 한 손에 지시봉 (끝에 노란 불빛)
+function drawFacilitator(ctx) {
+  const o = PAL.outline;
+  // 다리와 구두
+  box(ctx, o, PAL.pants, 11, 24, 4, 5);
+  box(ctx, o, PAL.pants, 17, 24, 4, 5);
+  rect(ctx, PAL.shoe, 11, 28, 4, 1);
+  rect(ctx, PAL.shoe, 17, 28, 4, 1);
+  // 재킷과 서류판
+  box(ctx, o, PAL.blazer, 8, 14, 16, 11);
+  rect(ctx, PAL.blazerDark, 9, 22, 14, 2);
+  rect(ctx, PAL.shirt, 14, 15, 4, 4);
+  box(ctx, o, PAL.paper, 6, 17, 7, 8);
+  rect(ctx, PAL.paperDark, 7, 19, 5, 1);
+  rect(ctx, PAL.paperDark, 7, 21, 5, 1);
+  // 머리 (짧은 단발)
+  box(ctx, o, PAL.skin, 9, 3, 14, 12);
+  rect(ctx, PAL.skinDark, 10, 13, 12, 1);
+  rect(ctx, o, 9, 2, 14, 1);
+  rect(ctx, PAL.bossHair, 10, 3, 12, 3);
+  rect(ctx, PAL.bossHair, 10, 6, 2, 5);
+  rect(ctx, PAL.bossHair, 20, 6, 2, 5);
+  // 똑바로 쳐다보는 눈, 웃는 입
+  rect(ctx, o, 13, 8, 2, 2);
+  rect(ctx, o, 17, 8, 2, 2);
+  rect(ctx, o, 14, 12, 4, 1);
+  // 머리띠 마이크
+  rect(ctx, PAL.headset, 9, 5, 1, 6);
+  rect(ctx, PAL.headset, 10, 11, 3, 1);
+  dot(ctx, o, 13, 11);
+  // 오른손 지시봉, 끝에 노란 불빛
+  box(ctx, o, PAL.blazer, 23, 15, 4, 5);
+  rect(ctx, PAL.headset, 26, 6, 1, 10);
+  rect(ctx, PAL.headset, 27, 4, 1, 3);
+  disc(ctx, 28, 3, 2, () => PAL.labelYellow);
+}
+
 // 그림이 없는 몬스터용: 빨간 덩어리
 function drawDefault(ctx) {
   const o = PAL.outline;
@@ -321,6 +358,7 @@ const ENEMY_DRAWINGS = {
   postit: drawPostit,
   'client-call': drawClientCall,
   'neighbor-manager': drawNeighborManager,
+  facilitator: drawFacilitator,
 };
 
 export function enemyTexture(scene, art) {

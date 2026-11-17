@@ -8,6 +8,8 @@ export const OFFICE_TEXTURES = {
   myDesk: 'office-my-desk',
   alert: 'ui-alert',
   stairs: 'office-stairs',
+  meetingTable: 'office-meeting-table',
+  whiteboard: 'office-whiteboard',
 };
 
 const TILE = 16;
@@ -135,6 +137,45 @@ function drawStairs(ctx) {
   }
 }
 
+// 64x24 회의 탁자: 긴 원목 탁자 위에 노트북 두 대와 서류, 양옆 의자
+function drawMeetingTable(ctx) {
+  const o = PAL.outline;
+  rect(ctx, PAL.shadow, 4, 21, 56, 3);
+  // 의자 (위 줄, 아래 줄)
+  for (const x of [10, 26, 42]) {
+    box(ctx, o, PAL.chair, x, 0, 10, 6);
+    box(ctx, o, PAL.chair, x + 2, 18, 10, 5);
+  }
+  // 탁자
+  box(ctx, o, PAL.woodPanel, 2, 13, 60, 7);
+  box(ctx, o, PAL.wood, 0, 4, 64, 11);
+  rect(ctx, PAL.woodDark, 1, 13, 62, 1);
+  // 노트북과 서류
+  box(ctx, o, PAL.monitor, 12, 6, 10, 6);
+  rect(ctx, PAL.screen, 13, 7, 8, 3);
+  box(ctx, o, PAL.monitor, 40, 6, 10, 6);
+  rect(ctx, PAL.screen, 41, 7, 8, 3);
+  box(ctx, o, PAL.paper, 27, 7, 8, 5);
+  rect(ctx, PAL.paperDark, 28, 9, 6, 1);
+}
+
+// 40x20 화이트보드: 알아볼 수 없는 회의 그림과 빨간 동그라미
+function drawWhiteboard(ctx) {
+  const o = PAL.outline;
+  box(ctx, o, PAL.frameGray, 0, 0, 40, 16);
+  rect(ctx, PAL.white, 2, 2, 36, 12);
+  rect(ctx, PAL.badge, 4, 4, 10, 1);
+  rect(ctx, PAL.badge, 4, 7, 7, 1);
+  rect(ctx, PAL.keyboardDark, 17, 5, 1, 7);
+  rect(ctx, PAL.keyboardDark, 17, 11, 12, 1);
+  rect(ctx, PAL.keyboardDark, 20, 8, 3, 3);
+  rect(ctx, PAL.keyboardDark, 25, 6, 3, 5);
+  disc(ctx, 33, 7, 3, (dx, dy) => (dx * dx + dy * dy >= 5 ? PAL.alert : null));
+  // 다리
+  rect(ctx, o, 4, 16, 1, 4);
+  rect(ctx, o, 35, 16, 1, 4);
+}
+
 // 9x9 빨간 알림 배지 "!"
 function drawAlert(ctx) {
   disc(ctx, 4, 4, 4, () => PAL.outline);
@@ -178,4 +219,6 @@ export function createOfficeTextures(scene) {
   createCanvasTexture(scene, OFFICE_TEXTURES.myDesk, 48, 32, drawMyDesk);
   createCanvasTexture(scene, OFFICE_TEXTURES.alert, 9, 9, drawAlert);
   createCanvasTexture(scene, OFFICE_TEXTURES.stairs, 32, 32, drawStairs);
+  createCanvasTexture(scene, OFFICE_TEXTURES.meetingTable, 64, 24, drawMeetingTable);
+  createCanvasTexture(scene, OFFICE_TEXTURES.whiteboard, 40, 20, drawWhiteboard);
 }

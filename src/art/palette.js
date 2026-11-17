@@ -67,6 +67,15 @@ export const PAL = {
   // 포스트잇 몬스터
   postitDark: '#d9a92a',
 
+  // 회의 진행자 (엘리트)
+  blazer: '#2f9a8f',
+  blazerDark: '#1f6e66',
+  headset: '#3a3f4b',
+
+  // 회의실
+  chair: '#4a5068',
+  frameGray: '#9aa0ad',
+
   // 계단
   exitGreen: '#3fa860',
   stair: '#a8a4b4',
