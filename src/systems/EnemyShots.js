@@ -15,6 +15,7 @@ export default class EnemyShots {
   constructor(scene) {
     this.scene = scene;
     this.pool = [];
+    this.fired = 0;
   }
 
   update(delta, enemies, player, projectiles) {
@@ -90,6 +91,7 @@ export default class EnemyShots {
     shot.life = a.lifetime;
     shot.damage = a.damage;
     shot.parryLines = a.parryLines;
+    shot.spawnId = `shot-${++this.fired}`;
   }
 
   moveShots(delta, player) {

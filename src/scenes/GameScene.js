@@ -173,7 +173,7 @@ export default class GameScene extends Phaser.Scene {
     this.events.on('bomb-dropped', () => this.juice.sfx.play('ping'));
     this.events.on('bomb-exploded', () => {
       const b = CONFIG.bomb;
-      this.cameras.main.flash(b.flash, 255, 240, 200);
+      this.juice.screenFlash(b.flash, b.flashColor);
       this.juice.shake(b.shake);
       this.juice.sfx.play('alarm');
       this.hud.showWarning('전체 회신!', CONFIG.colors.accent);

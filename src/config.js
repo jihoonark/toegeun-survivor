@@ -105,7 +105,7 @@ export const CONFIG = {
     stampFade: 250,
     stampRise: 8,
     // 보스·엘리트 퇴근: 멈춤(ms), 하얀 번쩍임(ms), 흔들림, 종이 조각 수
-    boss: { hitStop: 320, flash: 220, shake: { duration: 260, intensity: 0.014 }, paper: 40 },
+    boss: { hitStop: 320, flash: 220, flashColor: [255, 255, 255], shake: { duration: 260, intensity: 0.014 }, paper: 40 },
   },
 
   // 맞받아치기: 무기로 잔소리 말풍선을 맞히면 깨진다 (말풍선 판정 반지름 px)
@@ -127,7 +127,11 @@ export const CONFIG = {
     margin: 24,
     bossDamage: 0.2,
     flash: 300,
+    flashColor: [255, 240, 200],
     shake: { duration: 300, intensity: 0.018 },
+    // 폭탄으로 처치될 때 종이 조각·도장 연출을 보여 줄 마리 수와 한 마리당 종이 조각 수
+    fxLimit: 12,
+    paperEach: 3,
   },
 
   // 엘리트 (항목별 기술은 src/data/elites.js, 기술 동작은 systems/Elites.js)
@@ -373,6 +377,8 @@ export const CONFIG = {
 
   // 타격감 (GAME_SPEC.md 6장)
   juice: {
+    // 화면 전체 번쩍임(폭탄, 상사 퇴근) 세기 배율. 0이면 번쩍이지 않는다 (눈이 부신 사람용)
+    screenFlash: 1,
     // 히트스톱: 처치하는 순간 게임이 잠깐 멈춤(ms). 한 번 걸면 cooldown(ms) 동안은 다시 걸지 않는다
     hitStop: { duration: 45, cooldown: 350 },
     // 화면 흔들림: strength 는 전체 배율, intensity 는 화면 크기 대비 비율
@@ -436,6 +442,7 @@ export const CONFIG = {
       { label: '적 스폰 간격 배율', path: 'spawn.intervalMultiplier', min: 0.2, max: 3, step: 0.05 },
       { label: '히트스톱(ms)', path: 'juice.hitStop.duration', min: 0, max: 200, step: 5 },
       { label: '흔들림 세기', path: 'juice.shake.strength', min: 0, max: 3, step: 0.1 },
+      { label: '화면 번쩍임', path: 'juice.screenFlash', min: 0, max: 1, step: 0.1 },
       { label: '넉백 세기', path: 'juice.knockback.strength', min: 0, max: 600, step: 10 },
     ],
   },

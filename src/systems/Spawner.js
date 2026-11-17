@@ -29,8 +29,9 @@ export default class Spawner {
 
     if (CONFIG.enemy.separate) scene.physics.add.collider(this.enemies, this.enemies);
     // 처치 이벤트를 듣는 다른 곳(타격감 등)이 같은 몬스터 오브젝트를 읽은 뒤에 꺼내도록 모아 두었다가 다음 update 에서 꺼낸다
-    scene.events.on('enemy-killed', ({ def, x, y }) => {
-      if (def.splitInto) this.splits.push({ def: getEnemy(def.splitInto.id), count: def.splitInto.count, x, y });
+    // 전체 회신 폭탄으로 처치된 것은 쪼개지지 않는다 (한 번에 날려버린다)
+    scene.events.on('enemy-killed', ({ enemy, def, x, y }) => {
+      if (def.splitInto && !enemy.bombed) this.splits.push({ def: getEnemy(def.splitInto.id), count: def.splitInto.count, x, y });
     });
   }
 

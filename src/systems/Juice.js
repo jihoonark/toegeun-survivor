@@ -70,6 +70,14 @@ export default class Juice {
 
   onEnemyKilled({ enemy }) {
     const j = CONFIG.juice;
+    // 전체 회신 폭탄: 흔들림·소리·멈춤은 폭탄이 한 번만, 종이 조각은 정해진 수까지만
+    if (enemy.bombed) {
+      if (this.scene.bombFxLeft-- > 0) {
+        const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy;
+        this.paper.explode(CONFIG.bomb.paperEach, aim.x, aim.y);
+      }
+      return;
+    }
     this.hitStop(j.hitStop.duration);
     this.shake(j.shake.kill);
     const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy;
@@ -119,6 +127,12 @@ export default class Juice {
       this.trailEmitters[key] ??= this.emitter(key, null, CONFIG.juice.trail);
       this.trailEmitters[key].emitParticleAt(p.x, p.y, 1);
     }
+  }
+
+  // 화면 전체 번쩍임. config juice.screenFlash 로 시간을 줄이거나(0이면) 끈다
+  screenFlash(ms, [r, g, b]) {
+    const k = CONFIG.juice.screenFlash;
+    if (k > 0) this.scene.cameras.main.flash(ms * k, r, g, b);
   }
 
   shake({ duration, intensity }) {

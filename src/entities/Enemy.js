@@ -41,6 +41,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     // 엘리트에게 던져져 날아가는 중이면 그 정보, lift: 공중에 뜬 높이(px)
     this.flight = null;
     this.lift = 0;
+    // 전체 회신 폭탄에 맞았는지 (쪼개지지 않고 연출을 줄인다)
+    this.bombed = false;
 
     this.enableBody(true, x, y, true, true);
     this.body.setSize(def.bodyWidth, def.bodyHeight);

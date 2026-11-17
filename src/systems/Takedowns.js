@@ -30,6 +30,7 @@ export const FX = {
   stamp(scene, ghost, t, takedowns) {
     // 반쪽을 하나 더 꺼내 좌우로 찢어진 것처럼 떨어뜨린다
     const half = takedowns.ghost(ghost.texture.key, ghost.x, ghost.y, ghost.scale);
+    if (half) takedowns.release(half);
     const halves = half ? [ghost, half] : [ghost];
     const w = ghost.width;
     halves.forEach((g, i) => {
@@ -96,10 +97,17 @@ export default class Takedowns {
       .setDepth(CONFIG.depth.flying - 1);
   }
 
+  // 연출이 끝나면 다시 쓸 수 있게 숨긴다 (그사이 다른 처치에 다시 쓰였으면 건드리지 않는다)
+  release(ghost) {
+    const id = ghost.useId;
+    this.scene.time.delayedCall(CONFIG.takedown.ghostLife, () => ghost.useId === id && ghost.setVisible(false));
+  }
+
   onKilled({ enemy, def }) {
     if (def.boss || def.elite) this.bossDown(def, enemy);
     const d = def.defeat;
-    if (!d) return;
+    // 폭탄으로 한꺼번에 처치될 때는 정해진 수까지만 (Juice 가 수를 센다)
+    if (!d || (enemy.bombed && this.scene.bombFxLeft < 0)) return;
     const t = CONFIG.takedown;
     const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy;
     const fx = FX[d.fx];
@@ -107,9 +115,7 @@ export default class Takedowns {
     const ghost = this.ghost(enemyTexture(this.scene, def.art), aim.x, aim.y, def.scale ?? 1);
     if (ghost) {
       fx(this.scene, ghost, t, this);
-      // 트윈이 끝나면 다시 쓸 수 있게 (그사이 다른 처치에 다시 쓰였으면 건드리지 않는다)
-      const id = ghost.useId;
-      this.scene.time.delayedCall(t.ghostLife, () => ghost.useId === id && ghost.setVisible(false));
+      this.release(ghost);
     }
     if (d.text) this.stamp(aim.x, aim.y - t.stampOffsetY, d.text);
   }
@@ -135,7 +141,7 @@ export default class Takedowns {
     const b = CONFIG.takedown.boss;
     const scene = this.scene;
     scene.juice.hitStop(b.hitStop, true);
-    scene.cameras.main.flash(b.flash, 255, 255, 255);
+    scene.juice.screenFlash(b.flash, b.flashColor);
     scene.juice.shake(b.shake);
     const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy;
     scene.juice.paper.explode(b.paper, aim.x, aim.y);
