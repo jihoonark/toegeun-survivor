@@ -5,6 +5,7 @@
 //   id        층 번호 (엘리베이터 버튼 숫자)
 //   name      화면에 보이는 이름 ("15층")
 //   zone      구역 이름 ("우리 팀")
+//   intro     엘리베이터에서 층을 고르면 보이는 한 줄 소개
 //   theme     분위기
 //     floor     바닥 무늬 { pattern: 'carpet' | 'tile', base, dark, light } (색은 '#rrggbb')
 //     light     조명 색을 화면 전체에 얇게 덮는다 { color: 0xrrggbb, alpha } (없으면 null)
@@ -32,6 +33,7 @@ export const FLOORS = [
     id: 15,
     name: '15층',
     zone: '우리 팀',
+    intro: '옆 팀 과장과 팀장님이 기다리는 우리 팀',
     theme: {
       floor: { pattern: 'carpet', base: '#565e74', dark: '#4b5266', light: '#626b82' },
       light: null,

@@ -5,8 +5,11 @@ import { addButton } from '../systems/Button.js';
 import { formatClock } from '../systems/Hud.js';
 import { HERO } from '../art/hero.js';
 import { music } from '../systems/Music.js';
+import { progress } from '../systems/Progress.js';
+import { getFloor } from '../data/floors.js';
 
-// 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간, 다시하기
+// 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간
+// 칼퇴(계단 도착)면 그 층을 클리어로 저장하고, 다음 층이 있으면 [다음 층] [엘리베이터], 없으면 [다시하기] [엘리베이터]
 // 받는 값: { result: 'clear' | 'overtime', floor, tasks, minutes, rank }
 export default class ResultScene extends Phaser.Scene {
   constructor() {
@@ -24,9 +27,11 @@ export default class ResultScene extends Phaser.Scene {
       size: ui.titleFontSize,
       color: clear ? colors.accent : colors.danger,
     });
-    addText(this, width / 2, height * r.subtitleY, clear ? '오늘도 18:00 정시 퇴근!' : '멘탈이 바닥났다… 오늘도 야근', {
-      color: colors.textDim,
-    });
+    const floorName = getFloor(floor).name;
+    const opened = clear ? progress.markCleared(floor) : null;
+    let subtitle = `${floorName}에서 멘탈이 바닥났다… 오늘도 야근`;
+    if (clear) subtitle = opened ? `${floorName} 클리어! ${getFloor(opened).name} 버튼에 불이 들어왔다` : `${floorName} 클리어!`;
+    addText(this, width / 2, height * r.subtitleY, subtitle, { color: clear ? colors.text : colors.textDim });
 
     const statsY = height * r.statsY;
     addText(this, width / 2, statsY, `처리한 업무 ${tasks}건 · 최종 직급 ${rank}`);
@@ -39,9 +44,13 @@ export default class ResultScene extends Phaser.Scene {
 
     const by = height * r.buttonsY;
     const offset = (r.button.width + r.button.gap) / 2;
-    const restart = () => this.go('Game', { floor });
+    const next = clear ? progress.next(floor) : null;
+    const first = next !== null ? () => this.go('Game', { floor: next }) : () => this.go('Game', { floor });
     const toTitle = () => this.go('Title');
-    this.buttons = [addButton(this, width / 2 - offset, by, '다시하기', restart), addButton(this, width / 2 + offset, by, '타이틀로', toTitle)];
+    this.buttons = [
+      addButton(this, width / 2 - offset, by, next !== null ? '다음 층' : '다시하기', first),
+      addButton(this, width / 2 + offset, by, '엘리베이터', toTitle),
+    ];
 
     // 끝나는 순간 누르던 손이 바로 다시하기를 누르지 않도록 잠깐 뒤에 입력을 받는다
     this.ready = false;
@@ -56,8 +65,8 @@ export default class ResultScene extends Phaser.Scene {
 
     // 키를 꾹 누르고 있어 생기는 반복 입력은 무시한다 (결과 화면에서 새로 누른 것만)
     const onKey = (action) => (event) => !event.repeat && action();
-    this.input.keyboard?.on('keydown-ENTER', onKey(restart));
-    this.input.keyboard?.on('keydown-SPACE', onKey(restart));
+    this.input.keyboard?.on('keydown-ENTER', onKey(first));
+    this.input.keyboard?.on('keydown-SPACE', onKey(first));
     this.input.keyboard?.on('keydown-ESC', onKey(toTitle));
   }
 

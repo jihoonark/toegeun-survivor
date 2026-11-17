@@ -235,6 +235,9 @@ export const CONFIG = {
     bossBar: { width: 160, height: 6, y: 236, labelGap: 2, stackGap: 22, fill: 0xe03a3a, eliteFill: 0xf08a2a, back: 0x3a3048, outline: 0x1a1420 },
   },
 
+  // 진행 상황 저장 (systems/Progress.js): 클리어한 층을 이 브라우저에 기억하는 이름
+  progress: { storageKey: 'toegeun-progress' },
+
   // 결과 화면
   result: {
     // 게임이 끝나고 결과 화면으로 넘어가기까지(ms)
@@ -435,6 +438,35 @@ export const CONFIG = {
       promptY: 0.72,
       // 화면 아래에서 떨어뜨리는 거리(px)
       creditBottom: 12,
+    },
+    // 시작 화면 엘리베이터 버튼판 (scenes/TitleScene.js). 위치는 px
+    elevator: {
+      titleY: 26,
+      hintY: 50,
+      // 버튼판 1~(rows × columns)층, 위쪽 줄이 높은 층
+      rows: 5,
+      columns: 3,
+      panel: { x: 150, y: 62, width: 120, height: 182, radius: 6 },
+      display: { y: 68, width: 72, height: 18 },
+      // 버튼 반지름, 첫 버튼 위치, 버튼 사이, 누르는 범위를 그림보다 넓게(px)
+      button: { radius: 11, startX: 180, startY: 104, gapX: 30, gapY: 29, touchPad: 4 },
+      info: { x: 370, nameY: 110, statusY: 136, introY: 168, promptY: 222, wrap: 160 },
+      colors: {
+        panel: 0xc9ccd6,
+        panelDark: 0x8f94a3,
+        display: 0x1a1420,
+        displayText: '#ff8a3a',
+        lit: 0xffd23f,
+        locked: 0x5a5468,
+        unbuilt: 0x3a3048,
+        lockedText: '#8a8498',
+        selected: 0xffffff,
+        clearMark: '#5bd16a',
+      },
+      // 잠긴 층을 누르면 흔들림, 열린 층을 누르면 눌림, 출발까지(ms)
+      shake: { distance: 2, duration: 40, repeat: 2 },
+      press: { scale: 0.85, duration: 80 },
+      startDelay: 300,
     },
     gameInfo: {
       labelOffsetY: -12,
