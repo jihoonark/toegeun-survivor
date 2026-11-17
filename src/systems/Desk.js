@@ -9,6 +9,7 @@ import Npc from '../entities/Npc.js';
 import PcScreen from './PcScreen.js';
 import Sfx from './Sfx.js';
 import { addText } from './Text.js';
+import { drawEdgeArrow } from './EdgeArrow.js';
 
 // 내 자리 (GAME_SPEC.md 12장): 사무실 가운데 내 책상. 언제든 들르는 거점
 // - 열려 있으면 책상 위에 "퀴즈!"와 알림 배지. 닫혀 있으면 다시 열리기까지 남은 분
@@ -112,25 +113,11 @@ export default class Desk {
 
   // 책상이 막 열렸고(arrowTime 동안) 화면 밖이면 화면 가장자리에 책상 쪽 화살표
   drawArrow() {
-    this.arrow.clear();
-    if (!this.ready || this.arrowLeft <= 0) return;
-    const view = this.scene.cameras.main.worldView;
-    if (view.contains(this.x, this.y - 16)) return;
-    const a = CONFIG.desk.arrow;
-    const { width, height } = CONFIG.screen;
-    const angle = Math.atan2(this.y - 16 - view.centerY, this.x - view.centerX);
-    // 화면 가운데에서 그 방향으로 가장자리까지. 위·아래는 HUD(멘탈·무기 칸, 승진 막대)를 피해 더 안쪽
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    const tx = (width / 2 - a.margin) / Math.max(Math.abs(cos), 1e-6);
-    const ty = (sin < 0 ? height / 2 - a.marginTop : height / 2 - a.marginBottom) / Math.max(Math.abs(sin), 1e-6);
-    const t = Math.min(tx, ty);
-    const x = width / 2 + cos * t;
-    const y = height / 2 + sin * t;
-    const s = a.size;
-    const tip = (r, da) => [x + Math.cos(angle + da) * r, y + Math.sin(angle + da) * r];
-    this.arrow.fillStyle(CONFIG.hud.mentalColors.outline).fillTriangle(...tip(s + 2, 0), ...tip(s + 2, 2.5), ...tip(s + 2, -2.5));
-    this.arrow.fillStyle(a.color).fillTriangle(...tip(s, 0), ...tip(s, 2.5), ...tip(s, -2.5));
+    if (!this.ready || this.arrowLeft <= 0) {
+      this.arrow.clear();
+      return;
+    }
+    drawEdgeArrow(this.arrow, this.scene.cameras.main, this.x, this.y - 16, CONFIG.desk.arrow);
   }
 
   nextQuiz() {

@@ -71,14 +71,14 @@ export const FLOORS = [
       { at: 30, interval: 750, batch: [1, 2], hp: 1.45, speed: 1.03 },
       { at: 40, interval: 600, batch: [1, 2], hp: 1.7, speed: 1.06 },
       { at: 50, interval: 480, batch: [2, 3], hp: 2, speed: 1.1 },
-      { at: 55, interval: 400, batch: [2, 3], hp: 2.3, speed: 1.15 },
+      { at: 55, interval: 440, batch: [2, 3], hp: 2.05, speed: 1.12 },
     ],
     enemies: [
       { id: 'email', weight: 1 },
       { id: 'pptx-final', weight: 0.45, from: 14 },
       { id: 'meeting', weight: 0.4, from: 20 },
       { id: 'postit', weight: 0.18, from: 25 },
-      { id: 'deadline', weight: 1.2, from: 50 },
+      { id: 'deadline', weight: 0.7, from: 50 },
     ],
     waves: [
       { at: 3, type: 'line', count: 5, gap: 16, enemy: 'email' },
@@ -95,7 +95,7 @@ export const FLOORS = [
       { at: 48, type: 'line', count: 12, gap: 14, enemy: 'email' },
       { at: 50, type: 'ring', count: 12 },
       { at: 55, type: 'warning', warning: '퇴근 5분 전!' },
-      { at: 55.2, type: 'ring', count: 16 },
+      { at: 55.2, type: 'ring', count: 12 },
       { at: 58, type: 'line', count: 12, gap: 12, enemy: 'email' },
     ],
     // 17:15 옆 팀 과장 (팀장 전 구간을 긴장감 있게)

@@ -67,6 +67,13 @@ export const PAL = {
   // 포스트잇 몬스터
   postitDark: '#d9a92a',
 
+  // 계단
+  exitGreen: '#3fa860',
+  stair: '#a8a4b4',
+  stairMid: '#7e7a8c',
+  stairShade: '#5a566a',
+  stairDark: '#2e2a3a',
+
   // 옆 팀 과장 (엘리트)
   neighborSuit: '#6b5b95',
   neighborSuitDark: '#4b3f6e',

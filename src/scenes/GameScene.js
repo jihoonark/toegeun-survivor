@@ -15,6 +15,7 @@ import EnemyShots from '../systems/EnemyShots.js';
 import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
 import Elites from '../systems/Elites.js';
+import Stairs from '../systems/Stairs.js';
 import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
 import { FLOORS, getFloor } from '../data/floors.js';
 
@@ -23,7 +24,7 @@ const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
   'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
-  'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing',
+  'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing', 'stairs-open',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -51,6 +52,11 @@ export default class GameScene extends Phaser.Scene {
     this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
     this.desk = new Desk(this);
+    this.stairs = new Stairs(this);
+    this.events.on('stairs-open', () => {
+      this.hud.showWarning('계단 열림!', CONFIG.colors.accent);
+      this.juice.sfx.play('levelUp');
+    });
     this.enemyShots = new EnemyShots(this);
     this.events.on('enemy-rage', ({ enemy }) => {
       this.hud.showWarning(`${enemy.def.name}님이 화났다!`);
@@ -93,7 +99,7 @@ export default class GameScene extends Phaser.Scene {
     this.enemies.getChildren().forEach((e) => e.syncAfterPhysics(step));
   }
 
-  // 근무 시간: 멘탈, 시계, 처리한 업무 수, 칼퇴·야근 판정
+  // 근무 시간: 멘탈, 시계, 처리한 업무 수, 칼퇴(계단 도착)·야근 판정
   //   장면 이벤트 'shift-end' { result: 'clear' | 'overtime', tasks, minutes, rank }
   setupShift() {
     this.hud = new Hud(this);
@@ -153,13 +159,10 @@ export default class GameScene extends Phaser.Scene {
     return (this.elapsed / realDuration) * (endHour - startHour) * 60;
   }
 
+  // 18:00 이 지나도 시계는 계속 간다 (계단에 도착해야 퇴근)
   updateClock(delta) {
     this.elapsed += delta;
-    const { startHour, endHour } = CONFIG.clock;
-    const total = (endHour - startHour) * 60;
-    const minutes = Math.min(this.shiftMinutes(), total);
-    this.hud.setClock(minutes);
-    if (minutes >= total) this.endShift('clear');
+    this.hud.setClock(this.shiftMinutes());
   }
 
   endShift(result) {
@@ -232,7 +235,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.desk.transitioning) return; // 회사 PC 화면으로 넘어가는 중
     if (this.juice.update(time)) return; // 히트스톱 중
     this.updateClock(delta);
-    if (this.ended) return;
+    if (this.stairs.update(this.shiftMinutes(), this.player)) {
+      this.endShift('clear');
+      return;
+    }
     // 책상 앞에서 일하는 중에는 움직이지 못한다 (무기는 계속 나간다)
     const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner);
     // 17:50부터 음악이 빨라진다

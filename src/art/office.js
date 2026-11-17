@@ -7,6 +7,7 @@ export const OFFICE_TEXTURES = {
   plant: 'office-plant',
   myDesk: 'office-my-desk',
   alert: 'ui-alert',
+  stairs: 'office-stairs',
 };
 
 const TILE = 16;
@@ -110,6 +111,30 @@ function drawMyDesk(ctx) {
   rect(ctx, PAL.keyboardDark, 11, 25, 10, 1);
 }
 
+// 32x32 내려가는 계단: 바닥에 뚫린 계단 입구, 노란 안전선, 위에 초록 비상구 표지 "↓"
+function drawStairs(ctx) {
+  const o = PAL.outline;
+  // 비상구 표지
+  box(ctx, o, PAL.exitGreen, 9, 0, 14, 8);
+  rect(ctx, PAL.white, 15, 2, 2, 3);
+  rect(ctx, PAL.white, 13, 4, 6, 1);
+  rect(ctx, PAL.white, 14, 5, 4, 1);
+  dot(ctx, PAL.white, 15, 6);
+  dot(ctx, PAL.white, 16, 6);
+  // 계단 입구 (안쪽으로 갈수록 어두운 계단 4칸)
+  box(ctx, o, PAL.stairDark, 2, 10, 28, 21);
+  const steps = [PAL.stair, PAL.stairMid, PAL.stairShade, PAL.stairDark];
+  steps.forEach((color, i) => {
+    rect(ctx, color, 3, 26 - i * 4, 26, 4);
+    rect(ctx, PAL.stairShade, 3, 26 - i * 4, 26, 1);
+  });
+  // 노란·검은 안전선 테두리
+  for (let x = 2; x < 30; x += 4) {
+    rect(ctx, PAL.labelYellow, x, 10, 2, 1);
+    rect(ctx, PAL.labelYellow, x, 30, 2, 1);
+  }
+}
+
 // 9x9 빨간 알림 배지 "!"
 function drawAlert(ctx) {
   disc(ctx, 4, 4, 4, () => PAL.outline);
@@ -152,4 +177,5 @@ export function createOfficeTextures(scene) {
   createCanvasTexture(scene, OFFICE_TEXTURES.plant, 16, 24, drawPlant);
   createCanvasTexture(scene, OFFICE_TEXTURES.myDesk, 48, 32, drawMyDesk);
   createCanvasTexture(scene, OFFICE_TEXTURES.alert, 9, 9, drawAlert);
+  createCanvasTexture(scene, OFFICE_TEXTURES.stairs, 32, 32, drawStairs);
 }

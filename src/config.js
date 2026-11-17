@@ -40,6 +40,20 @@ export const CONFIG = {
   // 몬스터가 쏘는 말풍선 (팀장 잔소리). 항목별 수치는 몬스터 데이터의 attack
   enemyShot: { color: '#ffffff', back: '#a02424', hitRadius: 8, fadeTime: 300 },
 
+  // 층 클리어 계단 (systems/Stairs.js). 계단이 생길 수 있는 곳은 층 데이터 map.stairs
+  stairs: {
+    // 이 범위(계단 발밑에서 위로)에 들어서면 클리어
+    zone: { width: 28, height: 20 },
+    // 나타날 때 커지는 크기와 시간(ms), 머리 위 "계단" 글자 높이·둥실 높이(px)·시간(ms)
+    appearScale: 0.2,
+    appearTime: 400,
+    labelOffsetY: 40,
+    labelBob: 3,
+    labelBobTime: 400,
+    // 계단이 화면 밖이면 가장자리 화살표
+    arrow: { margin: 14, marginTop: 70, marginBottom: 34, size: 9, color: 0x5bd16a },
+  },
+
   // 엘리트 (항목별 기술은 src/data/elites.js, 기술 동작은 systems/Elites.js)
   elite: {
     // 기술을 쓸 대상이 없을 때 다시 노리기까지(ms)
