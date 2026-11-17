@@ -8,38 +8,11 @@ export const CONFIG = {
     backgroundColor: '#1a1420',
   },
 
-  // 사무실 맵. 가구 좌표는 발밑(아래쪽 가운데) 기준 픽셀
-  // 새 가구는 src/art/office.js 에 그림을 추가하고 여기에 { type, positions } 한 줄을 넣으면 된다
-  office: {
-    worldWidth: 960,
-    worldHeight: 540,
-    furniture: [
-      {
-        type: 'desk',
-        positions: [
-          // 시작 화면 네 귀퉁이 책상 묶음 (가운데는 비워 둔다)
-          [300, 200], [356, 200], [604, 200], [660, 200],
-          [300, 380], [356, 380], [604, 380], [660, 380],
-          // 바깥쪽 책상 줄
-          [100, 110], [156, 110], [804, 110], [860, 110],
-          [100, 480], [156, 480], [804, 480], [860, 480],
-        ],
-      },
-      {
-        type: 'plant',
-        positions: [
-          [24, 40], [936, 40], [24, 520], [936, 520],
-          [480, 170], [480, 430], [250, 300], [710, 300],
-        ],
-      },
-    ],
-  },
+  // 층마다 다른 맵·몬스터 구성·특별 규칙·엘리트는 src/data/floors.js. 여기는 모든 층에 공통인 값
 
   // 내 자리 (GAME_SPEC.md 12장). 자리 이벤트는 src/data/deskEvents.js
   desk: {
-    // 책상 발밑 위치. 주인공이 시작하는 곳 바로 위
-    x: 480,
-    y: 238,
+    // 책상 위치는 층 데이터(floors.js map.desk)
     labelOffsetY: 40,
     // 모니터 위 알림 배지 위치 (책상 발밑 기준)
     alertOffset: { x: 12, y: -34 },
@@ -66,6 +39,16 @@ export const CONFIG = {
 
   // 몬스터가 쏘는 말풍선 (팀장 잔소리). 항목별 수치는 몬스터 데이터의 attack
   enemyShot: { color: '#ffffff', back: '#a02424', hitRadius: 8, fadeTime: 300 },
+
+  // 엘리트 (항목별 기술은 src/data/elites.js, 기술 동작은 systems/Elites.js)
+  elite: {
+    // 기술을 쓸 대상이 없을 때 다시 노리기까지(ms)
+    retry: 800,
+    // 바닥 예고 원: 색, 바깥 선 투명도, 안쪽 채움 투명도(처음→실행 직전), 머리 위 "!" 크기와 높이(발밑에서 px, 엘리트 크기 배율이 곱해진다)
+    telegraph: { color: 0xe03a3a, lineAlpha: 0.9, fillFrom: 0.06, fillTo: 0.32, iconScale: 1.5, iconOffsetY: 46 },
+    // 대사 말풍선: 높이(발밑에서 px, 크기 배율이 곱해진다), 떠 있는 시간(ms), 사라지는 시간(ms), 색
+    bubble: { offsetY: 54, time: 1800, fade: 300, back: '#ffffff', color: '#1a1420' },
+  },
 
   // 사무실 NPC (항목별 행동은 src/data/npcs.js)
   npc: {
@@ -232,7 +215,8 @@ export const CONFIG = {
     warning: { y: 0.3, duration: 1300, fade: 500 },
     // 보스 체력 막대 (화면 아래 가운데)
     // 위쪽은 시계·알림 글자와 겹쳐서(3화: "17:30팀장", 알림과 겹침) 승진 막대 바로 위에 둔다
-    bossBar: { width: 160, height: 6, y: 236, labelGap: 2, fill: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
+    // 보스와 엘리트가 같이 있으면 위로 쌓는다(stackGap px). 엘리트 막대는 eliteFill 색
+    bossBar: { width: 160, height: 6, y: 236, labelGap: 2, stackGap: 22, fill: 0xe03a3a, eliteFill: 0xf08a2a, back: 0x3a3048, outline: 0x1a1420 },
   },
 
   // 결과 화면
@@ -253,41 +237,9 @@ export const CONFIG = {
 
   // 적 등장. 몬스터별 수치는 src/data/enemies.js
   spawn: {
-    // 시간대별 난이도. 17:00 부터 at 분이 지나면 그 단계 값으로 서서히 바뀐다 (단계 사이는 부드럽게 이어진다)
-    //   interval: 다음 적이 나오기까지 간격(ms), batch: 한 번에 나오는 수 [최소, 최대]
-    //   hp / speed: 몬스터 기본 체력·속도에 곱하는 배율
-    stages: [
-      { at: 0, interval: 1400, batch: [1, 1], hp: 1, speed: 1 },
-      { at: 10, interval: 1150, batch: [1, 1], hp: 1.1, speed: 1 },
-      { at: 20, interval: 900, batch: [1, 2], hp: 1.25, speed: 1 },
-      { at: 30, interval: 750, batch: [1, 2], hp: 1.45, speed: 1.03 },
-      { at: 40, interval: 600, batch: [1, 2], hp: 1.7, speed: 1.06 },
-      { at: 50, interval: 480, batch: [2, 3], hp: 2, speed: 1.1 },
-      { at: 55, interval: 400, batch: [2, 3], hp: 2.3, speed: 1.15 },
-    ],
+    // 시간대별 난이도(stages), 저절로 나오는 몬스터(enemies), 몰려오는 패턴(waves)은 층마다 다르다: src/data/floors.js
     // 전체 간격 배율 (조절 패널용. 작을수록 많이 나온다)
     intervalMultiplier: 1,
-    // 몰려오는 패턴: 그 시각(17:00 부터 분)에 한꺼번에 나온다
-    //   ring: "전체 회신 폭탄!" 주인공을 빙 둘러 사방에서 / line: 한쪽에서 줄지어 (gap: 줄 간격 px)
-    //   boss: 보스 한 마리 (enemy 필수) / warning: 글자만 띄우는 알림
-    //   enemy: 나올 몬스터 id (없으면 그 시각에 나올 수 있는 몬스터 중에서 고른다)
-    //   warning: 있으면 그 글자를 화면에 크게 띄운다 (ring 은 없어도 "전체 회신 폭탄!")
-    waves: [
-      { at: 6, type: 'line', count: 5, gap: 16, enemy: 'email' },
-      { at: 12, type: 'line', count: 6, gap: 16, enemy: 'email' },
-      { at: 16, type: 'ring', count: 6 },
-      { at: 20, type: 'line', count: 8, gap: 16, enemy: 'email' },
-      { at: 25, type: 'line', count: 8, gap: 16, enemy: 'email' },
-      { at: 30, type: 'boss', enemy: 'team-lead', warning: '팀장님 등장!' },
-      { at: 36, type: 'line', count: 10, gap: 14, enemy: 'email' },
-      { at: 40, type: 'ring', count: 10 },
-      { at: 44, type: 'line', count: 10, gap: 14, enemy: 'email' },
-      { at: 48, type: 'line', count: 12, gap: 14, enemy: 'email' },
-      { at: 50, type: 'ring', count: 12 },
-      { at: 55, type: 'warning', warning: '퇴근 5분 전!' },
-      { at: 55.2, type: 'ring', count: 16 },
-      { at: 58, type: 'line', count: 12, gap: 12, enemy: 'email' },
-    ],
     // 보스가 부르는 부하: every(ms)마다 count 마리를 보스 둘레 radius(px)에
     summonRadius: 28,
     // 쪼개져 나온 몬스터가 튕겨 나가는 세기(px/초)와 시간(ms)

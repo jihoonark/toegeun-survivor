@@ -5,10 +5,6 @@ export const PAL = {
   outline: CONFIG.colors.outline,
   shadow: 'rgba(26, 20, 32, 0.35)',
 
-  carpet: '#565e74',
-  carpetDark: '#4b5266',
-  carpetLight: '#626b82',
-
   wood: '#c89a62',
   woodDark: '#9a6e42',
   woodPanel: '#7f5636',

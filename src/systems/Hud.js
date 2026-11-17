@@ -155,43 +155,44 @@ export default class Hud {
     this.scene.tweens.add({ targets: text, alpha: 0, delay: w.duration, duration: w.fade, onComplete: () => text.destroy() });
   }
 
-  // 보스 체력 막대: 화면 아래 승진 막대 바로 위. 보스 이름을 막대 위에 작게
-  // (위쪽은 시계와 알림 글자가 쌓이는 자리라 겹친다)
+  // 보스·엘리트 체력 막대: 화면 아래 승진 막대 바로 위. 이름을 막대 위에 작게
+  // (위쪽은 시계와 알림 글자가 쌓이는 자리라 겹친다). 여럿이면 먼저 나온 것이 아래, 위로 쌓인다
   showBoss(enemy) {
-    const b = CONFIG.hud.bossBar;
-    const { width } = CONFIG.screen;
     const fix = (obj) => obj.setScrollFactor(0).setDepth(CONFIG.depth.hud);
-    this.boss = enemy;
-    this.bossSpawnId = enemy.spawnId;
-    this.bossBar ??= fix(this.scene.add.graphics());
-    this.bossLabel ??= fix(addText(this.scene, width / 2, b.y, '', { size: CONFIG.ui.smallFontSize, stroke: CONFIG.ui.bodyStroke }));
-    this.bossLabel.setOrigin(0.5, 1).setText(enemy.def.name).setVisible(true);
-    this.bossLabel.setY(b.y - b.labelGap);
-    this.bossBar.setVisible(true);
+    this.bossBars ??= [];
+    const bar = fix(this.scene.add.graphics());
+    const label = fix(addText(this.scene, CONFIG.screen.width / 2, 0, enemy.def.name, { size: CONFIG.ui.smallFontSize, stroke: CONFIG.ui.bodyStroke }));
+    label.setOrigin(0.5, 1);
+    this.bossBars.push({ enemy, spawnId: enemy.spawnId, bar, label });
     this.updateBoss();
   }
 
-  // 매 프레임. 보스가 사라졌으면 막대를 숨긴다
+  // 매 프레임. 사라진 보스·엘리트의 막대는 지우고 남은 것을 아래로 당긴다
   updateBoss() {
-    const enemy = this.boss;
-    if (!enemy) return;
-    if (!enemy.active || enemy.spawnId !== this.bossSpawnId) {
-      this.boss = null;
-      this.bossBar.setVisible(false);
-      this.bossLabel.setVisible(false);
-      return;
-    }
+    if (!this.bossBars?.length) return;
     const b = CONFIG.hud.bossBar;
     const x = CONFIG.screen.width / 2 - b.width / 2;
-    const ratio = Math.max(0, enemy.hp / enemy.maxHp);
-    this.bossBar
-      .clear()
-      .fillStyle(b.outline)
-      .fillRect(x - 1, b.y - 1, b.width + 2, b.height + 2)
-      .fillStyle(b.back)
-      .fillRect(x, b.y, b.width, b.height)
-      .fillStyle(b.fill)
-      .fillRect(x, b.y, Math.round(b.width * ratio), b.height);
+    this.bossBars = this.bossBars.filter((v) => {
+      const alive = v.enemy.active && v.enemy.spawnId === v.spawnId;
+      if (!alive) {
+        v.bar.destroy();
+        v.label.destroy();
+      }
+      return alive;
+    });
+    this.bossBars.forEach(({ enemy, bar, label }, i) => {
+      const y = b.y - i * b.stackGap;
+      const ratio = Math.max(0, enemy.hp / enemy.maxHp);
+      label.setY(y - b.labelGap);
+      bar
+        .clear()
+        .fillStyle(b.outline)
+        .fillRect(x - 1, y - 1, b.width + 2, b.height + 2)
+        .fillStyle(b.back)
+        .fillRect(x, y, b.width, b.height)
+        .fillStyle(enemy.def.elite ? b.eliteFill : b.fill)
+        .fillRect(x, y, Math.round(b.width * ratio), b.height);
+    });
   }
 
   // 시청자 무기를 얻으면 "○○님의 [무기]"를 시계 아래에 잠깐 띄운다 (GAME_SPEC.md 4장)

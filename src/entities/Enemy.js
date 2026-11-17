@@ -35,6 +35,9 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
     this.flashLeft = 0;
     this.knockLeft = 0;
     this.stunLeft = 0;
+    // 엘리트 기술 준비 중(예고 표시)이면 그 정보. 그동안은 제자리 (systems/Elites.js)
+    this.cast = null;
+    this.skillLeft = 0;
 
     this.enableBody(true, x, y, true, true);
     this.body.setSize(def.bodyWidth, def.bodyHeight);
@@ -57,7 +60,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
   chase(target) {
     if (this.knockLeft > 0) return; // 밀려나는 동안은 쫓지 않는다
-    if (this.stunLeft > 0) {
+    if (this.stunLeft > 0 || this.cast) {
       this.body.velocity.set(0, 0); // 스테이플러에 고정된 동안은 제자리
       return;
     }

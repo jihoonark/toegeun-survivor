@@ -89,6 +89,12 @@ function layout() {
   game.scale.refresh();
 }
 
+// 개발 서버에서만: 자동 시험(src/dev/sim.js)이 게임을 직접 돌린다. 배포 빌드에는 들어가지 않는다
+if (import.meta.env.DEV) {
+  window.__game = game;
+  import('./dev/sim.js').then(({ installSim }) => installSim(game));
+}
+
 const fullscreen = new Fullscreen(layout);
 new SoundToggle();
 

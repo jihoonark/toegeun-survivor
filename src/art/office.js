@@ -3,7 +3,6 @@ import { PAL } from './palette.js';
 import { createCanvasTexture, rect, dot, box, disc, seededRandom } from './pixel.js';
 
 export const OFFICE_TEXTURES = {
-  floor: 'office-floor',
   desk: 'office-desk',
   plant: 'office-plant',
   myDesk: 'office-my-desk',
@@ -12,24 +11,47 @@ export const OFFICE_TEXTURES = {
 
 const TILE = 16;
 
-// 카펫 타일 2x2 묶음. 타일마다 얼룩 위치를 달리해 반복이 덜 눈에 띄게 한다
-function drawFloor(ctx) {
-  const rand = seededRandom(1700);
-  for (let ty = 0; ty < 2; ty++) {
-    for (let tx = 0; tx < 2; tx++) {
-      const ox = tx * TILE;
-      const oy = ty * TILE;
-      rect(ctx, PAL.carpet, ox, oy, TILE, TILE);
-      // 타일 이음매
-      rect(ctx, PAL.carpetDark, ox, oy + TILE - 1, TILE, 1);
-      rect(ctx, PAL.carpetDark, ox + TILE - 1, oy, 1, TILE);
-      for (let i = 0; i < 6; i++) {
-        const x = ox + 1 + Math.floor(rand() * (TILE - 3));
-        const y = oy + 1 + Math.floor(rand() * (TILE - 3));
-        dot(ctx, rand() < 0.5 ? PAL.carpetLight : PAL.carpetDark, x, y);
+// 바닥 무늬 (층 데이터 theme.floor 의 pattern). 색은 { base, dark, light }
+const FLOOR_PATTERNS = {
+  // 카펫 타일 2x2 묶음. 타일마다 얼룩 위치를 달리해 반복이 덜 눈에 띄게 한다
+  carpet(ctx, { base, dark, light }) {
+    const rand = seededRandom(1700);
+    for (let ty = 0; ty < 2; ty++) {
+      for (let tx = 0; tx < 2; tx++) {
+        const ox = tx * TILE;
+        const oy = ty * TILE;
+        rect(ctx, base, ox, oy, TILE, TILE);
+        // 타일 이음매
+        rect(ctx, dark, ox, oy + TILE - 1, TILE, 1);
+        rect(ctx, dark, ox + TILE - 1, oy, 1, TILE);
+        for (let i = 0; i < 6; i++) {
+          const x = ox + 1 + Math.floor(rand() * (TILE - 3));
+          const y = oy + 1 + Math.floor(rand() * (TILE - 3));
+          dot(ctx, rand() < 0.5 ? light : dark, x, y);
+        }
       }
     }
+  },
+  // 반들반들한 큰 바닥 타일 (32x32 한 장): 굵은 줄눈과 대각선 반사광
+  tile(ctx, { base, dark, light }) {
+    const size = TILE * 2;
+    rect(ctx, base, 0, 0, size, size);
+    rect(ctx, dark, 0, size - 1, size, 1);
+    rect(ctx, dark, size - 1, 0, 1, size);
+    for (let i = 0; i < 6; i++) dot(ctx, light, 4 + i, 9 - i);
+    for (let i = 0; i < 3; i++) dot(ctx, light, 6 + i, 13 - i);
+  },
+};
+
+// 층마다 바닥 그림 하나 (처음 쓸 때 만든다)
+export function floorTexture(scene, floorId, spec) {
+  const key = `floor-${floorId}`;
+  if (!scene.textures.exists(key)) {
+    const draw = FLOOR_PATTERNS[spec.pattern];
+    if (!draw) throw new Error(`알 수 없는 바닥 무늬: ${spec.pattern}`);
+    createCanvasTexture(scene, key, TILE * 2, TILE * 2, (ctx) => draw(ctx, spec));
   }
+  return key;
 }
 
 // 48x32 책상: 모니터, 키보드, 서류 더미, 아메리카노 컵
@@ -126,7 +148,6 @@ function drawPlant(ctx) {
 }
 
 export function createOfficeTextures(scene) {
-  createCanvasTexture(scene, OFFICE_TEXTURES.floor, TILE * 2, TILE * 2, drawFloor);
   createCanvasTexture(scene, OFFICE_TEXTURES.desk, 48, 32, drawDesk);
   createCanvasTexture(scene, OFFICE_TEXTURES.plant, 16, 24, drawPlant);
   createCanvasTexture(scene, OFFICE_TEXTURES.myDesk, 48, 32, drawMyDesk);

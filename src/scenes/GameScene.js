@@ -14,13 +14,16 @@ import Desk from '../systems/Desk.js';
 import EnemyShots from '../systems/EnemyShots.js';
 import Player from '../entities/Player.js';
 import { music } from '../systems/Music.js';
-import { OFFICE_TEXTURES } from '../art/office.js';
+import Elites from '../systems/Elites.js';
+import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
+import { FLOORS, getFloor } from '../data/floors.js';
 
 // 이 장면에서 쓰는 장면 이벤트. 다시하기로 장면이 재시작될 때 이전 판의 듣기를 모두 지운다
 const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
   'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
+  'elite-spawned', 'elite-aim',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -28,15 +31,18 @@ export default class GameScene extends Phaser.Scene {
     super('Game');
   }
 
-  create() {
+  // data.floor: 층 번호 (엘리베이터에서 고른 층). 없으면 첫 층
+  create(data) {
+    this.floor = getFloor(data?.floor ?? FLOORS[0].id);
     this.buildOffice();
 
-    const { worldWidth, worldHeight } = CONFIG.office;
-    this.player = new Player(this, worldWidth / 2, worldHeight / 2);
+    const [startX, startY] = this.floor.map.start;
+    this.player = new Player(this, startX, startY);
     this.physics.add.collider(this.player, this.furniture);
     this.controls = new Controls(this);
 
-    this.spawner = new Spawner(this);
+    this.elites = new Elites(this);
+    this.spawner = new Spawner(this, this.floor);
     this.enemies = this.spawner.enemies;
     this.combat = new Combat(this, this.player, this.enemies);
     this.juice = new Juice(this);
@@ -65,7 +71,7 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, lerp, lerp);
 
     this.showControlsHint();
-    music.use(this).play('game', { restart: true });
+    music.use(this).play(this.floor.theme.music, { restart: true });
     // 물리 바디의 위치가 스프라이트에 반영된 뒤(POST_UPDATE) 그림자·앞뒤 정렬을 맞춘다
     this.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncAfterPhysics, this);
     // 승진 카드를 고르는 동안 누르던 키·조이스틱이 돌아와서도 눌린 채로 남지 않게
@@ -129,8 +135,10 @@ export default class GameScene extends Phaser.Scene {
     });
     // 보스: 체력 막대, 처치하면 먼저 퇴근한다
     this.events.on('boss-spawned', ({ enemy }) => this.hud.showBoss(enemy));
+    this.events.on('elite-spawned', ({ enemy }) => this.hud.showBoss(enemy));
+    this.events.on('elite-aim', () => this.juice.sfx.play('ping'));
     this.events.on('enemy-killed', ({ def }) => {
-      if (def.boss) this.hud.showWarning(`${def.name}님 퇴근!`);
+      if (def.boss || def.elite) this.hud.showWarning(`${def.name}님 퇴근!`);
     });
   }
 
@@ -155,7 +163,7 @@ export default class GameScene extends Phaser.Scene {
     this.physics.world.pause();
     this.player.anims.pause();
     music.stop();
-    const summary = { result, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
+    const summary = { result, floor: this.floor.id, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
     this.events.emit('shift-end', summary);
 
     // 그 자리에서 결과를 크게 한 번 보여 주고 결과 화면으로 넘어간다
@@ -171,9 +179,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   buildOffice() {
-    const { worldWidth, worldHeight, furniture } = CONFIG.office;
+    const { width: worldWidth, height: worldHeight, furniture, desk } = this.floor.map;
+    const { theme } = this.floor;
 
-    this.add.tileSprite(0, 0, worldWidth, worldHeight, OFFICE_TEXTURES.floor).setOrigin(0).setDepth(CONFIG.depth.floor);
+    this.add.tileSprite(0, 0, worldWidth, worldHeight, floorTexture(this, this.floor.id, theme.floor)).setOrigin(0).setDepth(CONFIG.depth.floor);
+    // 층 조명: 화면 전체에 얇게 덮는 색 (HUD 아래)
+    if (theme.light) {
+      const { width, height } = CONFIG.screen;
+      this.add.rectangle(0, 0, width, height, theme.light.color, theme.light.alpha).setOrigin(0).setScrollFactor(0).setDepth(CONFIG.depth.hud - 1);
+    }
 
     // 탑다운 3/4 시점: 발밑 y가 클수록 앞에 그려지도록 깊이를 y로 둔다
     for (const { type, positions } of furniture) {
@@ -193,7 +207,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     const myBlock = CONFIG.furnitureBlock.desk;
-    this.furniture.add(this.add.zone(CONFIG.desk.x, CONFIG.desk.y - myBlock.height / 2, myBlock.width, myBlock.height));
+    this.furniture.add(this.add.zone(desk[0], desk[1] - myBlock.height / 2, myBlock.width, myBlock.height));
 
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
@@ -223,6 +237,7 @@ export default class GameScene extends Phaser.Scene {
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
     this.enemyShots.update(delta, this.enemies, this.player);
+    this.elites.update(delta, this.enemies, this.player);
     this.pickups.update(delta);
     this.juice.trails(this.combat.projectiles, delta);
     this.hud.updateBoss();

@@ -8,8 +8,7 @@
 //   speed          주인공을 쫓는 속도(px/초)
 //   contactDamage  주인공에게 닿았을 때 깎는 멘탈
 //   xp             처치 시 떨어뜨리는 결재 서류(경험치)
-//   spawnWeight    스폰될 확률 비중 (클수록 자주). 0이면 저절로는 나오지 않는다 (쪼개질 때만)
-//   appearAt       17:00 부터 몇 분 뒤부터 나오는지 (없으면 처음부터)
+//   (어느 층에서 얼마나 자주, 몇 분부터 나오는지는 층 데이터 src/data/floors.js 의 enemies)
 //   scale          그림 크기 배율 (없으면 1)
 //   label          머리 위에 떠 있는 글자 (없으면 없음)
 //   labelTime      있으면 label 이 이 시간(ms) 뒤 사라진다 (쪼개져 나온 작은 몬스터들처럼 많이 몰릴 때)
@@ -41,7 +40,6 @@ export const ENEMIES = [
     speed: 38,
     contactDamage: 1,
     xp: 1,
-    spawnWeight: 1,
     bodyWidth: 16,
     bodyHeight: 8,
     hitRadius: 11,
@@ -59,8 +57,6 @@ export const ENEMIES = [
     speed: 30,
     contactDamage: 1,
     xp: 2,
-    spawnWeight: 0.45,
-    appearAt: 14,
     bodyWidth: 18,
     bodyHeight: 9,
     hitRadius: 13,
@@ -79,7 +75,6 @@ export const ENEMIES = [
     speed: 42,
     contactDamage: 1,
     xp: 1,
-    spawnWeight: 0,
     bodyWidth: 14,
     bodyHeight: 7,
     hitRadius: 10,
@@ -98,7 +93,6 @@ export const ENEMIES = [
     speed: 56,
     contactDamage: 1,
     xp: 1,
-    spawnWeight: 0,
     bodyWidth: 10,
     bodyHeight: 6,
     hitRadius: 7,
@@ -118,8 +112,6 @@ export const ENEMIES = [
     speed: 108,
     contactDamage: 2,
     xp: 3,
-    spawnWeight: 1.2,
-    appearAt: 50,
     bodyWidth: 14,
     bodyHeight: 8,
     hitRadius: 10,
@@ -138,7 +130,6 @@ export const ENEMIES = [
     contactDamage: 2,
     xp: 40,
     xpPieces: 10,
-    spawnWeight: 0,
     boss: true,
     summon: { id: 'email', count: 2, every: 4500 },
     // 잔소리 말풍선. 20초가 지나거나 체력이 반 아래면 화나서 3갈래로
@@ -177,8 +168,6 @@ export const ENEMIES = [
     speed: 26,
     contactDamage: 1,
     xp: 3,
-    spawnWeight: 0.4,
-    appearAt: 20,
     bodyWidth: 18,
     bodyHeight: 9,
     hitRadius: 13,
@@ -197,10 +186,8 @@ export const ENEMIES = [
     speed: 54,
     contactDamage: 1,
     xp: 1,
-    spawnWeight: 0.18,
     group: 3,
     groupGap: 10,
-    appearAt: 25,
     bodyWidth: 10,
     bodyHeight: 6,
     hitRadius: 8,
@@ -219,7 +206,6 @@ export const ENEMIES = [
     contactDamage: 2,
     xp: 8,
     xpPieces: 4,
-    spawnWeight: 0,
     knockbackScale: 0.4,
     bodyWidth: 18,
     bodyHeight: 9,

@@ -7,13 +7,13 @@ import { HERO } from '../art/hero.js';
 import { music } from '../systems/Music.js';
 
 // 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간, 다시하기
-// 받는 값: { result: 'clear' | 'overtime', tasks, minutes, rank }
+// 받는 값: { result: 'clear' | 'overtime', floor, tasks, minutes, rank }
 export default class ResultScene extends Phaser.Scene {
   constructor() {
     super('Result');
   }
 
-  create({ result, tasks, minutes, rank }) {
+  create({ result, floor, tasks, minutes, rank }) {
     const { width, height } = CONFIG.screen;
     const { ui, colors } = CONFIG;
     const r = CONFIG.result;
@@ -39,7 +39,7 @@ export default class ResultScene extends Phaser.Scene {
 
     const by = height * r.buttonsY;
     const offset = (r.button.width + r.button.gap) / 2;
-    const restart = () => this.go('Game');
+    const restart = () => this.go('Game', { floor });
     const toTitle = () => this.go('Title');
     this.buttons = [addButton(this, width / 2 - offset, by, '다시하기', restart), addButton(this, width / 2 + offset, by, '타이틀로', toTitle)];
 
@@ -61,9 +61,9 @@ export default class ResultScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', onKey(toTitle));
   }
 
-  go(scene) {
+  go(scene, data) {
     if (!this.ready) return;
     this.ready = false;
-    this.scene.start(scene);
+    this.scene.start(scene, data);
   }
 }

@@ -1,22 +1,27 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
-import { ENEMIES, getEnemy } from '../data/enemies.js';
+import { getEnemy } from '../data/enemies.js';
+import { getElite } from '../data/elites.js';
 import Enemy from '../entities/Enemy.js';
 import { ENEMY_ART } from '../art/enemies.js';
 
-// 적 등장: 카메라 화면 바로 바깥에서 몬스터를 꺼낸다
-// - 시간대별 난이도(config spawn.stages): 시간이 갈수록 자주, 여러 마리씩, 튼튼하고 빠르게
-// - 몬스터의 appearAt 이 지나야 그 몬스터가 나온다
-// - 몰려오는 패턴(config spawn.waves): 정해진 시각에 "전체 회신 폭탄"(빙 둘러) 또는 한쪽에서 줄지어
+// 적 등장: 카메라 화면 바로 바깥에서 몬스터를 꺼낸다. 무엇이 언제 나오는지는 층 데이터(src/data/floors.js)
+// - 시간대별 난이도(floor.stages): 시간이 갈수록 자주, 여러 마리씩, 튼튼하고 빠르게
+// - 저절로 나오는 몬스터(floor.enemies): from 분이 지나야 나온다
+// - 몰려오는 패턴(floor.waves): 정해진 시각에 "전체 회신 폭탄"(빙 둘러) 또는 한쪽에서 줄지어
+// - 엘리트(floor.elites): 정해진 시각에 한 마리
 // - splitInto 가 있는 몬스터는 처치하면 다음 프레임에 그 자리에서 쪼개져 나온다
 //
 // 장면 이벤트
 //   'mail-bomb'     { count }   전체 회신 폭탄(ring)이 터질 때 (경고 글자에서 쓴다)
 //   'wave-warning'  { text }    웨이브에 warning 글자가 있을 때 ("팀장님 등장!", "퇴근 5분 전!")
 //   'boss-spawned'  { enemy }   보스가 나왔을 때 (체력 막대에서 쓴다)
+//   'elite-spawned' { enemy }   엘리트가 나왔을 때 (체력 막대에서 쓴다)
 export default class Spawner {
-  constructor(scene) {
+  constructor(scene, floor) {
     this.scene = scene;
+    this.floor = floor;
+    this.pool = floor.enemies.map(({ id, weight, from }) => ({ def: getEnemy(id), weight, from: from ?? 0 }));
     this.timeLeft = CONFIG.spawn.firstDelay;
     this.enemies = scene.physics.add.group({ classType: Enemy, maxSize: CONFIG.spawn.maxAlive });
     this.wavesDone = new Set();
@@ -31,7 +36,7 @@ export default class Spawner {
 
   // 지금 시각의 난이도: 앞뒤 단계 사이를 부드럽게 잇는다 (batch 는 지난 단계 값)
   difficulty(minutes) {
-    const stages = CONFIG.spawn.stages;
+    const stages = this.floor.stages;
     let i = stages.length - 1;
     while (i > 0 && stages[i].at > minutes) i--;
     const a = stages[i];
@@ -46,13 +51,18 @@ export default class Spawner {
     this.boost = level.boost;
     this.releaseSplits();
 
-    for (const wave of CONFIG.spawn.waves) {
+    for (const wave of this.floor.waves) {
       if (minutes < wave.at || this.wavesDone.has(wave)) continue;
       this.wavesDone.add(wave);
       if (wave.warning) this.scene.events.emit('wave-warning', { text: wave.warning });
       if (wave.type === 'ring') this.mailBomb(wave.count, minutes, !wave.warning);
       else if (wave.type === 'line') this.line(wave, minutes);
       else if (wave.type === 'boss') this.boss(getEnemy(wave.enemy));
+    }
+    for (const entry of this.floor.elites) {
+      if (minutes < entry.at || this.wavesDone.has(entry)) continue;
+      this.wavesDone.add(entry);
+      this.elite(getElite(entry.id));
     }
     this.summons(delta);
 
@@ -77,13 +87,13 @@ export default class Spawner {
   }
 
   pickEnemy(minutes) {
-    const pool = ENEMIES.filter((e) => e.spawnWeight > 0 && minutes >= (e.appearAt ?? 0));
-    let roll = Math.random() * pool.reduce((sum, e) => sum + e.spawnWeight, 0);
-    for (const def of pool) {
-      roll -= def.spawnWeight;
-      if (roll < 0) return def;
+    const pool = this.pool.filter((e) => e.weight > 0 && minutes >= e.from);
+    let roll = Math.random() * pool.reduce((sum, e) => sum + e.weight, 0);
+    for (const e of pool) {
+      roll -= e.weight;
+      if (roll < 0) return e.def;
     }
-    return pool[pool.length - 1];
+    return pool[pool.length - 1].def;
   }
 
   spawnAt(def, x, y) {
@@ -103,20 +113,34 @@ export default class Spawner {
     for (let i = 0; i < n; i++) this.spawnAt(def, pos.x + ((i % 2) - 0.5) * gap, pos.y + (Math.floor(i / 2) - 0.5) * gap);
   }
 
-  // 보스: 화면 밖에서 나온다. 몬스터가 꽉 차 있어도 반드시 나오도록 가장 먼 몬스터 하나를 치운다
+  // 보스: 화면 밖에서 나온다
   boss(def) {
+    const enemy = this.spawnImportant(def);
+    if (enemy) this.scene.events.emit('boss-spawned', { enemy });
+  }
+
+  // 엘리트: 경고 글자와 함께 화면 밖에서 나온다
+  elite(def) {
+    const enemy = this.spawnImportant(def);
+    if (!enemy) return;
+    this.scene.elites.prepare(enemy);
+    this.scene.events.emit('wave-warning', { text: def.warning });
+    this.scene.events.emit('elite-spawned', { enemy });
+  }
+
+  // 몬스터가 꽉 차 있어도 반드시 나오도록 가장 먼 일반 몬스터 하나를 치운다
+  spawnImportant(def) {
     const pos = this.offscreenPoint();
-    if (!pos) return;
+    if (!pos) return null;
     if (this.enemies.countActive(true) >= CONFIG.spawn.maxAlive) {
       const { x, y } = this.scene.player;
       const far = this.enemies
         .getChildren()
-        .filter((e) => e.active && !e.def.boss)
+        .filter((e) => e.active && !e.def.boss && !e.def.elite)
         .sort((a, b) => Phaser.Math.Distance.Between(b.x, b.y, x, y) - Phaser.Math.Distance.Between(a.x, a.y, x, y))[0];
       far?.remove();
     }
-    const enemy = this.spawnAt(def, pos.x, pos.y);
-    if (enemy) this.scene.events.emit('boss-spawned', { enemy });
+    return this.spawnAt(def, pos.x, pos.y);
   }
 
   // summon 이 있는 몬스터(보스)는 every 마다 둘레에 부하를 불러낸다
@@ -140,7 +164,7 @@ export default class Spawner {
   // announce 가 false 면 "전체 회신 폭탄!" 대신 웨이브의 warning 글자가 이미 떠 있다
   mailBomb(count, minutes, announce = true) {
     const view = this.scene.cameras.main.worldView;
-    const { worldWidth: W, worldHeight: H } = CONFIG.office;
+    const { width: W, height: H } = this.floor.map;
     const { x: px, y: py } = this.scene.player;
     const radius = Math.hypot(view.width, view.height) / 2 + CONFIG.spawn.offscreenMargin;
     for (let i = 0; i < count; i++) {
@@ -156,7 +180,7 @@ export default class Spawner {
   line({ count, gap, enemy }, minutes) {
     const view = this.scene.cameras.main.worldView;
     const m = CONFIG.spawn.offscreenMargin;
-    const { worldWidth: W, worldHeight: H } = CONFIG.office;
+    const { width: W, height: H } = this.floor.map;
     const length = (count - 1) * gap;
     const sides = [];
     if (view.left - m >= 0) sides.push({ x: view.left - m, y: view.centerY, dx: 0, dy: 1 });
@@ -176,7 +200,7 @@ export default class Spawner {
   offscreenPoint() {
     const view = this.scene.cameras.main.worldView;
     const m = CONFIG.spawn.offscreenMargin;
-    const { worldWidth: W, worldHeight: H } = CONFIG.office;
+    const { width: W, height: H } = this.floor.map;
     const rnd = Phaser.Math.Between;
     // 변을 따라 고르는 범위도 화면 근처로 좁혀 너무 먼 곳에서 나오지 않게 한다
     const x0 = Math.max(0, view.left - m);
