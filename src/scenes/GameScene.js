@@ -42,7 +42,7 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.furniture);
     this.controls = new Controls(this);
 
-    this.elites = new Elites(this);
+    this.elites = new Elites(this, this.floor);
     this.spawner = new Spawner(this, this.floor);
     this.enemies = this.spawner.enemies;
     this.combat = new Combat(this, this.player, this.enemies);
@@ -241,12 +241,14 @@ export default class GameScene extends Phaser.Scene {
     }
     // 책상 앞에서 일하는 중에는 움직이지 못한다 (무기는 계속 나간다)
     const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner);
+    if (this.desk.transitioning) return; // 방금 회사 PC 화면으로 넘어가기 시작
     // 17:50부터 음악이 빨라진다
     music.setTempo(this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1);
     this.player.move(locked ? Desk.STILL : this.controls.read());
     this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
     this.combat.update(delta);
+    if (this.juice.frozen) return; // 방금 처치로 히트스톱이 걸렸다
     this.enemyShots.update(delta, this.enemies, this.player);
     this.elites.update(delta, this.enemies, this.player);
     this.pickups.update(delta);

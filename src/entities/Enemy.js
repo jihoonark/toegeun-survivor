@@ -44,6 +44,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
 
     this.enableBody(true, x, y, true, true);
     this.body.setSize(def.bodyWidth, def.bodyHeight);
+    this.body.checkCollision.none = false;
 
     this.visual.setTexture(enemyTexture(this.scene, def.art)).clearTint().setScale(1).setActive(true).setVisible(true);
 

@@ -59,9 +59,9 @@ export const CONFIG = {
     // 기술을 쓸 대상이 없을 때 다시 노리기까지(ms)
     retry: 800,
     // 바닥 예고 원: 색, 바깥 선 투명도, 안쪽 채움 투명도(처음→실행 직전), 머리 옆 "!" 크기와 위치(발밑에서 px, 엘리트 크기 배율이 곱해진다)
-    telegraph: { color: 0xe03a3a, lineAlpha: 0.9, fillFrom: 0.06, fillTo: 0.32, iconScale: 1.5, iconOffsetX: 13, iconOffsetY: 30 },
-    // 대사 말풍선: 높이(발밑에서 px, 크기 배율이 곱해진다), 떠 있는 시간(ms), 사라지는 시간(ms), 색
-    bubble: { offsetY: 54, time: 1800, fade: 300, back: '#ffffff', color: '#1a1420' },
+    telegraph: { color: 0xe03a3a, lineAlpha: 0.9, outerLine: 1, innerLine: 2, minRadius: 1, fillFrom: 0.06, fillTo: 0.32, iconScale: 1.5, iconOffsetX: 13, iconOffsetY: 30 },
+    // 대사 말풍선: 높이(발밑에서 px, 크기 배율이 곱해진다), 떠 있는 시간(ms), 사라지는 시간(ms), 색, 글자 둘레 여백(px)
+    bubble: { offsetY: 54, time: 1800, fade: 300, back: '#ffffff', color: '#1a1420', padX: 3, padY: 1 },
     // 던진 몬스터가 떨어질 때 화면 흔들림
     landingShake: { duration: 120, intensity: 0.006 },
   },

@@ -3,6 +3,7 @@ import { CONFIG } from '../config.js';
 import { OFFICE_TEXTURES } from '../art/office.js';
 import { addText } from './Text.js';
 import { getEnemy } from '../data/enemies.js';
+import { getElite } from '../data/elites.js';
 
 // 엘리트 기술 (GAME_SPEC.md 12장 "엘리트")
 // skill 이 있는 몬스터는 first 뒤, 그다음엔 every 마다 기술을 쓴다
@@ -38,20 +39,27 @@ export const SKILLS = {
         if (!o) break;
         picked.push(o);
       }
-      for (const o of picked) {
+      if (picked.length === 0) return;
+      const members = picked.map((o) => {
         const angle = Math.random() * Math.PI * 2;
         const r = Math.random() * s.scatter;
         elites.throw(o, cast.x + Math.cos(angle) * r, cast.y + Math.sin(angle) * r, s.flightTime, s.arcHeight);
-      }
-      elites.landings.push({ x: cast.x, y: cast.y, r: cast.r, left: s.flightTime, damage: s.damage });
+        return { enemy: o, spawnId: o.spawnId };
+      });
+      elites.landings.push({ x: cast.x, y: cast.y, r: cast.r, left: s.flightTime, damage: s.damage, members });
       scene.events.emit('elite-fire', { enemy: e });
     },
   },
 };
 
 export default class Elites {
-  constructor(scene) {
+  constructor(scene, floor) {
     this.scene = scene;
+    // 층에 나오는 엘리트의 기술이 모두 있는지 판을 시작할 때 확인한다 (등장하는 순간 멈추지 않게)
+    for (const { id } of floor.elites) {
+      const type = getElite(id).skill?.type;
+      if (type && !SKILLS[type]) throw new Error(`알 수 없는 엘리트 기술: ${type} (${id})`);
+    }
     this.marks = [];
     this.gfx = scene.add.graphics().setDepth(CONFIG.depth.floor + 1);
     this.icons = [];
@@ -61,16 +69,17 @@ export default class Elites {
     this.landings = [];
   }
 
-  // 몬스터를 (x, y) 로 포물선을 그리며 던진다. 날아가는 동안은 쫓지도, 주인공에게 닿지도 않는다
+  // 몬스터를 (x, y) 로 포물선을 그리며 던진다. 날아가는 동안은 쫓지도, 주인공·다른 몬스터에 닿지도, 무기에 맞지도 않는다
   throw(enemy, x, y, ms, height) {
     enemy.flight = { fromX: enemy.x, fromY: enemy.y, toX: x, toY: y, t: 0, ms, height };
     enemy.body.setVelocity(0, 0);
+    enemy.body.checkCollision.none = true;
     this.flights.push({ enemy, spawnId: enemy.spawnId });
   }
 
   updateFlights(delta, player) {
     this.flights = this.flights.filter(({ enemy, spawnId }) => {
-      if (!enemy.active || enemy.spawnId !== spawnId || !enemy.flight) return false;
+      if (!enemy.active || enemy.spawnId !== spawnId || !enemy.flight) return false; // 공중에서 처치됨 (다시 나올 때 Enemy.spawn 이 되돌린다)
       const f = enemy.flight;
       f.t += delta;
       const k = Math.min(1, f.t / f.ms);
@@ -79,11 +88,15 @@ export default class Elites {
       if (k < 1) return true;
       enemy.flight = null;
       enemy.lift = 0;
+      enemy.body.checkCollision.none = false;
       return false;
     });
+    // 던진 몬스터가 공중에서 처치되거나 풀에서 다른 몬스터로 다시 나왔으면 그 몬스터는 착지하지 않은 것
     this.landings = this.landings.filter((l) => {
       l.left -= delta;
       if (l.left > 0) return true;
+      const landed = l.members.some(({ enemy, spawnId }) => enemy.active && enemy.spawnId === spawnId);
+      if (!landed) return false;
       if (Phaser.Math.Distance.Between(l.x, l.y, player.x, player.y) <= l.r) player.hurt(l.damage);
       this.scene.events.emit('elite-landing', l);
       return false;
@@ -144,8 +157,8 @@ export default class Elites {
       this.marks.push(c);
       this.gfx.fillStyle(t.color, Phaser.Math.Linear(t.fillFrom, t.fillTo, p)).fillCircle(c.x, c.y, c.r);
       // 바깥 선은 고정, 안쪽 원이 바깥까지 차오르면 실행
-      this.gfx.lineStyle(1, t.color, t.lineAlpha).strokeCircle(c.x, c.y, c.r);
-      this.gfx.lineStyle(2, t.color, t.lineAlpha).strokeCircle(c.x, c.y, Math.max(1, c.r * p));
+      this.gfx.lineStyle(t.outerLine, t.color, t.lineAlpha).strokeCircle(c.x, c.y, c.r);
+      this.gfx.lineStyle(t.innerLine, t.color, t.lineAlpha).strokeCircle(c.x, c.y, Math.max(t.minRadius, c.r * p));
       const icon = (this.icons[used++] ??= this.scene.add.image(0, 0, OFFICE_TEXTURES.alert).setDepth(CONFIG.depth.flying));
       icon.setVisible(true).setScale(t.iconScale).setPosition(e.x + t.iconOffsetX * e.baseScale, e.y - t.iconOffsetY * e.baseScale);
     }
@@ -153,7 +166,7 @@ export default class Elites {
     for (const l of this.landings) {
       this.marks.push(l);
       this.gfx.fillStyle(t.color, t.fillTo).fillCircle(l.x, l.y, l.r);
-      this.gfx.lineStyle(2, t.color, t.lineAlpha).strokeCircle(l.x, l.y, l.r);
+      this.gfx.lineStyle(t.innerLine, t.color, t.lineAlpha).strokeCircle(l.x, l.y, l.r);
     }
     for (let i = used; i < this.icons.length; i++) this.icons[i].setVisible(false);
   }
@@ -165,7 +178,7 @@ export default class Elites {
     this.bubbles = this.bubbles.filter((x) => x.enemy !== enemy);
     const text = addText(this.scene, enemy.x, enemy.y, line, { size: CONFIG.ui.smallFontSize, color: b.color, stroke: 0 })
       .setBackgroundColor(b.back)
-      .setPadding(3, 1, 3, 1)
+      .setPadding(b.padX, b.padY, b.padX, b.padY)
       .setDepth(CONFIG.depth.flying);
     this.bubbles.push({ enemy, spawnId: enemy.spawnId, text, left: b.time });
   }

@@ -86,8 +86,10 @@ export default class Spawner {
     }
   }
 
+  // 지금 나올 수 있는 몬스터 중 하나 (없으면 null: 그번 등장은 건너뛴다)
   pickEnemy(minutes) {
     const pool = this.pool.filter((e) => e.weight > 0 && minutes >= e.from);
+    if (pool.length === 0) return null;
     let roll = Math.random() * pool.reduce((sum, e) => sum + e.weight, 0);
     for (const e of pool) {
       roll -= e.weight;
@@ -107,6 +109,7 @@ export default class Spawner {
     const pos = this.offscreenPoint();
     if (!pos) return;
     const def = this.pickEnemy(minutes);
+    if (!def) return;
     // group 이 있는 몬스터(포스트잇)는 한 자리에 여러 마리가 붙어서 나온다
     const n = def.group ?? 1;
     const gap = def.groupGap ?? 0;
@@ -171,7 +174,8 @@ export default class Spawner {
       const angle = (Math.PI * 2 * i) / count;
       const x = Phaser.Math.Clamp(px + Math.cos(angle) * radius, 0, W);
       const y = Phaser.Math.Clamp(py + Math.sin(angle) * radius, 0, H);
-      this.spawnAt(this.pickEnemy(minutes), x, y);
+      const def = this.pickEnemy(minutes);
+      if (def) this.spawnAt(def, x, y);
     }
     if (announce) this.scene.events.emit('mail-bomb', { count });
   }
@@ -190,6 +194,7 @@ export default class Spawner {
     const side = Phaser.Utils.Array.GetRandom(sides);
     if (!side) return;
     const def = enemy ? getEnemy(enemy) : this.pickEnemy(minutes);
+    if (!def) return;
     for (let i = 0; i < count; i++) {
       const t = i * gap - length / 2;
       this.spawnAt(def, Phaser.Math.Clamp(side.x + side.dx * t, 0, W), Phaser.Math.Clamp(side.y + side.dy * t, 0, H));

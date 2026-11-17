@@ -53,7 +53,7 @@ export default class Combat {
     let best = null;
     let bestDist = range * range;
     for (const enemy of this.enemies.getChildren()) {
-      if (!enemy.active) continue;
+      if (!enemy.active || enemy.flight) continue; // 엘리트가 던져 날아가는 중
       const d = Phaser.Math.Distance.Squared(this.player.x, this.player.y, enemy.x, enemy.y);
       if (d <= bestDist) {
         best = enemy;
@@ -104,7 +104,7 @@ export default class Combat {
     for (const projectile of this.projectiles.getChildren()) {
       if (!projectile.active) continue;
       for (const enemy of enemies) {
-        if (!enemy.active) continue;
+        if (!enemy.active || enemy.flight) continue;
         const aim = enemy.getAimPoint ? enemy.getAimPoint() : enemy.getCenter();
         const reach = (enemy.def?.hitRadius ?? enemy.width / 2) + projectile.radius;
         if (Phaser.Math.Distance.Squared(projectile.x, projectile.y, aim.x, aim.y) > reach * reach) continue;

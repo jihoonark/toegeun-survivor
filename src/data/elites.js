@@ -5,7 +5,7 @@
 // 항목 필드 (몬스터 필드는 src/data/enemies.js 와 같다: art, hp, speed, contactDamage, xp, xpPieces, scale,
 //            bodyWidth/bodyHeight, hitRadius, hop, knockbackScale, stunScale, credit)
 //   id        고유 이름 (영문)
-//   name      이름표에 보이는 이름
+//   name      머리 위 이름표와 체력 막대에 보이는 이름
 //   warning   나올 때 화면에 크게 뜨는 글자
 //   skill     기술 { type, first, every, telegraph, lines, ... }
 //               type: systems/Elites.js 의 SKILLS 에 있는 기술 이름
@@ -19,7 +19,6 @@ export const ELITES = [
     // 15층 17:15. 주인공 발밑에 예고 원을 띄우고, 자기 둘레 몬스터를 그 원 안으로 던져 떠넘긴다
     id: 'neighbor-manager',
     name: '옆 팀 과장',
-    label: '옆 팀 과장',
     warning: '옆 팀 과장 등장!',
     art: 'neighbor-manager',
     scale: 1.4,
@@ -57,7 +56,11 @@ export const ELITES = [
   },
 ];
 
-for (const elite of ELITES) elite.elite = true;
+// 엘리트 표시를 붙이고, 머리 위 이름표는 name 으로
+for (const elite of ELITES) {
+  elite.elite = true;
+  elite.label ??= elite.name;
+}
 
 export function getElite(id) {
   const elite = ELITES.find((e) => e.id === id);
