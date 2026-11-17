@@ -235,10 +235,8 @@ export default class GameScene extends Phaser.Scene {
     if (this.desk.transitioning) return; // 회사 PC 화면으로 넘어가는 중
     if (this.juice.update(time)) return; // 히트스톱 중
     this.updateClock(delta);
-    if (this.stairs.update(this.shiftMinutes(), this.player)) {
-      this.endShift('clear');
-      return;
-    }
+    // 계단 도착은 이 프레임의 공격을 다 처리한 뒤 맨 끝에 판정한다 (같은 프레임에 멘탈이 0이 되면 야근이 먼저)
+    const atStairs = this.stairs.update(this.shiftMinutes(), this.player);
     // 책상 앞에서 일하는 중에는 움직이지 못한다 (무기는 계속 나간다)
     const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner);
     if (this.desk.transitioning) return; // 방금 회사 PC 화면으로 넘어가기 시작
@@ -256,5 +254,6 @@ export default class GameScene extends Phaser.Scene {
     this.hud.updateBoss();
     const helper = this.desk.npcs.find((n) => !n.leaving);
     this.hud.setBuff(helper ? `🛡️ ${helper.def.name} 지원 ${helper.secondsLeft}초` : '');
+    if (atStairs && !this.ended) this.endShift('clear');
   }
 }
