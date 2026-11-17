@@ -23,7 +23,7 @@ const GAME_EVENTS = [
   'enemy-hit', 'enemy-killed', 'player-hit', 'player-healed', 'shift-end',
   'weapon-added', 'weapon-upgraded', 'xp-gained', 'xp-changed', 'promoted', 'mail-bomb',
   'wave-warning', 'boss-spawned', 'item-added', 'item-upgraded', 'desk-ready', 'desk-done', 'npc-joined', 'npc-refreshed', 'npc-guard', 'npc-hit', 'npc-defeated', 'enemy-rage',
-  'elite-spawned', 'elite-aim',
+  'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -106,7 +106,7 @@ export default class GameScene extends Phaser.Scene {
     this.hud.setTasks(0);
 
     this.physics.add.overlap(this.player, this.enemies, (_player, enemy) => {
-      if (this.ended || !enemy.active) return;
+      if (this.ended || !enemy.active || enemy.flight) return;
       this.player.hurt(enemy.def.contactDamage);
     });
     this.events.on('player-hit', ({ mental }) => {
@@ -137,6 +137,11 @@ export default class GameScene extends Phaser.Scene {
     this.events.on('boss-spawned', ({ enemy }) => this.hud.showBoss(enemy));
     this.events.on('elite-spawned', ({ enemy }) => this.hud.showBoss(enemy));
     this.events.on('elite-aim', () => this.juice.sfx.play('ping'));
+    this.events.on('elite-landing', () => {
+      this.juice.sfx.play('guard');
+      const s = CONFIG.elite.landingShake;
+      this.cameras.main.shake(s.duration, s.intensity * CONFIG.juice.shake.strength);
+    });
     this.events.on('enemy-killed', ({ def }) => {
       if (def.boss || def.elite) this.hud.showWarning(`${def.name}님 퇴근!`);
     });

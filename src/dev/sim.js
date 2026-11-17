@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CONFIG } from '../config.js';
 
 // 자동 시험 (개발 서버에서만). 브라우저 콘솔에서:
 //   await __sim.runMany({ floor: 15, bot: 'mover', runs: 6 })
@@ -35,6 +36,11 @@ function rectsOf(scene) {
   const blocks = [];
   for (const z of scene.furniture?.getChildren() ?? []) blocks.push({ x: z.x - z.width / 2, y: z.y - z.height / 2, w: z.width, h: z.height });
   for (const w of scene.walls?.getChildren() ?? []) blocks.push({ x: w.x - w.width / 2, y: w.y - w.height / 2, w: w.width, h: w.height });
+  // 내 자리 앞에 서 있으면 퀴즈 화면이 열리므로 봇은 책상 앞을 막힌 곳으로 본다
+  if (scene.desk) {
+    const z = CONFIG.desk.zone;
+    blocks.push({ x: scene.desk.x - z.width / 2, y: scene.desk.y, w: z.width, h: z.height });
+  }
   return blocks;
 }
 
@@ -220,5 +226,58 @@ export function installSim(game) {
     return status;
   }
 
-  window.__sim = { run, runMany, start, status };
+  // 녹화·확인용: 봇이 피해 다니며 그 시각(17:00 부터 분)까지 빨리 감은 뒤 멈추지 않고 사람에게 넘긴다
+  //   await __sim.jump({ floor: 15, minutes: 15.5 })   keepBot: true 면 봇이 계속 움직인다
+  async function jump({ floor, minutes, bot = 'mover', tune, keepBot = false } = {}) {
+    for (const s of game.scene.getScenes(true)) if (s.scene.key !== 'Game') s.scene.stop();
+    game.loop.sleep();
+    game.scene.start('Game', { floor });
+    let t = performance.now();
+    let scene = null;
+    let read = null;
+    for (let frame = 0; frame < 60 * 60 * 6; frame++) {
+      t += FRAME;
+      game.step(t, FRAME);
+      scene = game.scene.getScene('Game');
+      if (scene.sys.isActive() && !read && scene.player) {
+        read = scene.controls.read.bind(scene.controls);
+        const brain = bot === 'idle' ? () => STILL : makeMover(scene, tune);
+        scene.controls.read = () => brain();
+        scene.player.hurt = () => false; // 빨리 감는 동안은 다치지 않는다
+      }
+      const levelUp = game.scene.getScene('LevelUp');
+      if (levelUp.sys.isActive() && levelUp.choices) {
+        levelUp.ready = true;
+        levelUp.choose(Phaser.Utils.Array.GetRandom(levelUp.choices));
+      }
+      if (scene.ended || (scene.shiftMinutes && scene.shiftMinutes() >= minutes)) break;
+      if (frame % 300 === 0) await yieldNow();
+    }
+    delete scene.player.hurt;
+    if (!keepBot) scene.controls.read = read;
+    game.loop.wake();
+    return scene.shiftMinutes();
+  }
+
+  // 확인용: 조건이 맞을 때까지 한 프레임씩 돌리고 멈춘 채로 둔다 (화면 캡처용). 다시 움직이려면 __sim.resume()
+  //   await __sim.stepUntil((scene) => scene.elites.marks.length > 0)
+  async function stepUntil(test, maxFrames = 60 * 60) {
+    game.loop.sleep();
+    let t = performance.now();
+    for (let frame = 0; frame < maxFrames; frame++) {
+      t += FRAME;
+      game.step(t, FRAME);
+      const levelUp = game.scene.getScene('LevelUp');
+      if (levelUp.sys.isActive() && levelUp.choices) {
+        levelUp.ready = true;
+        levelUp.choose(Phaser.Utils.Array.GetRandom(levelUp.choices));
+      }
+      if (test(game.scene.getScene('Game'))) return frame;
+      if (frame % 300 === 0) await yieldNow();
+    }
+    return -1;
+  }
+  const resume = () => game.loop.wake();
+
+  window.__sim = { run, runMany, start, status, jump, stepUntil, resume };
 }

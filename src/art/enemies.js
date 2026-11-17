@@ -260,6 +260,49 @@ function drawClientCall(ctx) {
   rect(ctx, o, 23, 17, 2, 2);
 }
 
+// 옆 팀 과장 "이거 우리 팀 일 아니죠?": 보라 정장, 둥근 안경, 웃는 눈
+// 두 손으로 서류 상자를 앞으로 내민다. 상자에 하얀 화살표 "→" (떠넘기기)
+function drawNeighborManager(ctx) {
+  const o = PAL.outline;
+  // 다리와 구두
+  box(ctx, o, PAL.neighborSuitDark, 11, 24, 4, 5);
+  box(ctx, o, PAL.neighborSuitDark, 17, 24, 4, 5);
+  rect(ctx, PAL.shoe, 11, 28, 4, 1);
+  rect(ctx, PAL.shoe, 17, 28, 4, 1);
+  // 몸통
+  box(ctx, o, PAL.neighborSuit, 8, 14, 16, 11);
+  rect(ctx, PAL.neighborSuitDark, 9, 22, 14, 2);
+  rect(ctx, PAL.shirt, 14, 15, 4, 3);
+  // 머리 (옆으로 넘긴 갈색 머리)
+  box(ctx, o, PAL.skin, 9, 3, 14, 12);
+  rect(ctx, PAL.skinDark, 10, 13, 12, 1);
+  rect(ctx, o, 9, 2, 14, 1);
+  rect(ctx, PAL.hair, 10, 3, 12, 2);
+  rect(ctx, PAL.hair, 10, 5, 5, 1);
+  rect(ctx, PAL.hairDark, 19, 3, 3, 3);
+  // 둥근 안경과 웃는 눈
+  box(ctx, o, PAL.screenLight, 10, 7, 5, 4);
+  box(ctx, o, PAL.screenLight, 17, 7, 5, 4);
+  rect(ctx, o, 15, 8, 2, 1);
+  rect(ctx, o, 11, 9, 3, 1);
+  rect(ctx, o, 18, 9, 3, 1);
+  // 넉살 좋은 미소
+  rect(ctx, o, 13, 12, 6, 1);
+  dot(ctx, o, 12, 11);
+  dot(ctx, o, 19, 11);
+  // 앞으로 내민 서류 상자와 화살표
+  box(ctx, o, PAL.box, 5, 15, 22, 9);
+  rect(ctx, PAL.boxDark, 6, 22, 20, 1);
+  rect(ctx, PAL.boxDark, 15, 16, 2, 2);
+  rect(ctx, PAL.paper, 7, 13, 6, 3);
+  rect(ctx, PAL.paper, 19, 13, 6, 3);
+  rect(ctx, PAL.white, 10, 19, 10, 1);
+  rect(ctx, PAL.white, 18, 18, 1, 3);
+  dot(ctx, PAL.white, 19, 19);
+  dot(ctx, PAL.white, 17, 17);
+  dot(ctx, PAL.white, 17, 21);
+}
+
 // 그림이 없는 몬스터용: 빨간 덩어리
 function drawDefault(ctx) {
   const o = PAL.outline;
@@ -277,6 +320,7 @@ const ENEMY_DRAWINGS = {
   meeting: drawMeeting,
   postit: drawPostit,
   'client-call': drawClientCall,
+  'neighbor-manager': drawNeighborManager,
 };
 
 export function enemyTexture(scene, art) {

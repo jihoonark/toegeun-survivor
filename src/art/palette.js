@@ -67,6 +67,12 @@ export const PAL = {
   // 포스트잇 몬스터
   postitDark: '#d9a92a',
 
+  // 옆 팀 과장 (엘리트)
+  neighborSuit: '#6b5b95',
+  neighborSuitDark: '#4b3f6e',
+  box: '#c8955a',
+  boxDark: '#9a6a3a',
+
   // 선배
   cardigan: '#5f9a6a',
   cardiganDark: '#3f6e4a',

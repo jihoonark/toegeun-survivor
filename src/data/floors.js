@@ -65,8 +65,8 @@ export const FLOORS = [
       ],
     },
     stages: [
-      { at: 0, interval: 1400, batch: [1, 1], hp: 1, speed: 1 },
-      { at: 10, interval: 1150, batch: [1, 1], hp: 1.1, speed: 1 },
+      { at: 0, interval: 1150, batch: [1, 1], hp: 1, speed: 1 },
+      { at: 10, interval: 950, batch: [1, 2], hp: 1.15, speed: 1.02 },
       { at: 20, interval: 900, batch: [1, 2], hp: 1.25, speed: 1 },
       { at: 30, interval: 750, batch: [1, 2], hp: 1.45, speed: 1.03 },
       { at: 40, interval: 600, batch: [1, 2], hp: 1.7, speed: 1.06 },
@@ -81,8 +81,10 @@ export const FLOORS = [
       { id: 'deadline', weight: 1.2, from: 50 },
     ],
     waves: [
-      { at: 6, type: 'line', count: 5, gap: 16, enemy: 'email' },
-      { at: 12, type: 'line', count: 6, gap: 16, enemy: 'email' },
+      { at: 3, type: 'line', count: 5, gap: 16, enemy: 'email' },
+      { at: 6, type: 'line', count: 6, gap: 16, enemy: 'email' },
+      { at: 9, type: 'ring', count: 8 },
+      { at: 12, type: 'line', count: 8, gap: 16, enemy: 'email' },
       { at: 16, type: 'ring', count: 6 },
       { at: 20, type: 'line', count: 8, gap: 16, enemy: 'email' },
       { at: 25, type: 'line', count: 8, gap: 16, enemy: 'email' },
@@ -96,7 +98,8 @@ export const FLOORS = [
       { at: 55.2, type: 'ring', count: 16 },
       { at: 58, type: 'line', count: 12, gap: 12, enemy: 'email' },
     ],
-    elites: [],
+    // 17:15 옆 팀 과장 (팀장 전 구간을 긴장감 있게)
+    elites: [{ id: 'neighbor-manager', at: 15 }],
     rules: [],
   },
 ];
