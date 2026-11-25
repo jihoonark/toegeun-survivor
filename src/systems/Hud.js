@@ -1,4 +1,5 @@
 import { CONFIG } from '../config.js';
+import { WALLETS, formatAmount } from '../data/benefits.js';
 import { addText } from './Text.js';
 import { projectileTexture } from '../art/projectiles.js';
 import { itemTexture } from '../art/items.js';
@@ -31,6 +32,10 @@ export default class Hud {
 
     this.tasks = fix(addText(scene, width - margin, margin, '', { size: ui.smallFontSize, stroke: ui.bodyStroke }));
     this.tasks.setOrigin(1, 0);
+    // 이번 판에 주운 회사 혜택 (5화)
+    this.wallet = fix(addText(scene, width - margin, margin + this.tasks.height + CONFIG.hud.walletGap, '', { size: ui.smallFontSize, stroke: ui.bodyStroke }));
+    this.wallet.setOrigin(1, 0);
+    this.setWallet({});
 
     this.createWeaponSlots(fix);
     this.createItemSlots(fix);
@@ -260,6 +265,11 @@ export default class Hud {
       this.clockWarn = warn;
       this.clock.setColor(warn ? CONFIG.colors.accent : CONFIG.colors.text);
     }
+  }
+
+  // run: 이번 판에 주운 것 { salary, welfare }
+  setWallet(run) {
+    this.wallet.setText(Object.keys(WALLETS).map((k) => `${WALLETS[k].icon} ${formatAmount(k, run[k] ?? 0)}`).join('  '));
   }
 
   setTasks(count) {

@@ -294,6 +294,8 @@ export const CONFIG = {
   // 화면 위쪽 정보 (멘탈 바, 시계, 처리한 업무 수)
   hud: {
     margin: 8,
+    // 오른쪽 위 처리한 업무 아래 지갑 줄 간격(px)
+    walletGap: 1,
     mentalBar: { width: 80, height: 8, labelGap: 4 },
     mentalColors: { high: 0x5bd16a, mid: 0xffd23f, low: 0xe03a3a, back: 0x3a3048, outline: 0x1a1420 },
     // 멘탈 비율이 이 아래로 내려가면 중간·낮음 색
@@ -318,6 +320,27 @@ export const CONFIG = {
     bossBar: { width: 160, height: 6, y: 236, labelGap: 2, stackGap: 22, fill: 0xe03a3a, eliteFill: 0xf08a2a, back: 0x3a3048, outline: 0x1a1420 },
   },
 
+  // 회사 혜택 줍기 (systems/Benefits.js, 지갑 저장 systems/Wallet.js). 항목별 값·확률은 src/data/benefits.js
+  benefits: {
+    storageKey: 'toegeun-wallet',
+    // 야근(실패)해도 이 비율만큼 가져간다
+    keepOnOvertime: 0.5,
+    // 전체 배율: 떨어질 확률, 금액 (조절 패널·난이도용)
+    chanceScale: 1,
+    amountScale: 1,
+    // 바닥에 있는 시간(ms), 사라지기 전 깜빡임
+    lifetime: 20000,
+    blinkFrom: 4000,
+    blinkInterval: 150,
+    blinkAlpha: 0.3,
+    // 동시에 바닥에 있을 수 있는 수, 내 자리 보상이 떨어지는 높이(px), 주운 글자 높이(px)
+    poolSize: 30,
+    deskDropY: 12,
+    textY: 26,
+    // 주운 글자 색 (지갑별)
+    colors: { salary: '#7be07b', welfare: '#7ec8e3' },
+  },
+
   // 진행 상황 저장 (systems/Progress.js): 클리어한 층을 이 브라우저에 기억하는 이름
   progress: { storageKey: 'toegeun-progress' },
 
@@ -330,9 +353,9 @@ export const CONFIG = {
     // 화면 높이에 대한 비율
     titleY: 0.2,
     subtitleY: 0.33,
-    statsY: 0.46,
-    statsGap: 16,
-    heroY: 0.7,
+    statsY: 0.42,
+    statsGap: 15,
+    heroY: 0.72,
     buttonsY: 0.86,
     button: { width: 110, height: 26, gap: 16 },
   },

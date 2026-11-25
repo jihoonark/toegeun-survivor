@@ -98,5 +98,8 @@ export const PAL = {
   bottleDark: '#5e3012',
   capGold: '#e0b040',
   labelYellow: '#ffd23f',
+  // 월급봉투
+  envelope: '#e8d9a8',
+  envelopeDark: '#c9b47a',
   capOrange: '#f08a2a',
 };

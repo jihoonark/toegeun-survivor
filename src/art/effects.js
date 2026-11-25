@@ -54,6 +54,70 @@ function drawLock(ctx) {
   dot(ctx, PAL.outline, 3, 5);
 }
 
+// 회사 혜택 그림 (src/data/benefits.js art 키 → 그림 이름)
+export const BENEFIT_ART = {
+  envelope: 'benefit-envelope',
+  bonus: 'benefit-bonus',
+  holiday: 'benefit-holiday',
+  welfareCard: 'benefit-welfare',
+  mealTicket: 'benefit-meal',
+};
+
+// 11x8 월급봉투: 누런 봉투에 초록 띠
+function drawEnvelope(ctx) {
+  box(ctx, PAL.outline, PAL.envelope, 0, 0, 11, 8);
+  rect(ctx, PAL.envelopeDark, 1, 1, 1, 1);
+  rect(ctx, PAL.envelopeDark, 2, 2, 2, 1);
+  rect(ctx, PAL.envelopeDark, 4, 3, 3, 1);
+  rect(ctx, PAL.envelopeDark, 7, 2, 2, 1);
+  rect(ctx, PAL.envelopeDark, 9, 1, 1, 1);
+  rect(ctx, PAL.leaf, 1, 5, 9, 1);
+}
+
+// 10x11 성과급: 노란 돈자루
+function drawBonus(ctx) {
+  const o = PAL.outline;
+  rect(ctx, o, 3, 0, 4, 1);
+  rect(ctx, o, 4, 1, 2, 2);
+  rect(ctx, PAL.postitDark, 4, 1, 2, 1);
+  rect(ctx, o, 1, 3, 8, 1);
+  rect(ctx, o, 0, 4, 1, 6);
+  rect(ctx, o, 9, 4, 1, 6);
+  rect(ctx, o, 1, 10, 8, 1);
+  rect(ctx, PAL.labelYellow, 1, 4, 8, 6);
+  rect(ctx, PAL.postitDark, 1, 8, 8, 2);
+  rect(ctx, PAL.leafDark, 4, 5, 2, 1);
+  rect(ctx, PAL.leafDark, 4, 6, 1, 1);
+  rect(ctx, PAL.leafDark, 4, 7, 2, 1);
+}
+
+// 10x10 명절 상여: 빨간 선물 상자에 노란 리본
+function drawHoliday(ctx) {
+  box(ctx, PAL.outline, PAL.alert, 0, 2, 10, 8);
+  rect(ctx, PAL.alertDark, 1, 8, 8, 1);
+  rect(ctx, PAL.labelYellow, 4, 3, 2, 6);
+  rect(ctx, PAL.labelYellow, 1, 5, 8, 1);
+  rect(ctx, PAL.labelYellow, 2, 0, 2, 2);
+  rect(ctx, PAL.labelYellow, 6, 0, 2, 2);
+}
+
+// 11x7 복지포인트: 파란 카드에 흰 줄
+function drawWelfare(ctx) {
+  box(ctx, PAL.outline, PAL.badge, 0, 0, 11, 7);
+  rect(ctx, PAL.badgeDark, 1, 2, 9, 1);
+  rect(ctx, PAL.badgeCard, 2, 4, 3, 1);
+  rect(ctx, PAL.labelYellow, 7, 4, 2, 1);
+}
+
+// 11x7 식대 쿠폰: 주황 쿠폰, 양 옆 홈
+function drawMeal(ctx) {
+  box(ctx, PAL.outline, PAL.foot, 0, 0, 11, 7);
+  rect(ctx, PAL.outline, 0, 3, 1, 1);
+  rect(ctx, PAL.outline, 10, 3, 1, 1);
+  rect(ctx, PAL.paper, 3, 2, 5, 1);
+  rect(ctx, PAL.footDark, 3, 4, 5, 1);
+}
+
 const FRAME = 4;
 
 // 14x14 "전체 회신 폭탄": 빨간 편지봉투에 노란 "전체" 띠, 위로 심지와 불꽃
@@ -94,4 +158,9 @@ export function createEffectTextures(scene) {
   const hit = createCanvasTexture(scene, EFFECT_TEXTURES.hit, HIT_CELL * 6, HIT_CELL, drawHitBits);
   Object.values(EFFECT_TEXTURES.hitFrames).flat().forEach((name, i) => hit.add(name, 0, i * HIT_CELL, 0, HIT_CELL, HIT_CELL));
   createCanvasTexture(scene, EFFECT_TEXTURES.lock, 7, 8, drawLock);
+  createCanvasTexture(scene, BENEFIT_ART.envelope, 11, 8, drawEnvelope);
+  createCanvasTexture(scene, BENEFIT_ART.bonus, 10, 11, drawBonus);
+  createCanvasTexture(scene, BENEFIT_ART.holiday, 10, 10, drawHoliday);
+  createCanvasTexture(scene, BENEFIT_ART.welfareCard, 11, 7, drawWelfare);
+  createCanvasTexture(scene, BENEFIT_ART.mealTicket, 11, 7, drawMeal);
 }

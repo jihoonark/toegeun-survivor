@@ -20,6 +20,8 @@ import Stairs from '../systems/Stairs.js';
 import Rooms from '../systems/Rooms.js';
 import Takedowns from '../systems/Takedowns.js';
 import Bombs from '../systems/Bombs.js';
+import Benefits from '../systems/Benefits.js';
+import { wallet } from '../systems/Wallet.js';
 import FloorRules from '../systems/FloorRules.js';
 import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
 import { FLOORS, getFloor } from '../data/floors.js';
@@ -32,6 +34,7 @@ const GAME_EVENTS = [
   'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing', 'stairs-open',
   'meeting-door', 'meeting-stop',
   'shot-parried', 'elite-reflect', 'elite-returned', 'bomb-dropped', 'bomb-exploded',
+  'benefit-collected',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -58,6 +61,7 @@ export default class GameScene extends Phaser.Scene {
     this.juice = new Juice(this);
     this.pickups = new Pickups(this, this.player);
     this.bombs = new Bombs(this, this.player);
+    this.benefits = new Benefits(this, this.player);
     this.items = new Items(this, this.player);
     this.promotion = new Promotion(this, this.combat, this.player, this.items);
     this.setupShift();
@@ -132,6 +136,7 @@ export default class GameScene extends Phaser.Scene {
       if (mental <= 0) this.endShift('overtime');
     });
     this.events.on('enemy-killed', () => this.hud.setTasks(++this.tasksDone));
+    this.events.on('benefit-collected', ({ run }) => this.hud.setWallet(run));
     this.events.on('player-healed', ({ mental }) => this.hud.setMental(mental, this.player.maxMental));
 
     // 무기 칸과 승진 막대
@@ -200,6 +205,8 @@ export default class GameScene extends Phaser.Scene {
     this.player.anims.pause();
     music.stop();
     const summary = { result, floor: this.floor.id, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
+    // 회사 혜택 정산: 칼퇴면 다, 야근이면 절반 (config benefits.keepOnOvertime)
+    summary.benefits = { run: { ...this.benefits.run }, kept: wallet.settle(this.benefits.run, result === 'clear') };
     this.events.emit('shift-end', summary);
 
     // 그 자리에서 결과를 크게 한 번 보여 주고 결과 화면으로 넘어간다
@@ -286,6 +293,7 @@ export default class GameScene extends Phaser.Scene {
     this.elites.update(delta, this.enemies, this.player, this.combat.projectiles);
     this.pickups.update(delta);
     this.bombs.update(delta);
+    this.benefits.update(delta);
     this.juice.trails(this.combat.projectiles, delta);
     this.hud.updateBoss();
     const helper = this.desk.npcs.find((n) => !n.leaving);

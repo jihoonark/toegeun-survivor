@@ -150,12 +150,12 @@ export default class Juice {
     this.rise(text.setText(label).setColor(d.color), x, y, d, d.popScale);
   }
 
-  // 무기별 짧은 글자 ("승인" 등). 데미지 숫자 글자를 같이 돌려 쓴다
-  popText(x, y, message) {
+  // 무기별 짧은 글자 ("승인" 등), 혜택 주운 글자. 데미지 숫자 글자를 같이 돌려 쓴다 (color 없으면 popColor)
+  popText(x, y, message, color) {
     const text = this.numbers.find((t) => !t.visible);
     if (!text) return;
     const d = CONFIG.juice.damageNumber;
-    this.rise(text.setText(message).setColor(d.popColor), x, y - d.popOffsetY, d, 1);
+    this.rise(text.setText(message).setColor(color ?? d.popColor), x, y - d.popOffsetY, d, 1);
   }
 
   // popScale: 처음 크기 (데미지 숫자만 크게 쾅, 무기 글자는 그대로)

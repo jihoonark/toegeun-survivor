@@ -7,16 +7,19 @@ import { HERO } from '../art/hero.js';
 import { music } from '../systems/Music.js';
 import { progress } from '../systems/Progress.js';
 import { getFloor } from '../data/floors.js';
+import { WALLETS, formatAmount } from '../data/benefits.js';
+import { wallet } from '../systems/Wallet.js';
 
 // 결과 화면: "칼퇴 성공" / "야근 확정", 처리한 업무 수, 버틴 시간
 // 칼퇴(계단 도착)면 그 층을 클리어로 저장하고, 다음 층이 있으면 [다음 층] [엘리베이터], 없으면 [다시하기] [엘리베이터]
-// 받는 값: { result: 'clear' | 'overtime', floor, tasks, minutes, rank }
+// 받는 값: { result: 'clear' | 'overtime', floor, tasks, minutes, rank, benefits: { run, kept } }
+// 회사 혜택: 이번 판에 가져간 것과 지갑 합계 (야근이면 절반만)
 export default class ResultScene extends Phaser.Scene {
   constructor() {
     super('Result');
   }
 
-  create({ result, floor, tasks, minutes, rank }) {
+  create({ result, floor, tasks, minutes, rank, benefits }) {
     const { width, height } = CONFIG.screen;
     const { ui, colors } = CONFIG;
     const r = CONFIG.result;
@@ -37,6 +40,14 @@ export default class ResultScene extends Phaser.Scene {
     addText(this, width / 2, statsY, `처리한 업무 ${tasks}건 · 최종 직급 ${rank}`);
     const timeLine = clear ? `퇴근 시각 ${formatClock(minutes)}` : `${formatClock(minutes)}까지 버팀`;
     addText(this, width / 2, statsY + r.statsGap, timeLine);
+    if (benefits) {
+      const keys = Object.keys(WALLETS);
+      const got = keys.map((k) => `${WALLETS[k].icon} +${formatAmount(k, benefits.kept[k])}`).join('  ');
+      const half = clear || keys.every((k) => !benefits.run[k]) ? '' : ' (야근이라 절반)';
+      addText(this, width / 2, statsY + r.statsGap * 2, `가져간 혜택 ${got}${half}`, { color: colors.accent });
+      const total = wallet.balance();
+      addText(this, width / 2, statsY + r.statsGap * 3, `지갑 ${keys.map((k) => `${WALLETS[k].name} ${formatAmount(k, total[k])}`).join(' · ')}`, { size: ui.smallFontSize, color: colors.textDim });
+    }
 
     // 주인공: 칼퇴면 정면, 야근이면 뒷모습으로 쓸쓸하게
     const hero = this.add.sprite(width / 2, height * r.heroY, HERO.texture);
