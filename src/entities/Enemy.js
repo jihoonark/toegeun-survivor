@@ -23,7 +23,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Image {
   spawn(def, x, y, boost = { hp: 1, speed: 1 }) {
     this.def = def;
     this.spawnId = nextSpawnId++;
-    this.hp = Math.max(1, Math.round(def.hp * boost.hp));
+    // fixedHp: 시간대 체력 배율을 받지 않는다 (13층 최종 보스처럼 나오는 시각이 정해진 몬스터)
+    this.hp = Math.max(1, Math.round(def.hp * (def.fixedHp ? 1 : boost.hp)));
     this.maxHp = this.hp;
     this.summonLeft = def.summon?.every ?? 0;
     this.age = 0;

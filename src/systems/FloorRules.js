@@ -76,6 +76,62 @@ export const RULES = {
   },
 };
 
+// 17:59 최종 보스 (5화 13층): 시계가 at(분)에서 멈추고 보스가 나온다. 보스를 퇴근시켜야 18:00 이 되어 계단이 열린다
+//   { type: 'finalBoss', at, enemy, warning, phases: [{ below, line, warning, skill, spawn: { id, count, radius } }], tempo }
+//   phases: 보스 체력 비율이 below 아래로 내려가면 그 단계 (기술은 systems/Elites.js SKILLS, 데이터 모양은 data/elites.js skill)
+//           line 말풍선, warning 화면 글자, spawn 단계에 들어갈 때 보스 둘레에 한 번 불러내는 몬스터
+//   tempo: 보스가 있는 동안 음악 빠르기 배율
+RULES.finalBoss = class {
+  constructor(scene, rule) {
+    this.scene = scene;
+    this.rule = rule;
+    this.boss = null;
+    this.done = false;
+    this.phase = -1;
+    scene.events.on('enemy-killed', ({ enemy }) => {
+      if (!this.boss || enemy !== this.boss || enemy.spawnId !== this.bossSpawnId) return;
+      this.done = true;
+      this.boss = null;
+      scene.clockHold = null;
+      scene.musicBoost = 1;
+      scene.skipClockTo(scene.shiftEnd());
+    });
+  }
+
+  update(_delta, minutes) {
+    if (this.done) return;
+    const scene = this.scene;
+    if (!this.boss) {
+      if (minutes < this.rule.at) return;
+      scene.clockHold = this.rule.at;
+      this.boss = scene.spawner.spawnImportant(getEnemy(this.rule.enemy));
+      if (!this.boss) return; // 몬스터가 꽉 찼으면 다음 프레임에 다시
+      this.bossSpawnId = this.boss.spawnId;
+      scene.events.emit('boss-spawned', { enemy: this.boss });
+      scene.hud.showWarning(this.rule.warning, CONFIG.colors.danger);
+      scene.musicBoost = this.rule.tempo ?? 1;
+      return;
+    }
+    const ratio = this.boss.hp / this.boss.maxHp;
+    const next = this.rule.phases.findIndex((p, i) => i > this.phase && ratio <= p.below);
+    if (next < 0) return;
+    this.phase = next;
+    const p = this.rule.phases[next];
+    this.boss.skill = p.skill;
+    this.boss.skillLeft = p.skill.first ?? p.skill.every;
+    this.boss.cast = null;
+    if (p.line) scene.elites.say(this.boss, p.line);
+    if (p.warning) scene.hud.showWarning(p.warning, CONFIG.colors.accent);
+    if (p.spawn) {
+      const def = getEnemy(p.spawn.id);
+      for (let i = 0; i < p.spawn.count; i++) {
+        const a = (i / p.spawn.count) * Math.PI * 2;
+        scene.spawner.spawnAt(def, this.boss.x + Math.cos(a) * p.spawn.radius, this.boss.y + Math.sin(a) * p.spawn.radius);
+      }
+    }
+  }
+};
+
 export default class FloorRules {
   constructor(scene, floor) {
     this.rules = floor.rules.map((rule) => {

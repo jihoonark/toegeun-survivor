@@ -101,6 +101,37 @@ export const MUSIC = {
     drums: `K - h - S - h h | K - h - S - h - | K - h - S - h h | K - h - S h S h`,
   },
 
+  // 13층 해 진 사무실: 느리고 어둡게 시작 (17:55 부터 빨라지고, 팀장님이 나오면 더)
+  finale: {
+    bpm: 92,
+    stepsPerBeat: 2,
+    loop: true,
+    voices: [
+      {
+        wave: 'square',
+        gain: 0.12,
+        staccato: 0.7,
+        notes: `A4 - C5 - E5 . D5 C5 | B4 - D5 - G4 . . - |
+                A4 - C5 - E5 . F5 E5 | D5 . B4 . A4 . . -`,
+      },
+      {
+        wave: 'triangle',
+        gain: 0.35,
+        staccato: 0.5,
+        notes: `A3 E3 A3 E3 A3 E3 A3 E3 | G3 D3 G3 D3 G3 D3 G3 D3 |
+                F3 C3 F3 C3 F3 C3 F3 C3 | E3 B2 E3 B2 E3 G#3 B3 E4`,
+      },
+      {
+        wave: 'triangle',
+        gain: 0.55,
+        staccato: 0.9,
+        notes: `A2 . . . A2 . . . | G2 . . . G2 . . . |
+                F2 . . . F2 . . . | E2 . . . E2 . . .`,
+      },
+    ],
+    drums: `K - - - S - - h | K - - - S - h - | K - - - S - - h | K - h - S h S h`,
+  },
+
   // 칼퇴 성공: 한 번만
   clear: {
     bpm: 150,

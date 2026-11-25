@@ -207,6 +207,137 @@ export const FLOORS = [
       { type: 'meetingStop', hold: 1000, label: '회의 중' },
     ],
   },
+  {
+    id: 13,
+    name: '13층',
+    zone: '기획팀',
+    intro: '해 진 기획팀 사무실. 17:59에 팀장님이 기다린다 (시즌 1 마지막 층)',
+    theme: {
+      // 해가 지고 형광등이 반쯤 꺼진 사무실: 어두운 카펫에 푸른 밤빛을 덮는다
+      floor: { pattern: 'carpet', base: '#3f4558', dark: '#353a4c', light: '#4a5166' },
+      light: { color: 0x0c0a28, alpha: 0.3 },
+      music: 'finale',
+    },
+    map: {
+      width: 1000,
+      height: 600,
+      start: [500, 300],
+      desk: [500, 268],
+      stairs: [[50, 300], [950, 300], [500, 50], [500, 580]],
+      furniture: [
+        {
+          type: 'desk',
+          positions: [
+            // 책상 줄이 사무실을 칸칸이 나눈다 (가운데 십자 통로는 비워 둔다)
+            [150, 140], [206, 140], [262, 140], [738, 140], [794, 140], [850, 140],
+            [150, 240], [206, 240], [262, 240], [738, 240], [794, 240], [850, 240],
+            [150, 380], [206, 380], [262, 380], [738, 380], [794, 380], [850, 380],
+            [150, 480], [206, 480], [262, 480], [738, 480], [794, 480], [850, 480],
+            [400, 160], [600, 160], [400, 450], [600, 450],
+          ],
+        },
+        {
+          type: 'plant',
+          positions: [
+            [24, 40], [976, 40], [24, 580], [976, 580],
+            [500, 200], [500, 400], [340, 300], [660, 300],
+          ],
+        },
+      ],
+    },
+    // 14층보다 조금 더 세게. 17:59 에 시계가 멈추면 몬스터는 그 단계로 계속 나온다
+    stages: [
+      { at: 0, interval: 1050, batch: [1, 2], hp: 1.1, speed: 1 },
+      { at: 10, interval: 900, batch: [1, 2], hp: 1.3, speed: 1.03 },
+      { at: 20, interval: 760, batch: [1, 2], hp: 1.5, speed: 1.06 },
+      { at: 30, interval: 640, batch: [1, 2], hp: 1.75, speed: 1.08 },
+      { at: 40, interval: 520, batch: [2, 3], hp: 2.1, speed: 1.12 },
+      { at: 50, interval: 460, batch: [2, 3], hp: 2.35, speed: 1.14 },
+      { at: 58.9, interval: 460, batch: [2, 3], hp: 2.35, speed: 1.14 },
+      // 팀장님과 붙는 동안은 몬스터가 드문드문 (보스에게 집중)
+      { at: 59, interval: 2000, batch: [1, 1], hp: 2.35, speed: 1.14 },
+    ],
+    // 15·14층 몬스터가 다 섞여 나온다
+    enemies: [
+      { id: 'email', weight: 1 },
+      { id: 'pptx-final', weight: 0.5, from: 6 },
+      { id: 'meeting', weight: 0.6, from: 10 },
+      { id: 'postit', weight: 0.25, from: 15 },
+      { id: 'deadline', weight: 0.8, from: 45 },
+    ],
+    waves: [
+      { at: 3, type: 'line', count: 6, gap: 16, enemy: 'email' },
+      { at: 8, type: 'ring', count: 8 },
+      { at: 14, type: 'line', count: 8, gap: 18, enemy: 'meeting' },
+      { at: 26, type: 'ring', count: 10 },
+      { at: 32, type: 'line', count: 10, gap: 14, enemy: 'email' },
+      { at: 36, type: 'ring', count: 12 },
+      { at: 46, type: 'line', count: 10, gap: 18, enemy: 'meeting' },
+      { at: 50, type: 'ring', count: 12 },
+      { at: 55, type: 'warning', warning: '퇴근 5분 전…?' },
+      { at: 55.2, type: 'ring', count: 14 },
+    ],
+    // 17:20 옆 팀 과장, 17:40 회의 진행자
+    elites: [
+      { id: 'neighbor-manager', at: 20 },
+      { id: 'facilitator', at: 40 },
+    ],
+    rules: [
+      {
+        // 17:59 에서 시계가 멈추고 팀장님(진심 모드). 퇴근시켜야 18:00, 계단이 열린다
+        type: 'finalBoss',
+        at: 59,
+        enemy: 'team-lead-final',
+        warning: '17:59… 팀장님: "이거 하나만 더"',
+        tempo: 1.08,
+        phases: [
+          {
+            below: 0.7,
+            line: '이거 하나만 더',
+            warning: '서류 더미가 날아온다!',
+            skill: {
+              type: 'toss',
+              first: 1200,
+              every: 5000,
+              telegraph: 1000,
+              lines: ['이거 하나만 더', '이것도 같이 봐 줘', '급한 거야'],
+              range: 260,
+              radius: 30,
+              grabRadius: 140,
+              count: 3,
+              filler: 'pptx-final',
+              flightTime: 550,
+              arcHeight: 34,
+              scatter: 14,
+              damage: 1,
+              reflectTime: 450,
+              reflectDamage: 25,
+            },
+          },
+          {
+            below: 0.4,
+            line: '잠깐 회의 하나만',
+            warning: '긴급 회의 소집!',
+            spawn: { id: 'meeting', count: 6, radius: 60 },
+            skill: {
+              type: 'spotlight',
+              first: 1500,
+              every: 3200,
+              telegraph: 950,
+              lines: ['자, 한 명씩 말해 봐', '너는 어떻게 생각해?', '다음?', '그래서 결론이 뭐야?'],
+              range: 280,
+              radius: 32,
+              color: 0xffd23f,
+              playerEvery: 2,
+              hold: 1200,
+              heldLabel: '회의 참석 중…',
+              heldLine: '좋아, 그럼 그렇게 하자',
+            },
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export function getFloor(id) {

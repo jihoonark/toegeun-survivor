@@ -15,6 +15,9 @@ import { getElite } from '../data/elites.js';
 // 새 기술은 SKILLS 에 { aim, fire } 를 추가하고, elites.js 항목의 skill.type 으로 부른다
 //   aim(elites, enemy, player)  → { x, y, r, ... } 예고 원 (null 이면 이번엔 쓰지 않고 config elite.retry 뒤 다시)
 //   fire(elites, enemy, cast, player)
+// 지금 쓰는 기술: 단계마다 기술을 바꾸는 보스는 enemy.skill (층 규칙 finalBoss), 아니면 몬스터 데이터의 skill
+export const skillOf = (enemy) => enemy.skill ?? enemy.def.skill;
+
 export const SKILLS = {
   // 떠넘기기 (옆 팀 과장): 주인공 발밑에 예고 원 → 자기 둘레 일반 몬스터를 원 안으로 던진다
   // 떨어지는 순간 주인공이 원 안에 있으면 멘탈이 깎인다. 던져진 몬스터는 내려앉은 뒤 다시 쫓아온다
@@ -22,12 +25,12 @@ export const SKILLS = {
   // 날아오는 몬스터를 무기로 맞히면 "반송!": 과장에게 되돌아가 reflectDamage 를 주고 그 몬스터는 처리된다
   toss: {
     aim(_elites, e, player) {
-      const s = e.def.skill;
+      const s = skillOf(e);
       if (Phaser.Math.Distance.Between(e.x, e.y, player.x, player.y) > s.range) return null;
       return { x: player.x, y: player.y, r: s.radius };
     },
     fire(elites, e, cast) {
-      const s = e.def.skill;
+      const s = skillOf(e);
       const scene = elites.scene;
       const dist = (o) => Phaser.Math.Distance.Between(o.x, o.y, e.x, e.y);
       const picked = scene.enemies
@@ -57,7 +60,7 @@ export const SKILLS = {
   //   skill: { range, radius, playerEvery, hold, heldLabel, heldLine, color }
   spotlight: {
     aim(elites, e, player) {
-      const s = e.def.skill;
+      const s = skillOf(e);
       if (Phaser.Math.Distance.Between(e.x, e.y, player.x, player.y) > s.range) return null;
       e.turn = (e.turn ?? 0) + 1;
       const near = (o) => Phaser.Math.Distance.Between(o.x, o.y, player.x, player.y);
@@ -71,7 +74,7 @@ export const SKILLS = {
       return { x: target.x, y: target.y, r: s.radius, color: s.color };
     },
     fire(elites, e, cast, player) {
-      const s = e.def.skill;
+      const s = skillOf(e);
       const inside = (o) => Phaser.Math.Distance.Between(o.x, o.y, cast.x, cast.y) <= cast.r;
       for (const o of elites.scene.enemies.getChildren()) {
         if (o.active && o !== e && !o.def.boss && !o.def.elite && inside(o)) o.stun(s.hold);
@@ -121,7 +124,7 @@ export default class Elites {
       const reach = enemy.def.hitRadius + p.radius;
       if (Phaser.Math.Distance.Squared(aim.x, aim.y, p.x, p.y) > reach * reach) continue;
       if (!p.hit(enemy)) continue;
-      const s = f.by.def.skill;
+      const s = skillOf(f.by);
       Object.assign(f, { fromX: enemy.x, fromY: enemy.y, toX: f.by.x, toY: f.by.y, t: 0, ms: s.reflectTime, reflected: true });
       this.scene.events.emit('elite-reflect', { x: aim.x, y: aim.y });
       return;
@@ -143,7 +146,7 @@ export default class Elites {
       enemy.body.checkCollision.none = false;
       // 반송된 몬스터는 던진 엘리트에게 맞고 처리된다
       if (f.reflected) {
-        if (f.by.active && f.by.spawnId === f.bySpawnId) f.by.takeDamage(f.by.def.skill.reflectDamage);
+        if (f.by.active && f.by.spawnId === f.bySpawnId) f.by.takeDamage(skillOf(f.by).reflectDamage);
         this.scene.events.emit('elite-returned', { x: enemy.x, y: enemy.y });
         enemy.kill();
       }
@@ -164,7 +167,7 @@ export default class Elites {
 
   // 엘리트가 나올 때 (Spawner 가 부른다)
   prepare(enemy) {
-    const s = enemy.def.skill;
+    const s = skillOf(enemy);
     enemy.skillLeft = s ? (s.first ?? s.every) : 0;
     enemy.cast = null;
   }
@@ -172,7 +175,7 @@ export default class Elites {
   // projectiles: 무기 투사체 (날아오는 몬스터를 맞혀 반송할 때)
   update(delta, enemies, player, projectiles) {
     for (const e of enemies.getChildren()) {
-      const s = e.active && e.def.skill;
+      const s = e.active && skillOf(e);
       if (!s) continue;
       const skill = SKILLS[s.type];
       if (!skill) throw new Error(`알 수 없는 엘리트 기술: ${s.type}`);

@@ -204,8 +204,27 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // 18:00 이 지나도 시계는 계속 간다 (계단에 도착해야 퇴근)
+  // clockHold(분)가 있으면 그 시각에서 멈춘다 (13층 "17:59", 층 규칙 finalBoss)
   updateClock(delta) {
     this.elapsed += delta;
+    if (this.clockHold != null) this.elapsed = Math.min(this.elapsed, this.elapsedAt(this.clockHold));
+    this.hud.setClock(this.shiftMinutes());
+  }
+
+  // 게임 시각(17:00 부터 분) → 지난 시간(ms)
+  elapsedAt(minutes) {
+    const { startHour, endHour, realDuration } = CONFIG.clock;
+    return (minutes / ((endHour - startHour) * 60)) * realDuration;
+  }
+
+  // 18:00 (17:00 부터 분)
+  shiftEnd() {
+    const { startHour, endHour } = CONFIG.clock;
+    return (endHour - startHour) * 60;
+  }
+
+  skipClockTo(minutes) {
+    this.elapsed = Math.max(this.elapsed, this.elapsedAt(minutes));
     this.hud.setClock(this.shiftMinutes());
   }
 
@@ -316,7 +335,8 @@ export default class GameScene extends Phaser.Scene {
     const locked = this.desk.update(delta, this.shiftMinutes(), this.player, this.spawner) || this.player.frozen;
     if (this.desk.transitioning) return; // 방금 회사 PC 화면으로 넘어가기 시작
     // 17:50부터 음악이 빨라진다
-    music.setTempo(this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1);
+    // 13층 최종 보스가 있는 동안은 더 빨라진다 (musicBoost, 층 규칙 finalBoss)
+    music.setTempo((this.shiftMinutes() >= CONFIG.music.rushFrom ? CONFIG.music.rushTempo : 1) * (this.musicBoost ?? 1));
     this.player.move(locked ? Desk.STILL : this.controls.read());
     this.spawner.update(delta, this.shiftMinutes());
     this.enemies.getChildren().forEach((e) => e.active && e.chase(this.player));
