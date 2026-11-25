@@ -147,7 +147,7 @@ export default class Juice {
     if (!text) return;
     const d = CONFIG.juice.damageNumber;
     const label = Number.isInteger(damage) ? String(damage) : damage.toFixed(1);
-    this.rise(text.setText(label).setColor(d.color), x, y, d);
+    this.rise(text.setText(label).setColor(d.color), x, y, d, d.popScale);
   }
 
   // 무기별 짧은 글자 ("승인" 등). 데미지 숫자 글자를 같이 돌려 쓴다
@@ -155,11 +155,14 @@ export default class Juice {
     const text = this.numbers.find((t) => !t.visible);
     if (!text) return;
     const d = CONFIG.juice.damageNumber;
-    this.rise(text.setText(message).setColor(d.popColor), x, y - d.popOffsetY, d);
+    this.rise(text.setText(message).setColor(d.popColor), x, y - d.popOffsetY, d, 1);
   }
 
-  rise(text, x, y, d) {
-    text.setPosition(x, y).setAlpha(1).setVisible(true);
+  // popScale: 처음 크기 (데미지 숫자만 크게 쾅, 무기 글자는 그대로)
+  rise(text, x, y, d, popScale = 1) {
+    text.setPosition(x, y).setAlpha(1).setScale(popScale).setVisible(true);
+    // 크게 쾅 떴다가 제 크기로 (잘 보이게)
+    this.scene.tweens.add({ targets: text, scale: 1, duration: d.popTime ?? 0, ease: 'Back.out' });
     this.scene.tweens.add({
       targets: text,
       y: y - d.rise,

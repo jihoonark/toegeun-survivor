@@ -393,7 +393,8 @@ export const CONFIG = {
     knockback: { strength: 180, duration: 110 },
     // 데미지 숫자: 튀어오르는 높이(px)와 사라지는 시간(ms)
     // poolSize: 미리 만들어 돌려 쓰는 글자 수. popColor/popOffsetY: 무기별 짧은 글자("승인" 등) 색과 높이
-    damageNumber: { color: '#ffd23f', size: 12, stroke: 2, rise: 14, duration: 550, poolSize: 40, popColor: '#7ec8e3', popOffsetY: 8 },
+    // popScale/popTime: 처음에 이만큼 크게 떴다가 popTime(ms) 동안 제 크기로 (5화: 흰 숫자, 굵은 테두리로 크게)
+    damageNumber: { color: '#ffffff', size: 16, stroke: 4, rise: 16, duration: 650, poolSize: 40, popColor: '#7ec8e3', popOffsetY: 10, popScale: 1.6, popTime: 110 },
     // 무기별 맞힐 때 파편 (무기 데이터 hitFx.particle)
     hitParticles: { count: 5, speedMin: 30, speedMax: 90, lifespan: 320, gravity: 260 },
     // 투사체 잔상 (무기 데이터 trail)
@@ -477,15 +478,28 @@ export const CONFIG = {
     activePointers: 2,
   },
 
-  // 휴대폰: 화면 아무 곳이나 누르면 그 자리에 생기는 가상 조이스틱
+  // 휴대폰 가상 조이스틱 (src/systems/Controls.js)
+  // fixed: 로블록스식 고정 조이스틱 (5화). 끄면 예전처럼 누른 곳에 생기고 따라온다
   joystick: {
+    fixed: true,
+    // 고정 자리: 화면 왼쪽에서 fixedX, 아래에서 fixedBottom (px)
+    fixedX: 52,
+    fixedBottom: 50,
+    // 화면 왼쪽 이 비율 안을 누르면 조이스틱 (오른쪽은 조이스틱이 아니다)
+    touchArea: 0.5,
+    // 원을 이만큼(px) 바깥까지 눌러도 원 위로 본다 (원 가운데 기준)
+    ringPad: 8,
+    // 쉬는 동안 흐린 정도, 원 테두리
+    idleAlpha: 0.45,
+    ringWidth: 2,
+    ringAlpha: 0.7,
     radius: 28,
     knobRadius: 10,
     // 이 비율보다 덜 밀면 멈춘 것으로 본다
     deadZone: 0.15,
     // 원 반지름의 이 비율만큼 밀면 최고 속도 (1이면 끝까지 밀어야 최고 속도)
     fullAt: 0.6,
-    // 원 밖으로 끌면 원이 손가락을 따라온다
+    // 원 밖으로 끌면 원이 손가락을 따라온다 (fixed 일 때는 따라오지 않는다)
     follow: true,
     color: 0xffffff,
     baseAlpha: 0.25,

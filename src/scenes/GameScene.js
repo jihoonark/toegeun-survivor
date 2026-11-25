@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { addText } from '../systems/Text.js';
 import Controls from '../systems/Controls.js';
+import { touchDevice } from '../systems/Fullscreen.js';
 import Combat from '../systems/Combat.js';
 import Spawner from '../systems/Spawner.js';
 import Juice from '../systems/Juice.js';
@@ -255,7 +256,8 @@ export default class GameScene extends Phaser.Scene {
   showControlsHint() {
     const { width, height } = CONFIG.screen;
     const { ui } = CONFIG;
-    const hint = addText(this, width / 2, height - CONFIG.hud.controlsHintBottom, '방향키·WASD 또는 화면을 눌러 끌면 이동')
+    const message = touchDevice() && CONFIG.joystick.fixed ? '왼쪽 아래 조이스틱(또는 화면 왼쪽)을 끌면 이동' : '방향키·WASD 또는 화면을 눌러 끌면 이동';
+    const hint = addText(this, width / 2, height - CONFIG.hud.controlsHintBottom, message)
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
     this.tweens.add({ targets: hint, alpha: 0, delay: ui.hintDuration, duration: ui.hintFade, onComplete: () => hint.destroy() });

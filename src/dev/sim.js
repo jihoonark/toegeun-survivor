@@ -289,5 +289,6 @@ export function installSim(game) {
   }
   const resume = () => game.loop.wake();
 
-  window.__sim = { run, runMany, start, status, jump, stepUntil, resume };
+  // scene(): 지금 게임 장면 (브라우저 콘솔에서 상태 확인용)
+  window.__sim = { run, runMany, start, status, jump, stepUntil, resume, scene: () => game.scene.getScene('Game') };
 }

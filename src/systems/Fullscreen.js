@@ -17,7 +17,7 @@ const fullscreenActive = () => Boolean(document.fullscreenElement || document.we
 // 홈 화면에 추가한 아이콘으로 실행했으면 이미 주소창이 없다
 const standalone = () =>
   window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
-const touchDevice = () => navigator.maxTouchPoints > 0 || window.matchMedia('(any-pointer: coarse)').matches;
+export const touchDevice = () => navigator.maxTouchPoints > 0 || window.matchMedia('(any-pointer: coarse)').matches;
 const landscape = () => window.innerWidth > window.innerHeight;
 
 // 입력 이벤트 안에서 불러야 한다. 안 되는 환경이면 조용히 넘어간다
