@@ -53,10 +53,11 @@ class VirtualJoystick {
     this.origin = new Phaser.Math.Vector2();
     this.offset = new Phaser.Math.Vector2();
     this.reanchor = false;
-    this.fixed = cfg.fixed;
+    // 고정 조이스틱은 휴대폰(터치 기기)에서만. PC 마우스는 예전처럼 누른 곳에 생기고 따라온다
+    this.fixed = cfg.fixed && touchDevice();
     // 고정 조이스틱 자리 (화면 좌표)
     this.home = new Phaser.Math.Vector2(cfg.fixedX, CONFIG.screen.height - cfg.fixedBottom);
-    this.showIdle = this.fixed && touchDevice();
+    this.showIdle = this.fixed;
 
     this.base = scene.add.circle(0, 0, cfg.radius, cfg.color, cfg.baseAlpha);
     this.knob = scene.add.circle(0, 0, cfg.knobRadius, cfg.color, cfg.knobAlpha);

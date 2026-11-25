@@ -315,6 +315,10 @@ export function installSim(game) {
     }
     delete scene.player.hurt;
     if (!keepBot) scene.controls.read = read;
+    // 빨리 감은 시험 시계는 실제 시계보다 앞서 있어서, 넘겨준 뒤 시간이 거꾸로 간다
+    // 히트스톱이 그 차이만큼 풀리지 않던 문제(13층 팀장 퇴근 뒤 화면 멈춤)를 막는다
+    scene.juice.frozenUntil = 0;
+    scene.juice.lastHitStop = -Infinity;
     game.loop.wake();
     return scene.shiftMinutes();
   }
