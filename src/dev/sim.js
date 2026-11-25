@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
+import { shop } from '../systems/Shop.js';
+import { wallet } from '../systems/Wallet.js';
 
 // 자동 시험 (개발 서버에서만). 브라우저 콘솔에서:
 //   await __sim.runMany({ floor: 15, bot: 'mover', runs: 6 })
@@ -26,6 +28,9 @@ const BOT_BASE = {
   bombWeight: 4,
   deadEnd: 1.5, // 곧 막히는 방향 감점 (내다본 거리 한 칸마다)
   grid: 16, // 계단 길찾기 칸 크기(px)
+  stairsSnap: 70, // 계단이 이 거리 안이면 곧장 간다
+  bossDist: 120, // 13층 17:59 최종 보스와 이 거리를 지키며 싸운다 (사람처럼 붙어서 잡으러 간다)
+  bossPull: 8,
 };
 const BOT = BOT_BASE;
 
@@ -103,9 +108,17 @@ function makeMover(scene, tune = {}) {
     const p = scene.player;
     const stairs = scene.stairs?.open ? scene.stairs : null;
     if (stairs && !field) field = distanceField(scene, blocks, stairs.x, stairs.y);
+    // 계단 바로 앞에서는 망설이지 않고 들어간다 (계단 칸 가운데로)
+    if (stairs) {
+      const gx = stairs.x - p.x;
+      const gy = stairs.y - CONFIG.stairs.zone.height / 2 - p.y;
+      const gd = Math.hypot(gx, gy);
+      if (gd < BOT.stairsSnap && gd > 0) return (last = new Phaser.Math.Vector2(gx / gd, gy / gd));
+    }
     const enemies = scene.enemies.getChildren().filter((e) => e.active && Phaser.Math.Distance.Between(e.x, e.y, p.x, p.y) < BOT.dangerRange + 60);
     const shots = scene.enemyShots.pool.filter((s) => s.active);
     const marks = scene.elites?.marks ?? [];
+    const finalBoss = scene.clockHold != null ? scene.enemies.getChildren().find((e) => e.active && e.def.boss) : null;
     const score = (x, y) => {
       let s = 0;
       for (const e of enemies) {
@@ -122,6 +135,7 @@ function makeMover(scene, tune = {}) {
       if (x < m || y < m || x > width - m || y > height - m) s += 5;
       s += BOT.centerPull * (Math.abs(x - width / 2) / width + Math.abs(y - height / 2) / height);
       if (field) s += BOT.stairsWeight * field(x, y);
+      if (finalBoss) s += BOT.bossPull * Math.abs(Phaser.Math.Distance.Between(finalBoss.x, finalBoss.y, x, y) - BOT.bossDist) / BOT.bossDist;
       for (const b of scene.bombs?.items ?? []) {
         const d = Phaser.Math.Distance.Between(b.x, b.y, x, y);
         if (d < BOT.bombRange) s -= BOT.bombWeight * (1 - d / BOT.bombRange);
@@ -155,11 +169,19 @@ function makeMover(scene, tune = {}) {
 }
 
 export function installSim(game) {
-  async function run({ floor, bot = 'mover', tune, maxFrames = 60 * 60 * 6 } = {}) {
+  // 시험 시계: 호출마다 실제 시각에서 다시 시작하면 게임 시간이 거꾸로 가서 히트스톱이 풀리지 않는다
+  // 지난번에 돌린 시각보다 뒤에서만 시작한다
+  let lastT = 0;
+  const simStart = () => Math.max(performance.now(), lastT);
+  const stepAt = (t) => {
+    game.step(t, FRAME);
+    lastT = t;
+  };
+  async function run({ floor, bot = 'mover', tune, maxFrames = 60 * 60 * 12 } = {}) {
     for (const s of game.scene.getScenes(true)) if (s.scene.key !== 'Game') s.scene.stop();
     game.loop.sleep();
     game.scene.start('Game', { floor });
-    let t = performance.now();
+    let t = simStart();
     let scene = null;
     let brain = null;
     let summary = null;
@@ -168,7 +190,7 @@ export function installSim(game) {
     let levelUpsBefore30 = 0;
     for (let frame = 0; frame < maxFrames; frame++) {
       t += FRAME;
-      game.step(t, FRAME);
+      stepAt(t);
       scene = game.scene.getScene('Game');
       if (scene.sys.isActive() && !brain && scene.player) {
         brain = bot === 'idle' ? () => STILL : makeMover(scene, tune);
@@ -200,29 +222,57 @@ export function installSim(game) {
       while (scene.desk?.transitioning || game.scene.isPaused('Game') && !levelUp.sys.isActive()) {
         await new Promise((r) => setTimeout(r, 50));
         t += FRAME;
-        game.step(t, FRAME);
+        stepAt(t);
         if (game.scene.getScene('LevelUp').sys.isActive()) break;
       }
       if (summary) break;
       if (frame % 300 === 0) await yieldNow();
     }
+    // 시간이 다 됐으면 왜 그런지 볼 수 있게 그때 상태를 남긴다
+    const stuck = summary ? null : {
+      minutes: scene?.shiftMinutes?.().toFixed(2),
+      clockHold: scene?.clockHold,
+      boss: scene?.enemies?.getChildren().filter((e) => e.active && e.def.boss).map((e) => `${e.def.id} ${e.hp}/${e.maxHp}`),
+      stairs: scene?.stairs?.open ? [Math.round(scene.stairs.x), Math.round(scene.stairs.y)] : false,
+      player: scene?.player && [Math.round(scene.player.x), Math.round(scene.player.y), scene.player.mental],
+      frozen: scene?.juice?.frozen,
+      desk: scene?.desk?.transitioning,
+    };
     game.scene.stop('Result');
     game.scene.stop('Game');
+    game.scene.stop('Ending');
     game.loop.wake();
-    return { ...(summary ?? { result: 'timeout' }), hits, levelUps, levelUpsBefore30 };
+    return { ...(summary ?? { result: 'timeout' }), hits, levelUps, levelUpsBefore30, stuck };
   }
 
   // 진행 상황은 __sim.status 에 쌓인다 (오래 걸리므로 start 로 돌려 두고 나중에 읽는다)
   const status = [];
-  async function runMany({ floor, bot = 'mover', runs = 6, tune } = {}) {
-    const entry = { floor, bot, runs, tune, clears: 0, results: [], hits: {}, done: false };
+  // shopState: 가게에서 산 것 { bought: { power, mental, resignation }, pending: {...}, starter } (없으면 아무것도 안 산 상태)
+  //   판마다 이 상태로 시작한다. 지갑(연봉·복지포인트)은 시험 전 값으로 되돌린다
+  //   entry.income: 판마다 주운 혜택 합계 (칼퇴·야근 정산 전)
+  async function runMany({ floor, bot = 'mover', runs = 6, tune, shopState = null } = {}) {
+    const entry = { floor, bot, runs, tune, shopState, clears: 0, results: [], hits: {}, income: { salary: 0, welfare: 0 }, kept: { salary: 0, welfare: 0 }, done: false };
     status.push(entry);
+    const savedShop = localStorage.getItem(CONFIG.shop.storageKey);
+    const savedWallet = localStorage.getItem(CONFIG.benefits.storageKey);
     for (let i = 0; i < runs; i++) {
+      localStorage.setItem(CONFIG.shop.storageKey, JSON.stringify(shopState ?? {}));
+      shop.reload();
       const r = await run({ floor, bot, tune });
+      for (const k of ['salary', 'welfare']) {
+        entry.income[k] += r.benefits?.run?.[k] ?? 0;
+        entry.kept[k] += r.benefits?.kept?.[k] ?? 0;
+      }
       entry.results.push(`${r.result}@${r.minutes?.toFixed(1)} 승진${r.levelUps}(17:30전 ${r.levelUpsBefore30})`);
+      if (r.stuck) (entry.stuck ??= []).push(r.stuck);
       if (r.result === 'clear') entry.clears++;
       for (const [k, v] of Object.entries(r.hits)) entry.hits[k] = (entry.hits[k] ?? 0) + v;
     }
+    const restore = (key, value) => (value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value));
+    restore(CONFIG.shop.storageKey, savedShop);
+    restore(CONFIG.benefits.storageKey, savedWallet);
+    shop.reload();
+    wallet.reload();
     entry.done = true;
     return entry;
   }
@@ -242,12 +292,12 @@ export function installSim(game) {
     for (const s of game.scene.getScenes(true)) if (s.scene.key !== 'Game') s.scene.stop();
     game.loop.sleep();
     game.scene.start('Game', { floor });
-    let t = performance.now();
+    let t = simStart();
     let scene = null;
     let read = null;
     for (let frame = 0; frame < 60 * 60 * 6; frame++) {
       t += FRAME;
-      game.step(t, FRAME);
+      stepAt(t);
       scene = game.scene.getScene('Game');
       if (scene.sys.isActive() && !read && scene.player) {
         read = scene.controls.read.bind(scene.controls);
@@ -273,10 +323,10 @@ export function installSim(game) {
   //   await __sim.stepUntil((scene) => scene.elites.marks.length > 0)
   async function stepUntil(test, maxFrames = 60 * 60) {
     game.loop.sleep();
-    let t = performance.now();
+    let t = simStart();
     for (let frame = 0; frame < maxFrames; frame++) {
       t += FRAME;
-      game.step(t, FRAME);
+      stepAt(t);
       const levelUp = game.scene.getScene('LevelUp');
       if (levelUp.sys.isActive() && levelUp.choices) {
         levelUp.ready = true;

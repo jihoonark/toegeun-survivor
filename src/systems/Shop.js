@@ -39,6 +39,11 @@ function save() {
 }
 
 export const shop = {
+  // 저장소를 다시 읽는다 (자동 시험이 강화 단계를 바꿔 끼울 때)
+  reload() {
+    memory = null;
+  },
+
   items(shopId) {
     return SHOP_ITEMS.filter((i) => i.shop === shopId);
   },

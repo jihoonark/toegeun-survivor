@@ -327,7 +327,8 @@ export const CONFIG = {
     keepOnOvertime: 0.5,
     // 전체 배율: 떨어질 확률, 금액 (조절 패널·난이도용)
     chanceScale: 1,
-    amountScale: 1,
+    // 5화 난이도: 한 판 수입이 15층 칼퇴 약 1만 원이 되게 (자동 시험)
+    amountScale: 0.5,
     // 바닥에 있는 시간(ms), 사라지기 전 깜빡임
     lifetime: 20000,
     blinkFrom: 4000,

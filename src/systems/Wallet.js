@@ -34,6 +34,11 @@ function save() {
 }
 
 export const wallet = {
+  // 저장소를 다시 읽는다 (자동 시험)
+  reload() {
+    memory = null;
+  },
+
   // 지금 쓸 수 있는 돈 { salary, welfare }
   balance() {
     return { ...load().balance };

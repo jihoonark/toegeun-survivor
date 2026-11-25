@@ -108,7 +108,8 @@ export default class Elites {
   // 몬스터를 (x, y) 로 포물선을 그리며 던진다. 날아가는 동안은 쫓지도, 주인공·다른 몬스터에 닿지도, 무기에 맞지도 않는다
   // by: 던진 엘리트 (반송될 때 돌아갈 곳)
   throw(enemy, x, y, ms, height, by) {
-    enemy.flight = { fromX: enemy.x, fromY: enemy.y, toX: x, toY: y, t: 0, ms, height, by, bySpawnId: by?.spawnId };
+    // 던질 때의 기술을 기억한다 (보스가 날아가는 동안 다음 단계 기술로 바꿔도 반송 값이 남게)
+    enemy.flight = { fromX: enemy.x, fromY: enemy.y, toX: x, toY: y, t: 0, ms, height, by, bySpawnId: by?.spawnId, skill: by && skillOf(by) };
     enemy.body.setVelocity(0, 0);
     enemy.body.checkCollision.none = true;
     this.flights.push({ enemy, spawnId: enemy.spawnId });
@@ -124,7 +125,7 @@ export default class Elites {
       const reach = enemy.def.hitRadius + p.radius;
       if (Phaser.Math.Distance.Squared(aim.x, aim.y, p.x, p.y) > reach * reach) continue;
       if (!p.hit(enemy)) continue;
-      const s = skillOf(f.by);
+      const s = f.skill;
       Object.assign(f, { fromX: enemy.x, fromY: enemy.y, toX: f.by.x, toY: f.by.y, t: 0, ms: s.reflectTime, reflected: true });
       this.scene.events.emit('elite-reflect', { x: aim.x, y: aim.y });
       return;
@@ -146,7 +147,7 @@ export default class Elites {
       enemy.body.checkCollision.none = false;
       // 반송된 몬스터는 던진 엘리트에게 맞고 처리된다
       if (f.reflected) {
-        if (f.by.active && f.by.spawnId === f.bySpawnId) f.by.takeDamage(skillOf(f.by).reflectDamage);
+        if (f.by.active && f.by.spawnId === f.bySpawnId) f.by.takeDamage(f.skill.reflectDamage);
         this.scene.events.emit('elite-returned', { x: enemy.x, y: enemy.y });
         enemy.kill();
       }
