@@ -28,6 +28,7 @@
 //               enemy: 나올 몬스터 id (없으면 그 시각에 나올 수 있는 몬스터 중에서 고른다)
 //               warning: 있으면 그 글자를 화면에 크게 띄운다 (ring 은 없어도 "전체 회신 폭탄!")
 //   elites    엘리트 등장 [{ id, at }] (src/data/elites.js)
+//   ending    true 면 이 층을 깼을 때 칼퇴 엔딩 장면 (시즌 마지막 층)
 //   rules     특별 규칙 [{ type, ... }] (systems/FloorRules.js). 없으면 []
 
 export const FLOORS = [
@@ -212,6 +213,8 @@ export const FLOORS = [
     name: '13층',
     zone: '기획팀',
     intro: '해 진 기획팀 사무실. 17:59에 팀장님이 기다린다 (시즌 1 마지막 층)',
+    // 깨면 칼퇴 엔딩 (scenes/EndingScene.js)
+    ending: true,
     theme: {
       // 해가 지고 형광등이 반쯤 꺼진 사무실: 어두운 카펫에 푸른 밤빛을 덮는다
       floor: { pattern: 'carpet', base: '#3f4558', dark: '#353a4c', light: '#4a5166' },

@@ -149,7 +149,10 @@ export default class TitleScene extends Phaser.Scene {
     this.displayText.setText(`▼ ${id}`);
     this.infoName.setText(floor ? `${floor.name} · ${floor.zone}` : `${id}층`);
     let status;
-    if (!floor) status = '아직 공사 중인 층';
+    const ending = FLOORS.find((f) => f.ending);
+    // 시즌 마지막 층을 깨면 바로 아래층 버튼에 "시즌 2 준비 중"
+    if (!floor && ending && id === ending.id - 1 && progress.isCleared(ending.id)) status = '🚧 시즌 2 준비 중';
+    else if (!floor) status = '아직 공사 중인 층';
     else if (!progress.isOpen(id)) status = `🔒 ${progress.previousName(id)}을 클리어하면 열려요`;
     else if (progress.isCleared(id)) status = '✓ 클리어한 층';
     else status = '처음 가는 층';

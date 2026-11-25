@@ -363,6 +363,22 @@ export const CONFIG = {
     bombButton: { right: 30, bottom: 44, radius: 16 },
   },
 
+  // 칼퇴 엔딩 (scenes/EndingScene.js)
+  ending: {
+    // 장면마다 머무는 시간(ms), 넘어갈 때 밝아지는 시간
+    sceneTime: 3000,
+    fade: 400,
+    // 엘리베이터: 1층 버튼 크기, 불 들어오는 때, 문 닫히기 시작·걸리는 시간(ms)
+    button: 18,
+    buttonDelay: 500,
+    doorDelay: 1200,
+    doorTime: 900,
+    // 노을 하늘 띠 색 (위에서 아래로), 건물 그림자 [x, 너비, 높이]
+    sky: [0x5a4a8a, 0x9a5a8a, 0xe0786a, 0xf0a060, 0xffd28a],
+    buildings: [[130, 40, 70], [180, 30, 100], [240, 50, 60], [320, 36, 110], [380, 60, 80], [440, 40, 50]],
+    creditGap: 15,
+  },
+
   // 진행 상황 저장 (systems/Progress.js): 클리어한 층을 이 브라우저에 기억하는 이름
   progress: { storageKey: 'toegeun-progress' },
 

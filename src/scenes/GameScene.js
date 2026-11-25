@@ -146,7 +146,11 @@ export default class GameScene extends Phaser.Scene {
       this.hud.setMental(mental, this.player.maxMental);
       if (mental <= 0) this.endShift('overtime');
     });
-    this.events.on('enemy-killed', () => this.hud.setTasks(++this.tasksDone));
+    this.bossesDown = 0;
+    this.events.on('enemy-killed', ({ def }) => {
+      this.hud.setTasks(++this.tasksDone);
+      if (def.boss || def.elite) this.bossesDown++;
+    });
     this.events.on('benefit-collected', ({ run }) => this.hud.setWallet(run));
     this.events.on('player-healed', ({ mental }) => this.hud.setMental(mental, this.player.maxMental));
 
@@ -236,7 +240,7 @@ export default class GameScene extends Phaser.Scene {
     music.stop();
     const summary = { result, floor: this.floor.id, tasks: this.tasksDone, minutes: this.shiftMinutes(), rank: this.promotion.rank };
     // 회사 혜택 정산: 칼퇴면 다, 야근이면 절반 (config benefits.keepOnOvertime)
-    summary.benefits = { run: { ...this.benefits.run }, kept: wallet.settle(this.benefits.run, result === 'clear') };
+    summary.benefits = { run: { ...this.benefits.run }, kept: wallet.settle(this.benefits.run, result === 'clear', this.bossesDown) };
     this.events.emit('shift-end', summary);
 
     // 그 자리에서 결과를 크게 한 번 보여 주고 결과 화면으로 넘어간다
@@ -248,7 +252,9 @@ export default class GameScene extends Phaser.Scene {
     })
       .setScrollFactor(0)
       .setDepth(CONFIG.depth.hud);
-    this.time.delayedCall(CONFIG.result.delay, () => this.scene.start('Result', summary));
+    // 시즌 마지막 층(층 데이터 ending)을 깨면 칼퇴 엔딩 장면 뒤에 결과 화면
+    const next = clear && this.floor.ending ? 'Ending' : 'Result';
+    this.time.delayedCall(CONFIG.result.delay, () => this.scene.start(next, summary));
   }
 
   buildOffice() {
