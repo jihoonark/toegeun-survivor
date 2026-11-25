@@ -6,6 +6,10 @@ import { music } from '../systems/Music.js';
 import Sfx from '../systems/Sfx.js';
 import { progress } from '../systems/Progress.js';
 import { FLOORS } from '../data/floors.js';
+import { addButton } from '../systems/Button.js';
+import { wallet } from '../systems/Wallet.js';
+import { WALLETS, formatAmount } from '../data/benefits.js';
+import { SHOPS } from '../data/shop.js';
 
 const toColor = (hex) => Phaser.Display.Color.HexStringToColor(hex).color;
 
@@ -58,6 +62,15 @@ export default class TitleScene extends Phaser.Scene {
     const prompt = addText(this, info.x, info.promptY, '버튼을 누르거나 Enter', { size: ui.smallFontSize });
     this.tweens.add({ targets: prompt, alpha: ui.blinkMinAlpha, duration: ui.blinkDuration, yoyo: true, repeat: -1 });
 
+    // 왼쪽: 지갑과 두 가게 (5화, scenes/ShopScene.js)
+    const T = CONFIG.shop.title;
+    this.walletText = addText(this, T.x, T.walletY, '', { size: ui.smallFontSize, color: colors.accent });
+    this.refreshWallet();
+    Object.keys(SHOPS).forEach((shopId, i) => {
+      addButton(this, T.x, T.firstY + i * T.gap, SHOPS[shopId].name, () => this.openShop(shopId), T.button);
+    });
+    this.events.on(Phaser.Scenes.Events.RESUME, () => this.refreshWallet());
+
     // 에셋 출처 표기 자리 (GAME_SPEC.md 5장). 구매 에셋을 쓰기 전까지는 임시 문구
     addText(this, width / 2, height - ui.title.creditBottom, '임시 그래픽: 코드로 그린 도트', { size: ui.smallFontSize, color: colors.textDim });
 
@@ -75,6 +88,19 @@ export default class TitleScene extends Phaser.Scene {
     const go = (e) => !e.repeat && this.depart(this.selected);
     keys?.on('keydown-ENTER', go);
     keys?.on('keydown-SPACE', go);
+  }
+
+  refreshWallet() {
+    const have = wallet.balance();
+    this.walletText.setText(Object.keys(WALLETS).map((k) => `${WALLETS[k].icon} ${formatAmount(k, have[k])}`).join('\n'));
+  }
+
+  openShop(shopId) {
+    if (this.leaving) return;
+    this.pressing = null;
+    this.sfx.play('ping');
+    this.scene.pause();
+    this.scene.launch('Shop', { shopId });
   }
 
   addFloorButton(id, x, y) {

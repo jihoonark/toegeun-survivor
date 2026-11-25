@@ -30,9 +30,13 @@ export default class Combat {
     });
   }
 
-  // weapons.js 에서 starter: true 인 무기를 들고 시작한다
-  addStarterWeapons() {
-    WEAPONS.filter((w) => w.starter).forEach((w) => this.addWeapon(w));
+  // 시작 무기: 엘리베이터 '연봉 협상'에서 고른 무기 (없으면 weapons.js 에서 starter: true)
+  // bonus: 가게에서 산 시작 무기 데미지 배율 (이 무기에만)
+  addStarterWeapons(starter, bonus = 1) {
+    const list = starter ? [starter] : WEAPONS.filter((w) => w.starter);
+    list.forEach((w) => this.addWeapon(w));
+    const slot = starter && this.weapons.find((s) => s.def.id === starter.id);
+    if (slot) slot.bonus = bonus;
   }
 
   addWeapon(def) {
@@ -77,7 +81,7 @@ export default class Combat {
         slot.cooldownLeft = 0;
         continue;
       }
-      this.fire(w, target, w.damage * damageMultiplier);
+      this.fire(w, target, w.damage * damageMultiplier * (slot.bonus ?? 1));
       slot.cooldownLeft += w.cooldown;
     }
   }

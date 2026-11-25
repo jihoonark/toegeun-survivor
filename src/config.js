@@ -341,6 +341,28 @@ export const CONFIG = {
     colors: { salary: '#7be07b', welfare: '#7ec8e3' },
   },
 
+  // 엘리베이터 가게 (systems/Shop.js, scenes/ShopScene.js). 항목·값은 src/data/shop.js
+  shop: {
+    storageKey: 'toegeun-shop',
+    // 연차 쿠폰 무적 시간(ms)
+    leaveInvulnerable: 3000,
+    // 가게 화면 배치(px)
+    panel: { x: 24, y: 10, width: 432, height: 250 },
+    titleY: 26,
+    walletY: 46,
+    rowsY: 76,
+    rowGap: 40,
+    nameX: 40,
+    buyX: 384,
+    button: { width: 116, height: 24 },
+    starterY: 206,
+    closeY: 240,
+    // 엘리베이터 화면 왼쪽 가게 버튼
+    title: { x: 72, walletY: 112, firstY: 150, gap: 32, button: { width: 124, height: 24 } },
+    // 게임 안 폭탄 버튼 (오른쪽 아래, 들고 시작했을 때만)
+    bombButton: { right: 30, bottom: 44, radius: 16 },
+  },
+
   // 진행 상황 저장 (systems/Progress.js): 클리어한 층을 이 브라우저에 기억하는 이름
   progress: { storageKey: 'toegeun-progress' },
 
@@ -417,7 +439,7 @@ export const CONFIG = {
     // 데미지 숫자: 튀어오르는 높이(px)와 사라지는 시간(ms)
     // poolSize: 미리 만들어 돌려 쓰는 글자 수. popColor/popOffsetY: 무기별 짧은 글자("승인" 등) 색과 높이
     // popScale/popTime: 처음에 이만큼 크게 떴다가 popTime(ms) 동안 제 크기로 (5화: 흰 숫자, 굵은 테두리로 크게)
-    damageNumber: { color: '#ffffff', size: 16, stroke: 4, rise: 16, duration: 650, poolSize: 40, popColor: '#7ec8e3', popOffsetY: 10, popScale: 1.6, popTime: 110 },
+    damageNumber: { color: '#ffffff', size: 16, stroke: 4, rise: 16, duration: 650, poolSize: 40, popColor: '#7ec8e3', popOffsetY: 10, popScale: 1.6, popTime: 110, displayScale: 10 },
     // 무기별 맞힐 때 파편 (무기 데이터 hitFx.particle)
     hitParticles: { count: 5, speedMin: 30, speedMax: 90, lifespan: 320, gravity: 260 },
     // 투사체 잔상 (무기 데이터 trail)

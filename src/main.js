@@ -4,6 +4,7 @@ import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import GameScene from './scenes/GameScene.js';
 import ResultScene from './scenes/ResultScene.js';
+import ShopScene from './scenes/ShopScene.js';
 import LevelUpScene from './scenes/LevelUpScene.js';
 import Fullscreen from './systems/Fullscreen.js';
 import SoundToggle from './systems/SoundToggle.js';
@@ -52,7 +53,7 @@ const game = new Phaser.Game({
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 0 } },
   },
-  scene: [BootScene, TitleScene, GameScene, LevelUpScene, ResultScene],
+  scene: [BootScene, TitleScene, GameScene, LevelUpScene, ResultScene, ShopScene],
 });
 
 let lastLayout = '';

@@ -22,6 +22,7 @@ import Takedowns from '../systems/Takedowns.js';
 import Bombs from '../systems/Bombs.js';
 import Benefits from '../systems/Benefits.js';
 import { wallet } from '../systems/Wallet.js';
+import { shop } from '../systems/Shop.js';
 import FloorRules from '../systems/FloorRules.js';
 import { OFFICE_TEXTURES, floorTexture } from '../art/office.js';
 import { FLOORS, getFloor } from '../data/floors.js';
@@ -34,7 +35,7 @@ const GAME_EVENTS = [
   'elite-spawned', 'elite-aim', 'elite-fire', 'elite-landing', 'stairs-open',
   'meeting-door', 'meeting-stop',
   'shot-parried', 'elite-reflect', 'elite-returned', 'bomb-dropped', 'bomb-exploded',
-  'benefit-collected',
+  'benefit-collected', 'leave-used',
 ];
 
 export default class GameScene extends Phaser.Scene {
@@ -49,6 +50,11 @@ export default class GameScene extends Phaser.Scene {
 
     const [startX, startY] = this.floor.map.start;
     this.player = new Player(this, startX, startY);
+    // 엘리베이터 가게에서 산 것 (5화): 최대 멘탈, 커피믹스, 연차 쿠폰, 들고 시작하는 폭탄. 일회용은 여기서 쓰인다
+    this.perks = shop.startRun();
+    this.player.maxMental += this.perks.maxMental + this.perks.startMental;
+    this.player.mental = this.player.maxMental;
+    this.player.leaveCoupons = this.perks.leave;
     this.physics.add.collider(this.player, this.furniture);
     this.physics.add.collider(this.player, this.walls);
     this.controls = new Controls(this);
@@ -85,7 +91,12 @@ export default class GameScene extends Phaser.Scene {
     this.events.on('npc-hit', () => this.juice.sfx.play('hurt'));
     this.events.on('npc-defeated', ({ npc }) => this.hud.showNotice(npc.mode.defeatNotice));
     // HUD가 'weapon-added' 를 들은 뒤에 무기를 쥐어 credit 알림과 무기 칸이 맞게 한다
-    this.combat.addStarterWeapons();
+    this.combat.addStarterWeapons(shop.starter(), 1 + this.perks.starterDamage);
+    this.setupHeldBomb(this.perks.bomb);
+    this.events.on('leave-used', () => {
+      this.hud.showWarning('🎫 연차 사용! 잠깐 무적', CONFIG.colors.accent);
+      this.juice.sfx.play('levelUp');
+    });
     this.promotion.emitChanged();
     if (import.meta.env.DEV) this.debugPanel = new DebugPanel(this);
 
@@ -258,6 +269,28 @@ export default class GameScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+  }
+
+  // 들고 시작한 전체 회신 폭탄: 오른쪽 아래 버튼(터치) 또는 B 키로 터뜨린다
+  setupHeldBomb(count) {
+    this.heldBombs = count;
+    if (count <= 0) return;
+    const b = CONFIG.shop.bombButton;
+    const { width, height } = CONFIG.screen;
+    const x = width - b.right;
+    const y = height - b.bottom;
+    const fix = (o) => o.setScrollFactor(0).setDepth(CONFIG.depth.hud);
+    const circle = fix(this.add.circle(x, y, b.radius, 0xe03a3a, 0.85).setStrokeStyle(2, 0x1a1420));
+    const label = fix(addText(this, x, y, `💣${count}`, { size: CONFIG.ui.smallFontSize, stroke: CONFIG.ui.bodyStroke }));
+    const use = () => {
+      if (this.ended || this.heldBombs <= 0 || this.juice.frozen) return;
+      this.heldBombs--;
+      this.bombs.explode();
+      label.setText(`💣${this.heldBombs}`);
+      if (this.heldBombs <= 0) [circle, label].forEach((o) => o.destroy());
+    };
+    circle.setInteractive().on('pointerdown', use);
+    this.input.keyboard?.on('keydown-B', use);
   }
 
   showControlsHint() {

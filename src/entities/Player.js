@@ -66,8 +66,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   // 적에게 닿았을 때. 무적 시간 중이면 무시하고 false
   // 무적 시간과 깜빡임은 syncAfterPhysics 의 delta 로 줄어서 히트스톱 동안 함께 멈춘다
+  // 연차 쿠폰(leaveCoupons, 엘리베이터 사내 편의점)이 있으면 멘탈이 바닥날 한 방을 막고 잠깐 무적
   hurt(damage) {
     if (this.invulnerableLeft > 0 || this.mental <= 0) return false;
+    if (this.mental - damage <= 0 && this.leaveCoupons > 0) {
+      this.leaveCoupons--;
+      this.invulnerableLeft = CONFIG.shop.leaveInvulnerable;
+      this.scene.events.emit('leave-used', { player: this });
+      return false;
+    }
 
     this.mental = Math.max(0, this.mental - damage);
     this.invulnerableLeft = CONFIG.player.hurtCooldown;

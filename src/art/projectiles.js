@@ -41,7 +41,17 @@ function drawCorporateCard(ctx) {
   rect(ctx, PAL.paperDark, 7, 3, 2, 1);
 }
 
+// 12x9 사직서: 흰 봉투에 빨간 "사직서" 줄 (날아가는 방향을 바라본다)
+function drawResignation(ctx) {
+  const o = PAL.outline;
+  box(ctx, o, PAL.paper, 0, 0, 12, 9);
+  rect(ctx, PAL.paperDark, 1, 1, 10, 1);
+  rect(ctx, PAL.alert, 3, 4, 6, 1);
+  rect(ctx, PAL.paperDark, 3, 6, 4, 1);
+}
+
 const PROJECTILES = {
+  resignation: { width: 12, height: 9, draw: drawResignation },
   americano: { width: 8, height: 11, draw: drawAmericano },
   'corporate-card': { width: 12, height: 8, draw: drawCorporateCard },
   staple: { width: 9, height: 5, draw: drawStaple },

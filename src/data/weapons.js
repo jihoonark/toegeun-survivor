@@ -29,6 +29,7 @@ import { CONFIG } from '../config.js';
 //   levels       Lv2 부터 바뀌는 값. levels[0] 이 Lv2. { desc: 카드 설명, 바뀌는 필드: 값 }
 //                Lv1 은 위의 기본값이고, 레벨이 오르면 앞 레벨의 변경 위에 차례로 쌓인다
 //   starter      true 면 처음부터 들고 시작한다
+//   shopOnly     true 면 승진 카드에 나오지 않고, 엘리베이터 '연봉 협상'에서 사야 시작 무기로 고를 수 있다 (data/shop.js)
 //   credit       시청자 아이디어면 { nickname, comment }, 아니면 null
 //
 // 전체 공격 속도·데미지 배율은 config.js 의 combat, 최대 레벨은 weapons.maxLevel
@@ -110,6 +111,32 @@ export const WEAPONS = [
       { desc: '세 마리까지 뚫고 찍는다', pierce: 2 },
       { desc: '빠르고 세게 찍는다', cooldown: 650, damage: 2 },
     ],
+    credit: null,
+  },
+  {
+    id: 'resignation',
+    name: '사직서 던지기',
+    description: '크게 관통하는 한 방. 맞히면 "임시저장"',
+    projectile: 'resignation',
+    damage: 3,
+    cooldown: 1500,
+    count: 1,
+    spread: 20,
+    speed: 230,
+    range: 200,
+    lifetime: 1400,
+    pierce: Infinity,
+    orient: true,
+    hitFx: { sound: 'staple', particle: 'receipt', text: '임시저장', flashColor: 0xffffff },
+    trail: 60,
+    levels: [
+      { desc: '사직서 2장', count: 2 },
+      { desc: '더 자주 던진다', cooldown: 1100 },
+      { desc: '데미지 5', damage: 5 },
+      { desc: '사직서 3장, 더 멀리', count: 3, range: 240 },
+    ],
+    starter: false,
+    shopOnly: true,
     credit: null,
   },
 ];

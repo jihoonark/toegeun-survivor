@@ -100,7 +100,7 @@ export default class Promotion {
       .filter((s) => s.level < maxLevelOf(s.def))
       .map((s) => ({ type: 'upgrade', weapon: s.def, level: s.level + 1, desc: levelDesc(s.def, s.level + 1) }));
     const fresh = slots.length < CONFIG.weapons.slots
-      ? WEAPONS.filter((w) => !owned.has(w.id)).map((w) => ({ type: 'new', weapon: w, level: 1, desc: w.description }))
+      ? WEAPONS.filter((w) => !owned.has(w.id) && !w.shopOnly).map((w) => ({ type: 'new', weapon: w, level: 1, desc: w.description }))
       : [];
     // 아이템: 가진 것은 강화, 칸이 남으면 새 아이템
     const items = this.items.slots;

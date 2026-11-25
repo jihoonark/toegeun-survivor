@@ -146,7 +146,8 @@ export default class Juice {
     const text = this.numbers.find((t) => !t.visible);
     if (!text) return;
     const d = CONFIG.juice.damageNumber;
-    const label = Number.isInteger(damage) ? String(damage) : damage.toFixed(1);
+    // 보이는 숫자는 displayScale 배 (데미지 1 → "10", 가게 강화 +20% → "12")
+    const label = String(Math.round(damage * d.displayScale));
     this.rise(text.setText(label).setColor(d.color), x, y, d, d.popScale);
   }
 
